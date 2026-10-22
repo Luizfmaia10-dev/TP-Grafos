@@ -16,6 +16,6 @@ eficiencia.
 
 ## 👥 Autores / Disciplina
 
-* **Alunos**: Caio César Falinacio dos Santos,Joaquin Antonio,Luiz Fernando Cunha Maia,Pedro Henrique Nogueira,Wanessa Oliveira Marcos.
+* **Alunos**: Caio César Falinacio dos Santos, Joaquim Antonio, Luiz Fernando Cunha Maia, Pedro Henrique Nogueira e Wanessa Oliveira Marcos.
 * **Disciplina:** Teoria dos grafos e computabilidade.
 * **Professor Responsável:** Leonardo Vilela Cardoso.
