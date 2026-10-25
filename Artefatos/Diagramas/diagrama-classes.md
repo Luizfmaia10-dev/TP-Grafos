@@ -1,80 +1,84 @@
-# Arquitetura do Sistema de Rotas
+# Route System Architecture - Class Diagram
 
-Abaixo está a modelagem de classes do nosso motor de grafos:
+Class diagram for the core in-memory graph routing engine:
 
 ```mermaid
 classDiagram
-    class TipoVeiculo {
+    class VehicleType {
         <<enumeration>>
-        ONIBUS
-        METRO
-        CAMINHADA
+        BUS
+        SUBWAY
+        WALK
     }
 
-    class Estacao {
-        +String id_estacao
-        +String nome
+    class Station {
+        +str station_id
+        +str name
         +float latitude
         +float longitude
         +__hash__() int
-        +__eq__(outra) bool
+        +__eq__(other) bool
     }
 
-    class VerticeTemporario {
-        +String tipo_marcacao
+    class TemporaryVertex {
+        +str marker_type
     }
 
-    class Conexao {
-        +String id_linha
-        +float tempo_viagem
-        +float distancia
-        +obter_peso(horario_atual) float
+    class Connection {
+        +str route_id
+        +Station destination
+        +VehicleType vehicle_type
+        +float travel_time
+        +float distance
+        +get_weight(current_time) float
     }
 
-    class GrafoTransporte {
-        -Dict lista_adjacencia
-        +adicionar_estacao(estacao)
-        +adicionar_conexao(origem, conexao)
-        +obter_vizinhos(estacao) List~Conexao~
-        +remover_vertice_temporario(vertice)
+    class TransportGraph {
+        -dict adjacency_list
+        +add_station(station) None
+        +add_connection(origin, connection) None
+        +get_neighbors(station) List~Connection~
+        +remove_temporary_vertex(vertex) None
     }
 
-    class LeitorDados {
-        +String diretorio_arquivos
-        +construir_grafo() GrafoTransporte
-        -_ler_paradas() List~Estacao~
-        -_ler_horarios() List~Conexao~
-        -_sanitizar_linha(linha_csv) Dict
+    class DataLoader {
+        +str data_directory
+        +build_graph() TransportGraph
+        -_read_stops() List~Station~
+        -_read_stop_times() List~Connection~
+        -_sanitize_row(row) dict
     }
 
-    class Itinerario {
-        +float tempo_total
-        +float distancia_total
-        +List~String~ instrucoes_passo_a_passo
-        +adicionar_passo(instrucao)
-        +exportar_json() String
+    class Itinerary {
+        +float total_time
+        +float total_distance
+        +List~str~ step_by_step_instructions
+        +add_step(instruction) None
+        +to_dict() dict
+        +to_json() str
     }
 
-    class UtilTempo {
+    class TimeUtils {
         <<utility>>
-        +string_para_minutos(horario_str)$ float
-        +minutos_para_string(minutos)$ String
+        +time_to_minutes(time_str)$ float
+        +minutes_to_time(minutes)$ str
     }
 
-    class SimuladorRotas {
-        -GrafoTransporte grafo
-        +calcular_rota(origem, destino, hora_partida) Itinerario
-        -_calcular_heuristica(atual, destino) float
+    class RouteSimulator {
+        -TransportGraph graph
+        -float max_network_velocity
+        +find_route(origin, destination, departure_time) Itinerary
+        -_calculate_heuristic(current, destination) float
     }
 
-    %% Relacionamentos
-    Estacao <|-- VerticeTemporario : herança
-    Conexao --> Estacao : aponta para o destino
-    Conexao --> TipoVeiculo : possui modal
-    GrafoTransporte "1" o-- "many" Estacao : contém vértices
-    GrafoTransporte "1" *-- "many" Conexao : contém arestas
-    SimuladorRotas --> GrafoTransporte : consulta o mapa
-    SimuladorRotas ..> Itinerario : produz a resposta
-    LeitorDados ..> GrafoTransporte : popula o mapa
-    Conexao ..> UtilTempo : converte horários
+    %% Relationships
+    Station <|-- TemporaryVertex : inheritance
+    Connection --> Station : destination
+    Connection --> VehicleType : mode
+    TransportGraph "1" o-- "many" Station : contains vertices
+    TransportGraph "1" *-- "many" Connection : contains edges
+    RouteSimulator --> TransportGraph : queries
+    RouteSimulator ..> Itinerary : produces
+    DataLoader ..> TransportGraph : populates
+    Connection ..> TimeUtils : converts time
 ```
