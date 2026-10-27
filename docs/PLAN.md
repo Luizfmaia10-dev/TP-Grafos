@@ -12,11 +12,11 @@ Data Limite: 22/11/2026 23:59
 - [x] Padronizar toda a arquitetura de codigo e entidades de dominio em ingles.
 - [x] Especificar o diagrama UML de classes em Mermaid com as classes `Station`, `TemporaryVertex`, `Connection`, `VehicleType`, `TransportGraph`, `DataLoader`, `RouteSimulator`, `Itinerary`, `TimeUtils`.
 - [x] Criar o diagrama de componentes justificando a separacao em camadas (Data Ingestion, Core Graph Engine, API Controller, Presentation).
-- [ ] Revisao e aprovacao do plano de trabalho por todos os 6 membros da equipe.
+- [x] Revisao e aprovacao do plano de trabalho por todos os 6 membros da equipe.
 
 ## Parte 2: Scaffolding e Infraestrutura
-- [ ] Configurar a estrutura de diretorios do projeto: `backend/` (`app/`, `tests/`), `frontend/`, `docs/`, `data/`.
-- [ ] Configurar ambiente virtual Python (`venv`) e `requirements.txt` com dependencias estritas (`fastapi`, `uvicorn`, `pytest`, `pytest-cov`, e `networkx` exclusivo para benchmarks de performance).
+- [x] Configurar a estrutura de diretorios do projeto: `backend/` (`app/`, `tests/`), `frontend/`, `docs/`, `data/`.
+- [x] Configurar ambiente virtual Python (`venv`) e `requirements.txt` com dependencias estritas (`fastapi`, `uvicorn`, `pytest`, `pytest-cov`, e `networkx` exclusivo para benchmarks de performance).
 - [ ] Configurar suite de testes automatizados com `pytest` para a aplicacao do Test-Driven Development (TDD).
 - [ ] Criar endpoint basico de teste (`/health`) em FastAPI e servir o prototipo estatico da interface para validar o ciclo completo localmente.
 
