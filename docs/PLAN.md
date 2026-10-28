@@ -17,8 +17,8 @@ Data Limite: 22/11/2026 23:59
 ## Parte 2: Scaffolding e Infraestrutura
 - [x] Configurar a estrutura de diretorios do projeto: `backend/` (`app/`, `tests/`), `frontend/`, `docs/`, `data/`.
 - [x] Configurar ambiente virtual Python (`venv`) e `requirements.txt` com dependencias estritas (`fastapi`, `uvicorn`, `pytest`, `pytest-cov`, e `networkx` exclusivo para benchmarks de performance).
-- [ ] Configurar suite de testes automatizados com `pytest` para a aplicacao do Test-Driven Development (TDD).
-- [ ] Criar endpoint basico de teste (`/health`) em FastAPI e servir o prototipo estatico da interface para validar o ciclo completo localmente.
+- [x] Configurar suite de testes automatizados com `pytest` para a aplicacao do Test-Driven Development (TDD).
+- [x] Criar endpoint basico de teste (`/health`) em FastAPI e servir o prototipo estatico da interface para validar o ciclo completo localmente.
 
 ## Parte 3: Ingestao de Dados (Data Ingestion)
 - [ ] Obter e organizar o dataset de transporte publico de Belo Horizonte (BHTRANS / GTFS) no diretorio `data/`, mantendo os parsers desacoplados para permitir troca de fonte de dados se necessario.
