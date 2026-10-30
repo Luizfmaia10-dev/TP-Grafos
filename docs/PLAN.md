@@ -29,8 +29,8 @@ Data Limite: 22/11/2026 23:59
 - [ ] Validar cobertura de testes unitarios do modulo de ingestao.
 
 ## Parte 4: Estrutura do Grafo em Memoria
-- [ ] Implementar a classe `Station` com metodos especiais `__hash__`, `__eq__`, atributos geograficos (`latitude`, `longitude`) e identificador unico.
-- [ ] Implementar a classe `Connection` representando arestas direcionadas com destino, tipo de veiculo (`VehicleType`), tempo de percurso e horario.
+- [x] Implementar a classe `Station` com metodos especiais `__hash__`, `__eq__`, atributos geograficos (`latitude`, `longitude`) e identificador unico.
+- [x] Implementar a classe `Connection` representando arestas direcionadas com destino, tipo de veiculo (`VehicleType`), tempo de percurso e horario.
 - [ ] Implementar a classe `TransportGraph` utilizando lista de adjacencia baseada em dicionarios nativos do Python (`dict[Station, list[Connection]]`).
 - [ ] Garantir complexidade $O(1)$ para adicao de vertices e recuperacao de vizinhos (`get_neighbors`).
 - [ ] Implementar metodos para adicao e remocao de vertices e conexoes temporarias (`remove_temporary_vertex`).
