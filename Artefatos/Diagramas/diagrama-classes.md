@@ -12,6 +12,7 @@ classDiagram
     }
 
     class Station {
+        +tuple __slots__
         +str station_id
         +str name
         +float latitude
@@ -21,15 +22,18 @@ classDiagram
     }
 
     class TemporaryVertex {
+        +tuple __slots__
         +str marker_type
     }
 
     class Connection {
+        +tuple __slots__
         +str route_id
         +Station destination
         +VehicleType vehicle_type
         +float travel_time
         +float distance
+        +float departure_time
         +get_weight(current_time) float
     }
 
@@ -50,6 +54,7 @@ classDiagram
     }
 
     class Itinerary {
+        +tuple __slots__
         +float total_time
         +float total_distance
         +List~str~ step_by_step_instructions
@@ -68,7 +73,15 @@ classDiagram
         -TransportGraph graph
         -float max_network_velocity
         +find_route(origin, destination, departure_time) Itinerary
+        -_find_next_connections(connections, current_time) List~Connection~
         -_calculate_heuristic(current, destination) float
+    }
+
+    class GraphAnalyzer {
+        -TransportGraph graph
+        +find_articulation_points() Set~Station~
+        +find_strongly_connected_components() List~Set~Station~~
+        +get_critical_stations(top_n) List~Station~
     }
 
     %% Relationships
@@ -76,9 +89,10 @@ classDiagram
     Connection --> Station : destination
     Connection --> VehicleType : mode
     TransportGraph "1" o-- "many" Station : contains vertices
-    TransportGraph "1" *-- "many" Connection : contains edges
-    RouteSimulator --> TransportGraph : queries
+    TransportGraph "1" *-- "many" Connection : contains sorted edges
+    RouteSimulator --> TransportGraph : queries (bisect)
     RouteSimulator ..> Itinerary : produces
+    GraphAnalyzer --> TransportGraph : analyzes topology
     DataLoader ..> TransportGraph : populates
     Connection ..> TimeUtils : converts time
 ```
