@@ -10,7 +10,7 @@ Data Limite: 22/11/2026 23:59
 ## Parte 1: Planejamento e Documentacao Inicial
 - [x] Consolidar requisitos e limitacoes academicas no arquivo `AGENTS.md`.
 - [x] Padronizar toda a arquitetura de codigo e entidades de dominio em ingles.
-- [x] Especificar o diagrama UML de classes em Mermaid com as classes `Station`, `TemporaryVertex`, `Connection`, `VehicleType`, `TransportGraph`, `DataLoader`, `RouteSimulator`, `Itinerary`, `TimeUtils`.
+- [x] Especificar o diagrama UML de classes em Mermaid com as classes `Station`, `TemporaryVertex`, `Connection`, `VehicleType`, `TransportGraph`, `DataLoader`, `RouteSimulator`, `GraphAnalyzer`, `Itinerary`, `TimeUtils`.
 - [x] Criar o diagrama de componentes justificando a separacao em camadas (Data Ingestion, Core Graph Engine, API Controller, Presentation).
 - [x] Revisao e aprovacao do plano de trabalho por todos os 6 membros da equipe.
 
@@ -31,7 +31,8 @@ Data Limite: 22/11/2026 23:59
 ## Parte 4: Estrutura do Grafo em Memoria
 - [x] Implementar a classe `Station` com metodos especiais `__hash__`, `__eq__`, atributos geograficos (`latitude`, `longitude`) e identificador unico.
 - [x] Implementar a classe `Connection` representando arestas direcionadas com destino, tipo de veiculo (`VehicleType`), tempo de percurso e horario.
-- [ ] Implementar a classe `TransportGraph` utilizando lista de adjacencia baseada em dicionarios nativos do Python (`dict[Station, list[Connection]]`).
+- [x] Aplicar a propriedade `__slots__` em `Station` e `Connection` para otimizar o uso de memória RAM da aplicação.
+- [ ] Implementar a classe `TransportGraph` utilizando lista de adjacencia baseada em dicionarios nativos do Python (`dict[Station, list[Connection]]`), garantindo que as listas de conexoes sejam mantidas ordenadas por horario de partida para permitir busca binaria.
 - [ ] Garantir complexidade $O(1)$ para adicao de vertices e recuperacao de vizinhos (`get_neighbors`).
 - [ ] Implementar metodos para adicao e remocao de vertices e conexoes temporarias (`remove_temporary_vertex`).
 - [ ] Proibir terminantemente qualquer dependencia de bibliotecas de grafos prontas nesta camada.
@@ -41,7 +42,7 @@ Data Limite: 22/11/2026 23:59
 - [ ] Implementar a formula da distancia de Haversine em `RouteSimulator` para calculo de distancia geodésica em linha reta entre duas coordenadas.
 - [ ] Formular a funcao heuristica consistente e admissivel $h(u, v) = \text{haversine}(u, v) / V_{\max}$, em que $V_{\max}$ e a velocidade maxima teorica observavel na rede.
 - [ ] Implementar a busca heuristica A* dependente do tempo (*Time-Dependent A\**) na classe `RouteSimulator` utilizando a biblioteca nativa `heapq` para controle da fila de prioridade.
-- [ ] Considerar o tempo de espera dinamico na estacao com base no horario de partida e tabela de horarios das conexoes.
+- [ ] Utilizar busca binária (módulo nativo `bisect`) sobre a lista de conexões ordenadas da estação para determinar a próxima partida em $O(\log K)$ e calcular o tempo de espera dinâmico.
 - [ ] Reconstruir o caminho otimo a partir dos ponteiros de predecessores gerados pelo algoritmo.
 - [ ] Escrever testes unitarios cobrindo cenarios com rotas diretas, transferencias entre linhas/modais e casos em que nao ha caminho viavel.
 
@@ -71,6 +72,8 @@ Data Limite: 22/11/2026 23:59
 - [ ] Desenvolver scripts de benchmark comparando tempo de execucao e consumo de memoria do motor proprio de A* com o algoritmo de Dijkstra/A* do NetworkX (uso exclusivo para analise comparativa).
 - [ ] Avaliar a escalabilidade variando o tamanho da base de dados e a distancia entre os pares de teste.
 - [ ] Documentar analise formal da complexidade temporal e espacial na notacao Big-O para todas as estruturas centrais.
+- [ ] Implementar a classe `GraphAnalyzer` no backend com métodos para identificar Pontos de Articulação (DFS + `lowpt`) e Componentes Fortemente Conexos (Kosaraju ou Tarjan).
+- [ ] Gerar relatório analítico das Top N estações críticas (hubs/gargalos cuja interrupção isolaria regiões da cidade).
 - [ ] Identificar limitacoes computacionais e oportunidades de otimizacao.
 
 ## Parte 10: Artefatos Finais e Entrega

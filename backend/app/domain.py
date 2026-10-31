@@ -10,7 +10,7 @@ class VehicleType(Enum):
     WALK = "WALK"
 
 
-@dataclass(frozen=True, eq=False)
+@dataclass(frozen=True, eq=False, slots=True)
 class Station:
     """A station identified by its ID, with coordinates in decimal degrees."""
 
@@ -28,7 +28,7 @@ class Station:
         return self.station_id == other.station_id
 
 
-@dataclass
+@dataclass(slots=True)
 class Connection:
     """A directed trip to a station.
 

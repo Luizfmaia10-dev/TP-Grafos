@@ -56,3 +56,26 @@ def test_connection_stores_destination_mode_and_trip_details(vehicle_type):
 
 def test_vehicle_type_contains_the_supported_modes():
     assert {mode.name for mode in VehicleType} == {"BUS", "SUBWAY", "WALK"}
+
+
+def test_station_and_connection_use_slots_without_instance_dict():
+    station = Station("stop-1", "Central", -19.9167, -43.9345)
+    connection = Connection(
+        route_id="route-1",
+        destination=station,
+        vehicle_type=VehicleType.BUS,
+        travel_time=10.0,
+        distance=2.5,
+        departure_time=480.0,
+    )
+
+    assert hasattr(Station, "__slots__")
+    assert hasattr(Connection, "__slots__")
+    assert not hasattr(station, "__dict__")
+    assert not hasattr(connection, "__dict__")
+
+    with pytest.raises((AttributeError, TypeError)):
+        station.extra_attribute = "not allowed"
+
+    with pytest.raises((AttributeError, TypeError)):
+        connection.extra_attribute = "not allowed"
