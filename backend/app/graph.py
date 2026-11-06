@@ -14,5 +14,11 @@ class TransportGraph:
     def add_station(self, station: Station) -> None:
         self._adjacency_list.setdefault(station, [])
 
+    def add_connection(self, origin: Station, connection: Connection) -> None:
+        connections = self._adjacency_list[origin]
+        if connection.destination not in self._adjacency_list:
+            raise KeyError(connection.destination)
+        connections.append(connection)
+
     def get_neighbors(self, station: Station) -> list[Connection]:
         return self._adjacency_list[station]
