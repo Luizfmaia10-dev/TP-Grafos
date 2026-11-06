@@ -74,6 +74,26 @@ def test_connection_from_unknown_origin_is_rejected():
     assert transport_graph.get_neighbors(destination) == []
 
 
+def test_connections_are_kept_sorted_by_departure_time():
+    transport_graph = TransportGraph()
+    origin = Station("stop-1", "Central", -19.9167, -43.9345)
+    destination = Station("stop-2", "Lagoinha", -19.9100, -43.9400)
+    transport_graph.add_station(origin)
+    transport_graph.add_station(destination)
+    connections = [
+        Connection("late", destination, VehicleType.BUS, 10.0, 2.0, 600.0),
+        Connection("early", destination, VehicleType.BUS, 10.0, 2.0, 480.0),
+        Connection("middle", destination, VehicleType.BUS, 10.0, 2.0, 540.0),
+    ]
+
+    for connection in connections:
+        transport_graph.add_connection(origin, connection)
+
+    assert [
+        connection.route_id for connection in transport_graph.get_neighbors(origin)
+    ] == ["early", "middle", "late"]
+
+
 def test_adding_existing_station_does_not_erase_its_connections():
     transport_graph = TransportGraph()
     origin = Station("stop-1", "Central", -19.9167, -43.9345)
