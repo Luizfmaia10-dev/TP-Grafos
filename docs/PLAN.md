@@ -22,7 +22,7 @@ Data Limite: 22/11/2026 23:59
 
 ## Parte 3: Ingestao de Dados (Data Ingestion)
 - [ ] Obter e organizar o dataset de transporte publico de Belo Horizonte (BHTRANS / GTFS) no diretorio `data/`, mantendo os parsers desacoplados para permitir troca de fonte de dados se necessario.
-- [ ] Implementar a classe `TimeUtils` com testes unitarios (conversao de strings `HH:MM:SS` para minutos inteiros e vice-versa).
+- [x] Implementar a classe `TimeUtils` com testes unitarios (conversao de strings `HH:MM:SS` para minutos fracionarios e vice-versa, preservando segundos e aceitando horarios acima de 24h).
 - [ ] Implementar a classe `DataLoader` para leitura dos arquivos CSV/GTFS (`stops.txt`, `stop_times.txt`, `routes.txt`, `trips.txt`).
 - [ ] Aplicar sanitizacao e tratamento de dados ausentes (coordenadas invalidas, horarios fora de ordem, paradas duplicadas).
 - [ ] Instanciar os objetos de dominio `Station`, `Connection` e `VehicleType` com base nos dados higienizados.
