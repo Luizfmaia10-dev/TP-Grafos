@@ -32,11 +32,11 @@ Data Limite: 22/11/2026 23:59
 - [x] Implementar a classe `Station` com metodos especiais `__hash__`, `__eq__`, atributos geograficos (`latitude`, `longitude`) e identificador unico.
 - [x] Implementar a classe `Connection` representando arestas direcionadas com destino, tipo de veiculo (`VehicleType`), tempo de percurso e horario.
 - [x] Aplicar a propriedade `__slots__` em `Station` e `Connection` para otimizar o uso de memória RAM da aplicação.
-- [ ] Implementar a classe `TransportGraph` utilizando lista de adjacencia baseada em dicionarios nativos do Python (`dict[Station, list[Connection]]`), garantindo que as listas de conexoes sejam mantidas ordenadas por horario de partida para permitir busca binaria.
-- [ ] Garantir complexidade $O(1)$ para adicao de vertices e recuperacao de vizinhos (`get_neighbors`).
+- [x] Implementar a classe `TransportGraph` utilizando lista de adjacencia baseada em dicionarios nativos do Python (`dict[Station, list[Connection]]`), garantindo que as listas de conexoes sejam mantidas ordenadas por horario de partida para permitir busca binaria.
+- [x] Garantir complexidade $O(1)$ para adicao de vertices e recuperacao de vizinhos (`get_neighbors`).
 - [ ] Implementar metodos para adicao e remocao de vertices e conexoes temporarias (`remove_temporary_vertex`).
-- [ ] Proibir terminantemente qualquer dependencia de bibliotecas de grafos prontas nesta camada.
-- [ ] Desenvolver bateria de testes unitarios em TDD para validar insercao, busca de adjacencias e consistencia da topologia.
+- [x] Proibir terminantemente qualquer dependencia de bibliotecas de grafos prontas nesta camada.
+- [x] Desenvolver bateria de testes unitarios em TDD para validar insercao, busca de adjacencias e consistencia da topologia.
 
 ## Parte 5: Motor de Roteamento (Algoritmo A*)
 - [ ] Implementar a formula da distancia de Haversine em `RouteSimulator` para calculo de distancia geodésica em linha reta entre duas coordenadas.
