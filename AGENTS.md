@@ -57,8 +57,9 @@ O domínio do sistema é estruturado em inglês com tolerância zero a acoplamen
 5. Be concise. Keep README minimal. IMPORTANT: no emojis ever.
 6. When hitting issues, always identify root cause before trying a fix. Do not guess. Prove with evidence, then fix the root cause.
 7. Otimização de memória: todas as instâncias de classes de dados/domínio de alta cardinalidade (`Station`, `Connection`, `Itinerary`, etc.) devem utilizar `__slots__` para eliminar o overhead do dicionário interno `__dict__`.
+8. Atualização de Progresso (`docs/PLAN.md`): sempre que concluir uma tarefa ou implementação, o agente deve atualizar o arquivo `docs/PLAN.md` marcando apenas o progresso nos checkboxes (`[ ]` para `[x]`), sem alterar o texto original dos itens — exceto quando identificar uma falha técnica ou melhoria arquitetural comprovadamente necessária no plano.
 
 ## Documentação
 
 Todos os documentos analíticos, diagramas em código Mermaid, relatórios e o código-fonte `.tex` para a posterior geração do PDF avaliativo estarão contidos no diretório `docs/`.
-Todos os documentos analíticos, diagramas em código Mermaid, relatórios e o código-fonte `.tex` para a posterior geração do PDF avaliativo estarão contidos no diretório `docs/`.
+O acompanhamento de tarefas do projeto reside em `docs/PLAN.md` e deve ter seus checkboxes atualizados a cada entrega concluída, preservando o conteúdo descritivo original salvo em caso de correção de falhas ou melhorias justificadas no planejamento.
