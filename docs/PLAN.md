@@ -22,6 +22,7 @@ Data Limite: 22/11/2026 23:59
 
 ## Parte 3: Ingestao de Dados (Data Ingestion)
 - [x] Obter e organizar o dataset de transporte publico de Belo Horizonte (BHTRANS / GTFS) no diretorio `data/`, mantendo os parsers desacoplados para permitir troca de fonte de dados se necessario.
+- [x] Configurar Git LFS para `data/gtfs/*.txt` e documentar a obtencao e atualizacao dos dados, pois `stop_times.txt` excede o limite de arquivos do GitHub.
 - [x] Implementar a classe `TimeUtils` com testes unitarios (conversao de strings `HH:MM:SS` para minutos fracionarios e vice-versa, preservando segundos e aceitando horarios acima de 24h).
 - [x] Implementar a classe `DataLoader` para leitura dos arquivos CSV/GTFS (`stops.txt`, `stop_times.txt`, `routes.txt`, `trips.txt`).
 - [x] Aplicar sanitizacao e tratamento de dados ausentes (coordenadas invalidas, horarios fora de ordem, paradas duplicadas).

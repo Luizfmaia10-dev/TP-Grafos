@@ -6,6 +6,19 @@ bibliotecas de grafos ou dependências da API. Os arquivos originais não são a
 
 ## Uso
 
+Os quatro TXT de `data/gtfs/` são versionados com **Git LFS**. Antes de carregar
+a base real, instale e configure o LFS e execute, na raiz do repositório:
+
+```sh
+git lfs pull
+git lfs fsck
+```
+
+Os arquivos devem conter CSVs completos, não ponteiros iniciados por
+`version https://git-lfs.github.com/spec/v1`. Se os objetos já estiverem no cache
+local, `git lfs checkout` restaura os TXT sem acessar o remoto. O carregador não
+baixa arquivos nem interpreta ponteiros LFS. Consulte [o guia do dataset](../data/gtfs/README.md).
+
 Execute a partir de `backend/`:
 
 ```python
@@ -136,15 +149,14 @@ O `DataLoader` é chamado pelo comando `app.validate_gtfs` e pelos testes. Ainda
 não é chamado pela aplicação FastAPI em `app/main.py` nem pelo frontend. O comando
 cria o grafo na RAM e o libera ao terminar.
 
-As imagens [GRAPH_PREVIEW.svg](GRAPH_PREVIEW.svg) e
-[GRAPH_PREVIEW.png](GRAPH_PREVIEW.png) registram uma carga real: 9.659 paradas e
-13.765 segmentos direcionados, agregando 6.110.036 conexões horárias.
-O recorte [GRAPH_STATION.svg](GRAPH_STATION.svg) mostra a parada `14785288`,
-Avenida Dos Andradas 220, com 964 partidas e cinco destinos diretos.
+Durante a verificação manual foram geradas imagens de uma carga real: 9.659 paradas
+e 13.765 segmentos direcionados, agregando 6.110.036 conexões horárias.
+Um recorte da parada `14785288`, Avenida Dos Andradas 220, mostrou 964 partidas
+e cinco destinos diretos. Essas imagens não estão versionadas no repositório.
 
 São evidências pontuais extraídas do `TransportGraph` após a higienização.
 Cada segmento reúne partidas com a mesma origem, destino e modal. Os segmentos
 retos não representam as ruas nem uma rota calculada por A*.
 
-O visualizador temporário e seus testes foram removidos. Essas imagens não são
-atualizadas automaticamente; a visualização funcional ficará a cargo do frontend.
+O visualizador temporário e seus testes foram removidos. A visualização funcional
+ficará a cargo do frontend.

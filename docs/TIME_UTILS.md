@@ -8,7 +8,7 @@ dependencies on the API, frontend, or graph libraries.
   two ASCII digits for hours and exactly two for minutes and seconds. Minutes
   and seconds must be in `00..59`. Hours may exceed 23; there is no daily wrap.
   Whitespace, signs, missing fields, and fractional seconds are rejected with
-  `ValueError`. Input cleanup belongs to the future data loader.
+  `ValueError`. Input cleanup belongs to `DataLoader`.
 - `minutes_to_time(minutes: float) -> str`: accepts finite, nonnegative minutes
   and rounds to the nearest whole second with Python's `round` (ties to even).
   It formats hours with at least two digits, preserving values beyond 24 hours.
@@ -40,6 +40,10 @@ subsecond input when formatting. This utility does not choose service dates,
 load schedules, or find routes.
 
 ## Validation
+
+These unit tests use synthetic values and do not require the real GTFS dataset.
+For integration with the real feed, download the complete TXT files using Git LFS
+before loading them; see [the dataset guide](../data/gtfs/README.md).
 
 From `backend/`, with the project dependencies installed:
 
