@@ -1,6 +1,7 @@
 """Native adjacency-list structure for the transport network."""
 
 from bisect import bisect_right
+from collections.abc import Iterator
 
 from app.domain import Connection, Station
 
@@ -29,3 +30,7 @@ class TransportGraph:
 
     def get_neighbors(self, station: Station) -> list[Connection]:
         return self._adjacency_list[station]
+
+    def iter_stations(self) -> Iterator[Station]:
+        """Iterate over registered stations without copying the graph."""
+        return iter(self._adjacency_list)
