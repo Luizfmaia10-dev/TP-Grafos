@@ -17,6 +17,7 @@ O foco primário do MVP é a demonstração da correção da solução matemáti
 ## Decisões Técnicas
 
 - Núcleo de Algoritmos (Backend): Python puro, utilizando dicionários nativos e `heapq` para controle da fila de prioridade.
+- Versionamento do Dataset: Os arquivos `data/gtfs/*.txt` são versionados com Git LFS, conforme `.gitattributes`, pois `stop_times.txt` ultrapassa o limite de arquivos do GitHub. O guia de obtenção e atualização está em [data/gtfs/README.md](data/gtfs/README.md).
 - Gerenciamento de Memória: Uso obrigatório de `__slots__` nas classes de domínio Python (`Station`, `Connection`, `Itinerary`, etc.) para eliminar a sobrecarga do `__dict__` por instância e otimizar o consumo de memória RAM.
 - Consulta Temporal em $O(\log K)$: Ordenação das conexões de cada estação por horário de partida e utilização de busca binária (módulo nativo `bisect`) no motor de roteamento para localizar a próxima partida disponível em tempo logarítmico.
 - Análise de Topologia e Vulnerabilidade: Implementação de algoritmos de Pontos de Articulação (DFS com função `lowpt`) e Componentes Fortemente Conexos (CFC via Kosaraju/Tarjan) como funcionalidade analítica de suporte à avaliação de resiliência da malha no relatório da SBC.
@@ -58,6 +59,14 @@ O domínio do sistema é estruturado em inglês com tolerância zero a acoplamen
 6. When hitting issues, always identify root cause before trying a fix. Do not guess. Prove with evidence, then fix the root cause.
 7. Otimização de memória: todas as instâncias de classes de dados/domínio de alta cardinalidade (`Station`, `Connection`, `Itinerary`, etc.) devem utilizar `__slots__` para eliminar o overhead do dicionário interno `__dict__`.
 8. Atualização de Progresso (`docs/PLAN.md`): sempre que concluir uma tarefa ou implementação, o agente deve atualizar o arquivo `docs/PLAN.md` marcando apenas o progresso nos checkboxes (`[ ]` para `[x]`), sem alterar o texto original dos itens — exceto quando identificar uma falha técnica ou melhoria arquitetural comprovadamente necessária no plano.
+
+## Preparação dos Dados GTFS
+
+- Instalar o Git LFS e inicializá-lo com `git lfs install` uma vez por usuário, ou `git lfs install --local` para configurar somente este repositório.
+- Na raiz do repositório, executar `git lfs pull` para obter os TXT completos antes de carregar a base real. Se os objetos já estiverem disponíveis localmente, `git lfs checkout` restaura os arquivos sem download.
+- Um TXT começando com `version https://git-lfs.github.com/spec/v1` é um ponteiro LFS, não o CSV esperado pelo `DataLoader`. Resolver o download antes de executar a ingestão; não adaptar o parser para interpretar ponteiros como dados.
+- Manter `.gitattributes` versionado e preservar o rastreamento `data/gtfs/*.txt` por LFS. Ao atualizar o dataset, utilizar uma versão coerente dos quatro arquivos e repetir a validação descrita em [docs/GTFS_VALIDATION.md](docs/GTFS_VALIDATION.md).
+- O uso de LFS não altera o domínio nem o processamento em memória. Os testes unitários usam arquivos sintéticos e não dependem do download do dataset real.
 
 ## Documentação
 

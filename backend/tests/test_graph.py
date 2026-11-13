@@ -109,3 +109,13 @@ def test_adding_existing_station_does_not_erase_its_connections():
     transport_graph.add_station(same_origin)
 
     assert transport_graph.get_neighbors(origin) == [connection]
+
+
+def test_iter_stations_returns_registered_stations_without_copying_neighbors():
+    graph = TransportGraph()
+    first = Station('A', 'Central', -19.9167, -43.9345)
+    second = Station('B', 'Terminal', -19.9100, -43.9400)
+    graph.add_station(first)
+    graph.add_station(second)
+
+    assert list(graph.iter_stations()) == [first, second]
