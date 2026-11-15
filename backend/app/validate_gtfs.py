@@ -4,7 +4,6 @@ import argparse
 import hashlib
 import json
 import platform
-import resource
 import sys
 from math import isfinite
 from pathlib import Path
@@ -12,6 +11,56 @@ from time import perf_counter
 
 from app.data_loader import DataLoader
 from app.graph import TransportGraph
+
+
+def _get_process_peak_rss_mib() -> float:
+    """Return peak resident set size in MiB across POSIX and Windows platforms."""
+    if sys.platform == "win32":
+        try:
+            import ctypes
+            from ctypes import wintypes
+
+            class PROCESS_MEMORY_COUNTERS(ctypes.Structure):
+                _fields_ = [
+                    ("cb", wintypes.DWORD),
+                    ("PageFaultCount", wintypes.DWORD),
+                    ("PeakWorkingSetSize", ctypes.c_size_t),
+                    ("WorkingSetSize", ctypes.c_size_t),
+                    ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
+                    ("QuotaPagedPoolUsage", ctypes.c_size_t),
+                    ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
+                    ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
+                    ("PagefileUsage", ctypes.c_size_t),
+                    ("PeakPagefileUsage", ctypes.c_size_t),
+                ]
+
+            psapi = ctypes.windll.psapi
+            kernel32 = ctypes.windll.kernel32
+            psapi.GetProcessMemoryInfo.argtypes = [
+                wintypes.HANDLE,
+                ctypes.POINTER(PROCESS_MEMORY_COUNTERS),
+                wintypes.DWORD,
+            ]
+            psapi.GetProcessMemoryInfo.restype = wintypes.BOOL
+            kernel32.GetCurrentProcess.restype = wintypes.HANDLE
+
+            counters = PROCESS_MEMORY_COUNTERS()
+            counters.cb = ctypes.sizeof(PROCESS_MEMORY_COUNTERS)
+            if psapi.GetProcessMemoryInfo(
+                kernel32.GetCurrentProcess(), ctypes.byref(counters), counters.cb
+            ):
+                return counters.PeakWorkingSetSize / (1024 * 1024)
+        except Exception:
+            pass
+        return 0.0
+
+    try:
+        import resource
+
+        peak_rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        return peak_rss / (1024 * 1024 if sys.platform == "darwin" else 1024)
+    except (ImportError, AttributeError, ValueError):
+        return 0.0
 
 
 def validate_graph(graph: TransportGraph) -> dict:
@@ -101,8 +150,7 @@ def validate_dataset(data_directory: str | Path, audit_path: str | Path | None =
             and audit_result['zero_time_quarantine_matches']
         )
     validation_seconds = perf_counter() - start
-    peak_rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-    peak_rss_mib = peak_rss / (1024 * 1024 if sys.platform == 'darwin' else 1024)
+    peak_rss_mib = _get_process_peak_rss_mib()
     return {
         'passed': all(checks.values()),
         'checks': checks,
