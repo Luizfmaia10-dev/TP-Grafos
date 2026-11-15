@@ -40,8 +40,8 @@ Data Limite: 22/11/2026 23:59
 - [x] Desenvolver bateria de testes unitarios em TDD para validar insercao, busca de adjacencias e consistencia da topologia.
 
 ## Parte 5: Motor de Roteamento (Algoritmo A*)
-- [ ] Implementar a formula da distancia de Haversine em `RouteSimulator` para calculo de distancia geodésica em linha reta entre duas coordenadas.
-- [ ] Formular a funcao heuristica consistente e admissivel $h(u, v) = \text{haversine}(u, v) / V_{\max}$, em que $V_{\max}$ e a velocidade maxima teorica observavel na rede.
+- [x] Implementar a formula da distancia de Haversine em `RouteSimulator` para calculo de distancia geodésica em linha reta entre duas coordenadas.
+- [x] Formular a funcao heuristica consistente e admissivel $h(u, v) = \text{haversine}(u, v) / V_{\max}$, em que $V_{\max}$ e a velocidade maxima teorica observavel na rede.
 - [ ] Implementar a busca heuristica A* dependente do tempo (*Time-Dependent A\**) na classe `RouteSimulator` utilizando a biblioteca nativa `heapq` para controle da fila de prioridade.
 - [ ] Utilizar busca binária (módulo nativo `bisect`) sobre a lista de conexões ordenadas da estação para determinar a próxima partida em $O(\log K)$ e calcular o tempo de espera dinâmico.
 - [ ] Reconstruir o caminho otimo a partir dos ponteiros de predecessores gerados pelo algoritmo.
