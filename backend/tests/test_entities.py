@@ -2,7 +2,7 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
-from app.domain import Connection, Station, VehicleType
+from app.domain import Connection, Station, TemporaryVertex, VehicleType
 
 
 def test_station_stores_identifier_name_and_coordinates():
@@ -32,6 +32,29 @@ def test_station_identity_cannot_change_after_use_as_dictionary_key():
 
     with pytest.raises(FrozenInstanceError):
         station.station_id = "stop-2"
+
+
+def test_temporary_vertex_specializes_station_without_instance_dict():
+    vertex = TemporaryVertex(
+        "temporary-origin",
+        "Temporary origin",
+        -19.9167,
+        -43.9345,
+        "origin",
+    )
+    station_with_same_id = Station(
+        "temporary-origin", "Other name", -19.9000, -43.9000
+    )
+
+    assert isinstance(vertex, Station)
+    assert vertex.station_id == "temporary-origin"
+    assert vertex.name == "Temporary origin"
+    assert vertex.latitude == -19.9167
+    assert vertex.longitude == -43.9345
+    assert vertex.marker_type == "origin"
+    assert vertex == station_with_same_id
+    assert hash(vertex) == hash(station_with_same_id)
+    assert not hasattr(vertex, "__dict__")
 
 
 @pytest.mark.parametrize("vehicle_type", list(VehicleType))
