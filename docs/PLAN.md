@@ -38,7 +38,7 @@ Data Limite: 22/11/2026 23:59
 - [x] Aplicar a propriedade `__slots__` em `Station` e `Connection` para otimizar o uso de memória RAM da aplicação.
 - [x] Implementar a classe `TransportGraph` utilizando lista de adjacencia baseada em dicionarios nativos do Python (`dict[Station, list[Connection]]`), garantindo que as listas de conexoes sejam mantidas ordenadas por horario de partida para permitir busca binaria.
 - [x] Garantir complexidade $O(1)$ para adicao de vertices e recuperacao de vizinhos (`get_neighbors`).
-- [ ] Implementar metodos para adicao e remocao de vertices e conexoes temporarias (`remove_temporary_vertex`).
+- [x] Implementar metodos para adicao e remocao de vertices e conexoes temporarias (`remove_temporary_vertex`).
 - [x] Proibir terminantemente qualquer dependencia de bibliotecas de grafos prontas nesta camada.
 - [x] Desenvolver bateria de testes unitarios em TDD para validar insercao, busca de adjacencias e consistencia da topologia.
 
@@ -51,11 +51,11 @@ Data Limite: 22/11/2026 23:59
 - [ ] Escrever testes unitarios cobrindo cenarios com rotas diretas, transferencias entre linhas/modais e casos em que nao ha caminho viavel.
 
 ## Parte 6: Vertices Temporarios e Resposta Estruturada
-- [ ] Implementar a especializacao `TemporaryVertex` e a logica de aproximacao (*snap-to-network*) a partir de cliques do usuario em coordenadas arbitrarias.
-- [ ] Conectar o ponto temporario as estacoes mais proximas dentro de um raio configuravel (ex: 800m) criando arestas do modal `WALK` ponderadas pela velocidade media de caminhada (~5 km/h).
+- [x] Implementar a especializacao `TemporaryVertex` e a logica de aproximacao (*snap-to-network*) a partir de cliques do usuario em coordenadas arbitrarias.
+- [x] Conectar o ponto temporario as estacoes mais proximas dentro de um raio configuravel (ex: 800m) criando arestas do modal `WALK` ponderadas pela velocidade media de caminhada (~5 km/h).
 - [ ] Implementar a classe `Itinerary` para encapsular a solucao (tempo total de viagem, tempo de espera, distancia total percorrida e lista de instrucoes passo a passo).
 - [ ] Implementar serializacao para dicionario e JSON no `Itinerary`.
-- [ ] Garantir limpeza automatica dos vertices temporarios no grafo apos cada consulta.
+- [x] Garantir limpeza automatica dos vertices temporarios no grafo apos cada consulta.
 
 ## Parte 7: Interface Grafica (Frontend)
 - [ ] Integrar o prototipo HTML/Tailwind ao backend FastAPI servido estaticamente.
