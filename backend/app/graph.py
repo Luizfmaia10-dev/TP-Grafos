@@ -3,7 +3,7 @@
 from bisect import bisect_right
 from collections.abc import Iterator
 
-from app.domain import Connection, Station
+from app.domain import Connection, Station, TemporaryVertex
 
 
 class TransportGraph:
@@ -34,3 +34,12 @@ class TransportGraph:
     def iter_stations(self) -> Iterator[Station]:
         """Iterate over registered stations without copying the graph."""
         return iter(self._adjacency_list)
+
+    def remove_temporary_vertex(self, vertex: TemporaryVertex) -> None:
+        del self._adjacency_list[vertex]
+        for connections in self._adjacency_list.values():
+            connections[:] = [
+                connection
+                for connection in connections
+                if connection.destination != vertex
+            ]

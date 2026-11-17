@@ -1,6 +1,6 @@
 import pytest
 
-from app.domain import Connection, Station, VehicleType
+from app.domain import Connection, Station, TemporaryVertex, VehicleType
 from app.graph import TransportGraph
 
 
@@ -119,3 +119,32 @@ def test_iter_stations_returns_registered_stations_without_copying_neighbors():
     graph.add_station(second)
 
     assert list(graph.iter_stations()) == [first, second]
+
+
+def test_remove_temporary_vertex_removes_its_edges_and_keeps_real_topology():
+    graph = TransportGraph()
+    first = Station("A", "Central", -19.9167, -43.9345)
+    second = Station("B", "Terminal", -19.9100, -43.9400)
+    temporary = TemporaryVertex(
+        "temporary-origin", "Temporary origin", -19.9150, -43.9350, "origin"
+    )
+    real_connection = Connection(
+        "route-1", second, VehicleType.BUS, 12.0, 3.2, 480.0
+    )
+    incoming_connection = Connection(
+        "temporary-walk", temporary, VehicleType.WALK, 2.0, 0.1, 0.0
+    )
+    outgoing_connection = Connection(
+        "temporary-walk", second, VehicleType.WALK, 2.0, 0.1, 0.0
+    )
+    for station in (first, second, temporary):
+        graph.add_station(station)
+    graph.add_connection(first, real_connection)
+    graph.add_connection(first, incoming_connection)
+    graph.add_connection(temporary, outgoing_connection)
+
+    graph.remove_temporary_vertex(temporary)
+
+    assert list(graph.iter_stations()) == [first, second]
+    assert graph.get_neighbors(first) == [real_connection]
+    assert graph.get_neighbors(second) == []
