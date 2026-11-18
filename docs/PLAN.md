@@ -58,8 +58,8 @@ Data Limite: 22/11/2026 23:59
 - [x] Garantir limpeza automatica dos vertices temporarios no grafo apos cada consulta.
 
 ## Parte 7: Interface Grafica (Frontend)
-- [ ] Integrar o prototipo HTML/Tailwind ao backend FastAPI servido estaticamente.
-- [ ] Garantir a aplicacao das cores do guia de design do `AGENTS.md` (Metro em Blue `#209dd7`, Onibus em Red `#e11d48`, Acoes em Purple `#753991`, Cabecalho em Navy `#032147`, Caminhada/Temporario em Yellow `#ecad0a` e Gray `#888888`).
+- [x] Integrar o prototipo HTML/Tailwind ao backend FastAPI servido estaticamente.
+- [x] Garantir a aplicacao das cores do guia de design do `AGENTS.md` (Metro em Blue `#209dd7`, Onibus em Red `#e11d48`, Acoes em Purple `#753991`, Cabecalho em Navy `#032147`, Caminhada/Temporario em Yellow `#ecad0a` e Gray `#888888`).
 - [ ] Implementar a interacao de selecao de origem e destino diretamente no mapa e via campos de texto.
 - [ ] Exibir indicadores visuais de carregamento durante a consulta a API.
 
