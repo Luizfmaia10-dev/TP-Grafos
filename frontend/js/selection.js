@@ -24,9 +24,9 @@ export function editStation(selection, field, text) {
 }
 
 export function normalizeDepartureTime(value) {
-  const match = value.match(/^([0-9]{2,}):([0-5][0-9])(?::([0-5][0-9]))?$/u);
+  const match = value.match(/^([0-9]{2,}):([0-5][0-9])$/u);
   if (!match || match[0] !== value) return null;
-  return `${match[1]}:${match[2]}:${match[3] ?? "00"}`;
+  return value;
 }
 
 export function validateSelection(selection) {
@@ -43,7 +43,7 @@ export function validateSelection(selection) {
     errors.destination = "Origem e destino precisam ser paradas diferentes.";
   }
   if (departureTime === null) {
-    errors.departureTime = "Use HH:MM ou HH:MM:SS, com minutos e segundos entre 00 e 59.";
+    errors.departureTime = "Use HH:MM, sem segundos, com minutos entre 00 e 59.";
   }
 
   const query = Object.keys(errors).length === 0

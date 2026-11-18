@@ -3,6 +3,7 @@ import { createStationMap } from "./map.js";
 import { searchDemoRoute } from "./demo-service.js";
 import { createRouteRequest } from "./route-request.js";
 import { formatDuration, renderRoute } from "./route-view.js";
+import { maskDepartureTime } from "./time-mask.js";
 import {
   createSelection,
   editStation,
@@ -265,6 +266,7 @@ for (const [field, controls] of Object.entries(fields)) {
 
 for (const event of ["input", "blur"]) {
   departureInput.addEventListener(event, () => {
+    if (event === "input") departureInput.value = maskDepartureTime(departureInput.value);
     selection = { ...selection, departureTime: departureInput.value };
     if (event === "input") request.cancel();
     if (event === "blur" && selection.departureTime) touched.add("departureTime");

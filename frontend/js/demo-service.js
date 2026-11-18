@@ -2,7 +2,7 @@ import { DEMO_STATIONS, DEMO_TRIP } from "./demo-data.js";
 import { normalizeDepartureTime } from "./selection.js";
 
 function timeToSeconds(time) {
-  const [hours, minutes, seconds] = time.split(":").map(Number);
+  const [hours, minutes, seconds = 0] = time.split(":").map(Number);
   return hours * 3600 + minutes * 60 + seconds;
 }
 

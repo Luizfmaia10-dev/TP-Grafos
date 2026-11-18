@@ -7,7 +7,7 @@ const [pampulha, rio, parana] = DEMO_STATIONS;
 const query = {
   originId: pampulha.stationId,
   destinationId: parana.stationId,
-  departureTime: "07:45:00",
+  departureTime: "07:45",
 };
 
 test("the reference trip preserves waiting, vehicle and total seconds", () => {
@@ -19,7 +19,7 @@ test("the reference trip preserves waiting, vehicle and total seconds", () => {
   assert.equal(result.totalSeconds, result.waitingSeconds + result.vehicleSeconds);
   assert.equal(result.boardingTime, "07:51:00");
   assert.equal(result.arrivalTime, "08:20:16");
-  assert.equal(result.query.departureTime, "07:45:00");
+  assert.equal(result.query.departureTime, "07:45");
   assert.equal(result.routeId, DEMO_TRIP.routeId);
   assert.equal(result.tripId, DEMO_TRIP.tripId);
   assert.equal(result.serviceId, DEMO_TRIP.serviceId);
@@ -27,19 +27,13 @@ test("the reference trip preserves waiting, vehicle and total seconds", () => {
 });
 
 test("departure exactly at boarding is allowed without waiting", () => {
-  const result = buildDemoRoute({ ...query, departureTime: "07:51:00" });
+  const result = buildDemoRoute({ ...query, departureTime: "07:51" });
   assert.equal(result.status, "found");
   assert.equal(result.waitingSeconds, 0);
   assert.equal(result.totalSeconds, 1756);
 });
 
-test("one second of waiting is kept instead of rounded away", () => {
-  const result = buildDemoRoute({ ...query, departureTime: "07:50:59" });
-  assert.equal(result.waitingSeconds, 1);
-  assert.equal(result.totalSeconds, 1757);
-});
-
-for (const departureTime of ["07:51:01", "08:30:00", "25:00:00", "100:00:00"]) {
+for (const departureTime of ["07:52", "08:30", "25:00", "100:00"]) {
   test(`a missed sample departure at ${departureTime} does not wrap to another day`, () => {
     const result = buildDemoRoute({ ...query, departureTime });
     assert.equal(result.status, "no-route");
@@ -48,20 +42,20 @@ for (const departureTime of ["07:51:01", "08:30:00", "25:00:00", "100:00:00"]) {
   });
 }
 
-test("hours and minutes are normalized without changing the input query", () => {
+test("hours and minutes stay unchanged in the input query", () => {
   const input = { ...query, departureTime: "07:45" };
-  assert.equal(buildDemoRoute(input).query.departureTime, "07:45:00");
+  assert.equal(buildDemoRoute(input).query.departureTime, "07:45");
   assert.equal(input.departureTime, "07:45");
 });
 
 test("a forward subtrip uses its own boarding and arrival times", () => {
   const result = buildDemoRoute({
-    ...query, originId: rio.stationId, departureTime: "08:16:50",
+    ...query, originId: rio.stationId, departureTime: "08:16",
   });
   assert.equal(result.status, "found");
-  assert.equal(result.waitingSeconds, 1);
+  assert.equal(result.waitingSeconds, 51);
   assert.equal(result.vehicleSeconds, 205);
-  assert.equal(result.totalSeconds, 206);
+  assert.equal(result.totalSeconds, 256);
   assert.deepEqual(result.stops.map(stop => stop.stationId), [rio.stationId, parana.stationId]);
   assert.equal(result.boardingTime, "08:16:51");
   assert.equal(result.arrivalTime, "08:20:16");
@@ -94,7 +88,8 @@ test("distance is the sum of geographic segments, not the direct endpoint distan
 });
 
 test("invalid time input cannot produce a fabricated itinerary", () => {
-  assert.throws(() => buildDemoRoute({ ...query, departureTime: "07:60:00" }), RangeError);
+  assert.throws(() => buildDemoRoute({ ...query, departureTime: "07:60" }), RangeError);
+  assert.throws(() => buildDemoRoute({ ...query, departureTime: "07:45:00" }), RangeError);
 });
 
 test("the asynchronous query settles only after the loading interval", async () => {

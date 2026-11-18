@@ -76,19 +76,19 @@ test("unknown station IDs are rejected", () => {
   assert.equal(validateSelection(state).query, null);
 });
 
-test("a valid query contains selected IDs and normalized seconds", () => {
+test("a valid query contains selected IDs and a minute-only departure", () => {
   const result = validateSelection(readySelection());
   assert.deepEqual(result.errors, {});
   assert.deepEqual(result.query, {
     originId: pampulha.stationId,
     destinationId: parana.stationId,
-    departureTime: "07:45:00",
+    departureTime: "07:45",
   });
 });
 
-test("extended hours and seconds are preserved in the query", () => {
-  const state = { ...readySelection(), departureTime: "25:15:30" };
-  assert.equal(validateSelection(state).query.departureTime, "25:15:30");
+test("extended hours are preserved in the query", () => {
+  const state = { ...readySelection(), departureTime: "25:15" };
+  assert.equal(validateSelection(state).query.departureTime, "25:15");
 });
 
 test("an invalid time blocks an otherwise valid query", () => {
@@ -98,9 +98,8 @@ test("an invalid time blocks an otherwise valid query", () => {
 });
 
 for (const [input, expected] of [
-  ["00:00", "00:00:00"], ["07:45", "07:45:00"], ["08:30:45", "08:30:45"],
-  ["23:59:59", "23:59:59"], ["24:00", "24:00:00"], ["25:00", "25:00:00"],
-  ["48:00:01", "48:00:01"], ["100:15:30", "100:15:30"],
+  ["00:00", "00:00"], ["07:45", "07:45"], ["23:59", "23:59"],
+  ["24:00", "24:00"], ["25:00", "25:00"], ["100:15", "100:15"],
 ]) {
   test(`normalizes ${input} without wrapping service-day hours`, () => {
     assert.equal(normalizeDepartureTime(input), expected);
@@ -108,7 +107,7 @@ for (const [input, expected] of [
 }
 
 for (const input of [
-  "", "7:45", "07:5", "08:60", "08:30:60", "-01:00", "+08:00", "08:30:00.5",
+  "", "7:45", "07:5", "08:60", "08:30:00", "08:30:60", "-01:00", "+08:00", "08:30:00.5",
   " 08:30", "08:30 ", "08:30\n", "08:30:00\n", "０８:30", "08:30:00:00",
 ]) {
   test(`rejects malformed time ${JSON.stringify(input)}`, () => {

@@ -87,9 +87,9 @@
               <span class="clock-icon icon-slot shrink-0" aria-hidden="true">
                 <img src="/assets/icons/clock.svg" alt="">
               </span>
-              <input id="departure-time" class="time-input min-w-0 flex-1 font-mono" name="departure_time" type="text" value="07:45" autocomplete="off" spellcheck="false" aria-describedby="departure-hint departure-error" required>
+              <input id="departure-time" class="time-input min-w-0 flex-1 font-mono" name="departure_time" type="text" value="07:45" inputmode="numeric" autocomplete="off" spellcheck="false" aria-describedby="departure-hint departure-error" required>
             </div>
-            <p id="departure-hint" class="sr-only">Use horas e minutos, como 07:45, ou horas, minutos e segundos. Horários após 24 horas pertencem ao mesmo dia de serviço.</p>
+            <p id="departure-hint" class="sr-only">Use apenas horas e minutos, como 07:45. O separador aparece automaticamente e segundos não são aceitos. Horários após 24 horas pertencem ao mesmo dia de serviço.</p>
             <p id="departure-error" class="field-error" hidden></p>
           </div>
 
