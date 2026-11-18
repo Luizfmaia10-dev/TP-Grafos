@@ -488,5 +488,124 @@ def test_astar_finds_same_earliest_arrival_as_time_dependent_dijkstra():
         assert astar_arrival == pytest.approx(dijkstra_arrival, abs=1e-5)
 
 
+def test_astar_verified_against_independent_oracle_including_unreachable():
+    def independent_oracle_earliest_arrival(
+        graph: TransportGraph, origin: Station, destination: Station, dep_time: float
+    ) -> float:
+        if origin == destination:
+            return dep_time
+        earliest: dict[Station, float] = {origin: dep_time}
+        unvisited = set(graph.iter_stations())
+        while unvisited:
+            current = min(unvisited, key=lambda s: earliest.get(s, float("inf")))
+            t = earliest.get(current, float("inf"))
+            if t == float("inf"):
+                break
+            if current == destination:
+                return t
+            unvisited.remove(current)
+            for c in graph.get_neighbors(current):
+                if c.vehicle_type is VehicleType.WALK:
+                    arr = t + c.travel_time
+                else:
+                    if c.departure_time < t:
+                        continue
+                    arr = c.departure_time + c.travel_time
+                if arr < earliest.get(c.destination, float("inf")):
+                    earliest[c.destination] = arr
+        return earliest.get(destination, float("inf"))
+
+    rng = random.Random(1337)
+    graph = TransportGraph()
+    # Create two disconnected partitions: component 1 (0..14) and component 2 (15..29)
+    # with only unidirectional edges from component 1 to component 2.
+    stations = [
+        Station(
+            f"oracle-st-{i}",
+            f"Oracle Station {i}",
+            -19.92 + rng.uniform(-0.04, 0.04),
+            -43.94 + rng.uniform(-0.04, 0.04),
+        )
+        for i in range(30)
+    ]
+    for station in stations:
+        graph.add_station(station)
+
+    # Subgraph 1 internal edges
+    for i in range(80):
+        u = rng.choice(stations[:15])
+        v = rng.choice(stations[:15])
+        if u == v:
+            continue
+        dist = max(haversine(u.latitude, u.longitude, v.latitude, v.longitude), 0.2)
+        v_type = rng.choice([VehicleType.BUS, VehicleType.WALK])
+        dep = 0.0 if v_type is VehicleType.WALK else rng.uniform(400.0, 900.0)
+        dur = dist / (5.0 / 60.0) if v_type is VehicleType.WALK else dist / (rng.uniform(25.0, 50.0) / 60.0)
+        graph.add_connection(u, Connection(f"sub1-edge-{i}", v, v_type, dur, dist, dep))
+
+    # Subgraph 2 internal edges
+    for i in range(80):
+        u = rng.choice(stations[15:])
+        v = rng.choice(stations[15:])
+        if u == v:
+            continue
+        dist = max(haversine(u.latitude, u.longitude, v.latitude, v.longitude), 0.2)
+        v_type = rng.choice([VehicleType.BUS, VehicleType.WALK])
+        dep = 0.0 if v_type is VehicleType.WALK else rng.uniform(400.0, 900.0)
+        dur = dist / (5.0 / 60.0) if v_type is VehicleType.WALK else dist / (rng.uniform(25.0, 50.0) / 60.0)
+        graph.add_connection(u, Connection(f"sub2-edge-{i}", v, v_type, dur, dist, dep))
+
+    # One-way bridge edges from component 1 -> component 2 only
+    for i in range(5):
+        u = rng.choice(stations[:15])
+        v = rng.choice(stations[15:])
+        dist = max(haversine(u.latitude, u.longitude, v.latitude, v.longitude), 0.5)
+        graph.add_connection(
+            u, Connection(f"bridge-{i}", v, VehicleType.BUS, dist / 0.5, dist, rng.uniform(500.0, 700.0))
+        )
+
+    simulator = RouteSimulator(graph, max_speed=RouteSimulator.max_speed_of(graph))
+
+    none_count = 0
+    route_count = 0
+
+    # 100 test queries across both components and varying departure times
+    for _ in range(100):
+        u = rng.choice(stations)
+        v = rng.choice(stations)
+        dep_time = rng.uniform(350.0, 1000.0)
+
+        oracle_arrival = independent_oracle_earliest_arrival(graph, u, v, dep_time)
+        astar_route = simulator.calculate_route(u, v, dep_time)
+
+        if oracle_arrival == float("inf"):
+            assert astar_route is None
+            none_count += 1
+        elif u == v:
+            assert astar_route == []
+            assert oracle_arrival == dep_time
+        else:
+            assert astar_route is not None
+            route_count += 1
+            # Verify reconstructed path matches oracle arrival exactly
+            t_curr = dep_time
+            last_dest = u
+            for leg_origin, conn in astar_route:
+                assert leg_origin == last_dest
+                if conn.vehicle_type is VehicleType.WALK:
+                    t_curr += conn.travel_time
+                else:
+                    assert conn.departure_time >= t_curr - 1e-9
+                    t_curr = conn.departure_time + conn.travel_time
+                last_dest = conn.destination
+            assert last_dest == v
+            assert t_curr == pytest.approx(oracle_arrival, abs=1e-5)
+
+    # Ensure our test exercised both cases solidly
+    assert none_count >= 15, f"Expected at least 15 unreachable queries, got {none_count}"
+    assert route_count >= 20, f"Expected at least 20 reachable queries, got {route_count}"
+
+
+
 
 
