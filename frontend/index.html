@@ -51,7 +51,7 @@
           <button id="edit-search" class="edit-search" type="button" hidden><span class="edit-icon icon-slot" aria-hidden="true"><img src="/assets/icons/arrow-left.svg" alt=""></span> Editar busca</button>
         </div>
 
-        <form id="route-form" class="search-form flex flex-col border border-rg-line bg-rg-surface shadow-rg-card" aria-label="Planejamento do trajeto" aria-busy="false" novalidate>
+        <form id="route-form" class="search-form flex flex-col border border-rg-line bg-rg-surface shadow-rg-card" aria-label="Planejamento do trajeto" aria-busy="false" tabindex="-1" novalidate>
           <p id="station-hint" class="sr-only">Escolha uma sugestão para confirmar a parada. Use as setas, Enter e Escape para navegar.</p>
           <div id="origin-field" class="form-field flex min-w-0 flex-col">
             <label class="field-label font-semibold" for="origin">Origem</label>
@@ -87,13 +87,37 @@
             <p id="destination-error" class="field-error" hidden></p>
           </div>
 
-          <div class="form-field flex min-w-0 flex-col">
+          <div id="departure-field" class="form-field time-field flex min-w-0 flex-col">
             <label class="field-label font-semibold" for="departure-time">Horário de saída</label>
             <div class="field-control flex items-center">
-              <span class="clock-icon icon-slot shrink-0" aria-hidden="true">
-                <img src="/assets/icons/clock.svg" alt="">
-              </span>
+              <button id="departure-picker-trigger" class="clock-button icon-slot shrink-0" type="button" aria-label="Escolher horário" aria-haspopup="dialog" aria-expanded="false" aria-controls="departure-picker">
+                <img src="/assets/icons/clock.svg" alt="" aria-hidden="true">
+              </button>
               <input id="departure-time" class="time-input min-w-0 flex-1 font-mono" name="departure_time" type="text" value="07:45" inputmode="numeric" autocomplete="off" spellcheck="false" aria-describedby="departure-hint departure-error" required>
+            </div>
+            <div id="departure-picker" class="time-picker" role="dialog" aria-labelledby="departure-picker-title" hidden>
+              <div class="time-picker-heading">
+                <div>
+                  <h2 id="departure-picker-title">Escolha o horário</h2>
+                  <p>Horas e minutos, sem segundos</p>
+                </div>
+                <span class="time-picker-format font-mono" aria-hidden="true">HH:MM</span>
+              </div>
+              <div class="time-wheels" aria-label="Seletor de horário">
+                <div class="time-wheel-group">
+                  <span class="time-wheel-label">Horas</span>
+                  <div class="time-wheel font-mono" data-wheel="hour" role="listbox" aria-label="Horas" tabindex="0"></div>
+                </div>
+                <span class="time-wheel-separator font-mono" aria-hidden="true">:</span>
+                <div class="time-wheel-group">
+                  <span class="time-wheel-label">Minutos</span>
+                  <div class="time-wheel font-mono" data-wheel="minute" role="listbox" aria-label="Minutos" tabindex="0"></div>
+                </div>
+              </div>
+              <div class="time-picker-actions">
+                <button class="time-picker-cancel" type="button" data-time-cancel>Cancelar</button>
+                <button class="time-picker-apply" type="button" data-time-apply>Aplicar horário</button>
+              </div>
             </div>
             <p id="departure-hint" class="sr-only">Use apenas horas e minutos, como 07:45. O separador aparece automaticamente e segundos não são aceitos. Horários após 24 horas pertencem ao mesmo dia de serviço.</p>
             <p id="departure-error" class="field-error" hidden></p>
@@ -142,8 +166,19 @@
         <p id="demo-scope" class="demo-scope">Demonstração com três paradas da linha 50 no sentido Centro e horários de uma viagem de exemplo.</p>
       </section>
 
-      <section class="map-panel relative min-w-0 overflow-hidden bg-rg-map" aria-labelledby="map-title" aria-describedby="map-description">
+      <div id="map-backdrop" class="map-backdrop" aria-hidden="true" hidden></div>
+
+      <section class="map-panel min-w-0 overflow-hidden bg-rg-map" aria-labelledby="map-title" aria-describedby="map-description">
         <p id="map-description" class="sr-only">Mapa esquemático da rede de ônibus de Belo Horizonte. Selecione as paradas do exemplo da linha 50 para preencher origem e destino. Os marcadores A e B identificam suas escolhas.</p>
+
+        <div id="map-expanded-bar" class="map-expanded-bar" hidden>
+          <span class="map-expanded-marker font-mono" aria-hidden="true">A</span>
+          <div class="map-expanded-copy">
+            <p>Origem confirmada</p>
+            <strong id="map-confirmed-origin"></strong>
+          </div>
+          <button id="map-close" class="map-close" type="button">Continuar busca</button>
+        </div>
 
         <div class="network-layer">
           <div class="network-background" aria-hidden="true">

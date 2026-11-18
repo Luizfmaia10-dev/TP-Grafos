@@ -1,10 +1,12 @@
 import { DEMO_STATIONS, DEMO_TRIP } from "./demo-data.js";
+import { createFieldActivity } from "./field-activity.js";
 import { createStationMap } from "./map.js";
 import { createOriginConfirmation } from "./origin-confirmation.js";
 import { searchDemoRoute } from "./demo-service.js";
 import { createRouteRequest } from "./route-request.js";
 import { formatDuration, renderRoute } from "./route-view.js";
 import { maskDepartureTime } from "./time-mask.js";
+import { createTimePicker } from "./time-picker.js";
 import { createThemeSwitch } from "./theme.js";
 import {
   createSelection,
@@ -41,18 +43,31 @@ const fields = Object.fromEntries(["origin", "destination"].map(field => [field,
 }]));
 
 let selection = createSelection();
-let activeField = "origin";
+const fieldActivity = createFieldActivity();
 let openField = null;
 let options = [];
 let activeOption = -1;
 
-const map = createStationMap(document.querySelector("#map-stations"), DEMO_STATIONS, station => {
-  chooseStation(activeField, station);
-});
+const map = createStationMap(
+  document.querySelector("#map-stations"),
+  DEMO_STATIONS,
+  station => {
+    const field = fieldActivity.activeField;
+    if (!field) return;
+    chooseStation(field, station);
+    if (field === "destination") map.collapse(departureInput);
+  },
+  () => fields.destination.input.focus(),
+);
 const originConfirmation = createOriginConfirmation(station => {
-  map.confirmOrigin(station.stationId);
-  announce(`Origem confirmada: ${station.label}. O mapa foi atualizado.`);
+  map.confirmOrigin(station);
+  announce(`Origem confirmada: ${station.label}. O mapa foi expandido para a escolha do destino.`);
 });
+const timePicker = createTimePicker(
+  document.querySelector("#departure-picker"),
+  departureInput,
+  document.querySelector("#departure-picker-trigger"),
+);
 const request = createRouteRequest(searchDemoRoute, renderRequest);
 
 function confirmOriginIfLeft() {
@@ -94,6 +109,8 @@ function renderRequest(state) {
     document.querySelector("#feedback-description").textContent = message[1];
   }
   if (found) {
+    map.collapse();
+    timePicker.close({ restoreFocus: false });
     renderRoute(state);
     announce(`Trajeto de exemplo encontrado. Total: ${formatDuration(state.totalSeconds)}. Chegada às ${state.arrivalTime}.`);
     title.focus({ preventScroll: true });
@@ -136,9 +153,10 @@ function renderSelection() {
   const loading = request.state.status === "loading";
   const found = request.state.status === "found";
   submitButton.disabled = loading || result.query === null;
+  const activeField = fieldActivity.activeField;
   map.update(selection, activeField, found ? request.state : null);
   mapRole.hidden = found;
-  mapRole.textContent = activeField === "origin" ? "Origem" : "Destino";
+  mapRole.textContent = activeField === "origin" ? "Origem" : activeField === "destination" ? "Destino" : "Escolha um campo";
   document.querySelector("#map-description").textContent = found
     ? `Trajeto de exemplo da linha ${request.state.routeShortName}, de ${selection.originText} até ${selection.destinationText}. O traço vermelho liga as paradas no mapa esquemático. A marca a origem e B marca o destino.`
     : "Mapa esquemático da rede de ônibus de Belo Horizonte. Selecione as paradas do exemplo da linha 50 para preencher origem e destino. Os marcadores A e B identificam suas escolhas.";
@@ -168,14 +186,14 @@ function chooseStation(field, station, focusNext = false) {
   request.cancel();
   touched.add(field);
   closeOptions();
-  activeField = field;
-  if (field === "origin" && !selection.destinationId) activeField = "destination";
-  if (field === "destination" && !selection.originId) activeField = "origin";
+  fieldActivity.activate(field);
+  if (field === "origin" && !selection.destinationId) fieldActivity.activate("destination");
+  if (field === "destination" && !selection.originId) fieldActivity.activate("origin");
   const result = renderSelection();
   announce(selection.originId && selection.destinationId && !result.query
     ? Object.values(result.errors).join(" ")
     : `${field === "origin" ? "Origem selecionada" : "Destino selecionado"}: ${station.label}.`);
-  if (focusNext) fields[activeField].input.focus();
+  if (focusNext) fields[fieldActivity.activeField].input.focus();
   if (field === "origin") queueMicrotask(confirmOriginIfLeft);
 }
 
@@ -250,7 +268,7 @@ function handleStationKey(event, field) {
 
 for (const [field, controls] of Object.entries(fields)) {
   controls.input.addEventListener("focus", () => {
-    activeField = field;
+    fieldActivity.activate(field);
     renderSelection();
     openOptions(field);
   });
@@ -273,6 +291,7 @@ for (const [field, controls] of Object.entries(fields)) {
     if (field === "origin") queueMicrotask(confirmOriginIfLeft);
   });
   controls.clear.addEventListener("click", () => {
+    closeOptions();
     selection = editStation(selection, field, "");
     if (field === "origin") {
       originConfirmation.reset();
@@ -280,9 +299,9 @@ for (const [field, controls] of Object.entries(fields)) {
     }
     request.cancel();
     touched.delete(field);
+    fieldActivity.deactivate();
     renderSelection();
-    controls.input.focus();
-    closeOptions();
+    form.focus({ preventScroll: true });
     announce(`${field === "origin" ? "Origem limpa" : "Destino limpo"}. Escolha uma parada.`);
   });
   controls.input.addEventListener("pointerdown", () => {
@@ -317,7 +336,7 @@ demoTrigger.addEventListener("click", () => {
   selection = selectStation(createSelection(), "origin", origin);
   selection = selectStation(selection, "destination", destination);
   touched.clear();
-  activeField = "destination";
+  fieldActivity.activate("destination");
   closeOptions();
   renderSelection();
   announce("Exemplo da linha 50 preenchido: Pampulha para Av. Paraná, 162, com saída às 07:45. Você pode calcular o trajeto.");
@@ -327,6 +346,7 @@ form.addEventListener("submit", event => {
   event.preventDefault();
   if (request.state.status === "loading") return;
   closeOptions();
+  timePicker.close({ restoreFocus: false });
   ["origin", "destination", "departureTime"].forEach(field => touched.add(field));
   const result = renderSelection();
   if (!result.query) {

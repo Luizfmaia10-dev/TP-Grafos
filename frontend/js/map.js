@@ -1,3 +1,5 @@
+import { animateMapLayout } from "./map-expansion.js";
+
 const MAP_LAYOUTS = {
   desktop: { width: 960, height: 780, west: -44.045, east: -43.861, north: -19.803, south: -19.968 },
   mobile: { width: 358, height: 256, west: -44.018, east: -43.895, north: -19.814, south: -19.955 },
@@ -13,7 +15,7 @@ export function projectStation(station, layout) {
   };
 }
 
-export function createStationMap(container, stations, onSelect) {
+export function createStationMap(container, stations, onSelect, onClose) {
   const controls = stations.map(station => {
     const button = document.createElement("button");
     button.type = "button";
@@ -56,33 +58,67 @@ export function createStationMap(container, stations, onSelect) {
 
   const layer = container.parentElement;
   const panel = layer.parentElement;
+  const backdrop = document.querySelector("#map-backdrop");
+  const expandedBar = document.querySelector("#map-expanded-bar");
+  const originName = document.querySelector("#map-confirmed-origin");
+  const closeButton = document.querySelector("#map-close");
+  const pageRegions = [document.querySelector(".site-header"), document.querySelector(".search-panel")];
   let view = null;
+  let expanded = false;
+
+  function setPageInert(value) {
+    pageRegions.forEach(region => {
+      if (region) region.inert = value;
+    });
+  }
+
+  function setExpanded(next, focusTarget = null) {
+    if (expanded === next) return;
+    const before = panel.getBoundingClientRect();
+    expanded = next;
+    if (next) panel.dataset.expanded = "true";
+    else panel.removeAttribute("data-expanded");
+    document.body.toggleAttribute("data-map-expanded", next);
+    backdrop.hidden = !next;
+    expandedBar.hidden = !next;
+    panel.setAttribute("aria-modal", String(next));
+    if (next) panel.setAttribute("role", "dialog");
+    else {
+      panel.removeAttribute("role");
+      panel.removeAttribute("aria-modal");
+    }
+    setPageInert(next);
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduceMotion) animateMapLayout(panel, before, 620);
+    if (next) closeButton.focus({ preventScroll: true });
+    else if (focusTarget) focusTarget.focus({ preventScroll: true });
+  }
+
+  function collapse(focusTarget = null) {
+    setExpanded(false, focusTarget);
+  }
 
   function clearOriginConfirmation() {
+    collapse();
     panel.removeAttribute("data-origin-confirmed");
     controls.forEach(control => control.button.removeAttribute("data-confirmed"));
   }
 
-  function confirmOrigin(stationId) {
-    const control = controls.find(item => item.station.stationId === stationId);
+  function confirmOrigin(station) {
+    const control = controls.find(item => item.station.stationId === station.stationId);
     if (!control) return;
     clearOriginConfirmation();
     panel.dataset.originConfirmed = "true";
     control.button.dataset.confirmed = "true";
+    originName.textContent = station.label;
+    setExpanded(true);
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduceMotion || typeof panel.animate !== "function") return;
-    panel.animate([
-      { clipPath: "inset(5% 4% 5% 4%)", transform: "scale(0.985)", opacity: 0.86 },
-      { clipPath: "inset(0 0 0 0)", transform: "scale(1)", opacity: 1 },
-    ], { duration: 780, easing: "cubic-bezier(0.16, 1, 0.3, 1)" });
+    if (reduceMotion || typeof control.button.querySelector(".map-marker").animate !== "function") return;
     control.button.querySelector(".map-marker").animate([
       { transform: "translate(-50%, -50%) scale(0.65)", opacity: 0.5 },
       { transform: "translate(-50%, -50%) scale(1.45)", opacity: 1, offset: 0.55 },
       { transform: "translate(-50%, -50%) scale(1)", opacity: 1 },
     ], { duration: 900, easing: "cubic-bezier(0.16, 1, 0.3, 1)" });
-    if (window.matchMedia("(width < 640px)").matches) {
-      panel.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
   }
 
   function render() {
@@ -135,11 +171,13 @@ export function createStationMap(container, stations, onSelect) {
 
       button.dataset.selection = role;
       button.dataset.onRoute = String(Boolean(result?.stops.some(stop => stop.stationId === station.stationId)));
-      button.disabled = Boolean(result);
+      button.disabled = Boolean(result) || activeField === null;
       button.setAttribute("aria-pressed", String(selected));
       button.setAttribute("aria-label", result
         ? `${station.label}${isOrigin ? ", origem" : isDestination ? ", destino" : ""}`
-        : `Selecionar ${station.label} como ${activeField === "origin" ? "origem" : "destino"}`);
+        : activeField === null
+          ? `${station.label}. Escolha primeiro o campo de origem ou destino.`
+          : `Selecionar ${station.label} como ${activeField === "origin" ? "origem" : "destino"}`);
       point.hidden = selected || Boolean(result);
       letter.hidden = !selected;
       letter.textContent = MARKER_LETTERS[role] ?? "";
@@ -167,6 +205,22 @@ export function createStationMap(container, stations, onSelect) {
     }
   }
 
+  closeButton.addEventListener("click", () => {
+    collapse();
+    onClose?.();
+  });
+  backdrop.addEventListener("click", () => {
+    collapse();
+    onClose?.();
+  });
+  document.addEventListener("keydown", event => {
+    if (expanded && event.key === "Escape") {
+      event.preventDefault();
+      collapse();
+      onClose?.();
+    }
+  });
+
   new ResizeObserver(render).observe(layer.parentElement);
   return {
     update(selection, activeField, result = null) {
@@ -175,5 +229,9 @@ export function createStationMap(container, stations, onSelect) {
     },
     confirmOrigin,
     clearOriginConfirmation,
+    collapse,
+    get expanded() {
+      return expanded;
+    },
   };
 }
