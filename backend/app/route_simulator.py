@@ -27,11 +27,12 @@ def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 class RouteSimulator:
     """Searches the fastest route over a time-dependent transport graph."""
 
-    __slots__ = ("graph", "max_speed")
+    __slots__ = ("graph", "max_speed", "last_expanded_count")
 
     def __init__(self, graph: TransportGraph, max_speed: float) -> None:
         self.graph = graph
         self.max_speed = max_speed  # km/min, must bound every edge speed
+        self.last_expanded_count: int = 0
 
     @staticmethod
     def max_speed_of(graph: TransportGraph) -> float:
@@ -69,11 +70,13 @@ class RouteSimulator:
         heap: list[tuple[float, int, Station]] = [
             (departure_time + self.heuristic(origin, destination), next(counter), origin)
         ]
+        self.last_expanded_count = 0
 
         while heap:
             _, _, station = heappop(heap)
             if station in closed:
                 continue
+            self.last_expanded_count += 1
             if station == destination:
                 return self._reconstruct_path(predecessor, origin, destination)
             closed.add(station)
@@ -82,7 +85,10 @@ class RouteSimulator:
             connections = self.graph.get_neighbors(station)
 
             # 1. Walk connections: on-demand, departing immediately at t
+            # Walk connections have departure_time == 0.0 and appear at the prefix of connections.
             for connection in connections:
+                if connection.departure_time > 0.0:
+                    break
                 if connection.vehicle_type is VehicleType.WALK:
                     arrival = t + connection.travel_time
                     if arrival < g.get(connection.destination, float("inf")):
@@ -99,7 +105,8 @@ class RouteSimulator:
 
             # 2. Scheduled transit connections: departing at or after t
             start = bisect_left(connections, t, key=lambda c: c.departure_time)
-            for connection in connections[start:]:
+            for i in range(start, len(connections)):
+                connection = connections[i]
                 if connection.vehicle_type is VehicleType.WALK:
                     continue
                 if connection.departure_time >= g.get(destination, float("inf")):
