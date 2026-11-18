@@ -71,10 +71,11 @@ classDiagram
 
     class RouteSimulator {
         -TransportGraph graph
-        -float max_network_velocity
-        +find_route(origin, destination, departure_time) Itinerary
-        -_find_next_connections(connections, current_time) List~Connection~
-        -_calculate_heuristic(current, destination) float
+        -float max_speed
+        +calculate_route(origin, destination, departure_time) List
+        +max_speed_of(graph)$ float
+        +heuristic(current, destination) float
+        +snap_to_network(latitude, longitude, marker_type) ContextManager
     }
 
     class GraphAnalyzer {

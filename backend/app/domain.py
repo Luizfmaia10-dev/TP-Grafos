@@ -28,6 +28,13 @@ class Station:
         return self.station_id == other.station_id
 
 
+@dataclass(frozen=True, eq=False, slots=True)
+class TemporaryVertex(Station):
+    """An arbitrary map point attached temporarily to the network."""
+
+    marker_type: str
+
+
 @dataclass(slots=True)
 class Connection:
     """A directed trip to a station.
