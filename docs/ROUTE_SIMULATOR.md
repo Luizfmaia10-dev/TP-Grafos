@@ -76,3 +76,31 @@ A suíte em `backend/tests/test_route_simulator.py` valida:
 - Preferência por linhas mais rápidas que partem depois contra linhas lentas que partem antes.
 - Rota indireta mais rápida escolhida em detrimento de rota direta mais demorada.
 - **Prova de otimalidade por equivalência (Property-Based Test):** Teste comparativo entre A* e Dijkstra dependente do tempo sobre 50 pares aleatórios em grafos sintéticos, confirmando identidade rigorosa no horário ótimo de chegada e validade temporal de todos os trechos.
+
+---
+
+## 6. Validação de Desempenho com Dados Reais da BHTRANS
+
+A validação foi realizada sobre o dataset oficial de Belo Horizonte (`data/gtfs`), filtrando o serviço dominante `307679`:
+- **Grafo em memória:** 9.659 estações e 1.336.540 conexões temporais.
+- **Velocidade máxima derivada (`max_speed_of`):** $2,60\text{ km/min}$ ($156,2\text{ km/h}$), computada em $0,36\text{ s}$.
+
+### Resultados de 10 Consultas em Horários de Pico (07:00) e Fora de Pico (14:00)
+
+| Consulta | Origem | Destino | Horário | Tempo de Resposta | Status / Trechos |
+|:---|:---|:---|:---:|:---:|:---|
+| 01 | Rua Joana Angelica 9 | Rua Chasquiel Zinqui | 07:00 | $784,28\text{ ms}$ | Rota encontrada (31 trechos) |
+| 02 | Rua Sao Fidelis 1052 | Rua Quintino Bocaiuv | 07:00 | $692,65\text{ ms}$ | Rota encontrada (59 trechos) |
+| 03 | Avenida Presidente A | Rua Maria Felicia 15 | 07:00 | $827,78\text{ ms}$ | Rota encontrada (51 trechos) |
+| 04 | Rua Caetano Pirri, 1 | Rua Josue Martins De | 07:00 | $1262,97\text{ ms}$ | Rota encontrada (71 trechos) |
+| 05 | Avenida Tito Fulgenc | Avenida Dos Andradas | 07:00 | $868,38\text{ ms}$ | Rota encontrada (99 trechos) |
+| 06 | Rua Joinville 643 | Rua Major Barbosa 18 | 14:00 | $175,74\text{ ms}$ | Rota encontrada (83 trechos) |
+| 07 | Rua Costa Rica 33 | Rua das Petúnias, 88 | 14:00 | $808,41\text{ ms}$ | Rota encontrada (67 trechos) |
+| 08 | Rua Sao Pedro Da Ald | Estação Barreiro - P | 14:00 | $19,29\text{ ms}$ | Rota encontrada (23 trechos) |
+| 09 | Rua Joao Batista Vie | Rua Regia 123 | 14:00 | $485,07\text{ ms}$ | Rota encontrada (68 trechos) |
+| 10 | Rua Joaquim Cardoso | Rua Mestre Valentim | 14:00 | $103,38\text{ ms}$ | Rota encontrada (44 trechos) |
+
+- **Tempo médio por consulta:** $602,80\text{ ms}$
+- **Tempo máximo:** $1262,97\text{ ms}$ (significativamente abaixo do limiar de $5\text{ s}$)
+- **Taxa de sucesso:** 100% das rotas encontradas respeitando a consistência temporal.
+
