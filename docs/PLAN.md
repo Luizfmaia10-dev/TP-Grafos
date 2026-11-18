@@ -55,8 +55,8 @@ Data Limite: 22/11/2026 23:59
 ## Parte 6: Vertices Temporarios e Resposta Estruturada
 - [x] Implementar a especializacao `TemporaryVertex` e a logica de aproximacao (*snap-to-network*) a partir de cliques do usuario em coordenadas arbitrarias.
 - [x] Conectar o ponto temporario as estacoes mais proximas dentro de um raio configuravel (ex: 800m) criando arestas do modal `WALK` ponderadas pela velocidade media de caminhada (~5 km/h).
-- [ ] Implementar a classe `Itinerary` para encapsular a solucao (tempo total de viagem, tempo de espera, distancia total percorrida e lista de instrucoes passo a passo).
-- [ ] Implementar serializacao para dicionario e JSON no `Itinerary`.
+- [x] Implementar a classe `Itinerary` para encapsular a solucao (tempo total de viagem, tempo de espera, distancia total percorrida e lista de instrucoes passo a passo).
+- [x] Implementar serializacao para dicionario e JSON no `Itinerary`.
 - [x] Garantir limpeza automatica dos vertices temporarios no grafo apos cada consulta.
 
 ## Parte 7: Interface Grafica (Frontend)

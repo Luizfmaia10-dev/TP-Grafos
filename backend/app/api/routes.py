@@ -4,8 +4,14 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.api.route_models import RouteResult, RouteSearchRequest, RouteSearchResponse, RouteStep
-from app.domain import Connection, Station, VehicleType
+from app.api.route_models import (
+    RouteResult,
+    RouteSearchRequest,
+    RouteSearchResponse,
+    RouteStep,
+)
+from app.domain import Connection, Station
+from app.itinerary import Itinerary
 from app.network import RouteNetwork, get_network
 from app.route_simulator import RouteSimulator
 from app.time_utils import TimeUtils
@@ -14,37 +20,23 @@ router = APIRouter(prefix="/routes", tags=["routes"])
 
 
 def build_route_result(path: list[tuple[Station, Connection]], departure_time: float) -> RouteResult:
-    """Round absolute timestamps first so all reported durations stay additive."""
-    current_time = departure_time
-    steps = []
-    for origin, connection in path:
-        departure = (
-            current_time if connection.vehicle_type is VehicleType.WALK
-            else connection.departure_time
-        )
-        arrival = departure + connection.travel_time
-        departure_seconds = round(departure * 60)
-        arrival_seconds = round(arrival * 60)
-        steps.append(RouteStep(
-            origin=origin,
-            destination=connection.destination,
-            route_id=connection.route_id,
-            vehicle_type=connection.vehicle_type,
-            departure_time=TimeUtils.minutes_to_time(departure),
-            arrival_time=TimeUtils.minutes_to_time(arrival),
-            waiting_seconds=departure_seconds - round(current_time * 60),
-            travel_seconds=arrival_seconds - departure_seconds,
-            distance_km=connection.distance,
-        ))
-        current_time = arrival
-
+    """Adapt domain itinerary costs to the existing HTTP response contract."""
+    if not path:
+        return RouteResult(TimeUtils.minutes_to_time(departure_time), 0, 0, 0, 0, [])
+    itinerary = Itinerary(path[0][0], departure_time, path)
     return RouteResult(
-        arrival_time=TimeUtils.minutes_to_time(current_time),
-        total_seconds=round(current_time * 60) - round(departure_time * 60),
-        waiting_seconds=sum(step.waiting_seconds for step in steps),
-        travel_seconds=sum(step.travel_seconds for step in steps),
-        distance_km=sum(step.distance_km for step in steps),
-        steps=steps,
+        arrival_time=itinerary.arrival_time,
+        total_seconds=itinerary.total_seconds,
+        waiting_seconds=itinerary.waiting_seconds,
+        travel_seconds=itinerary.travel_seconds,
+        distance_km=itinerary.distance_km,
+        steps=[RouteStep(
+            origin=step.origin, destination=step.destination,
+            route_id=step.route_id, vehicle_type=step.vehicle_type,
+            departure_time=step.departure_time, arrival_time=step.arrival_time,
+            waiting_seconds=step.waiting_seconds, travel_seconds=step.travel_seconds,
+            distance_km=step.distance_km,
+        ) for step in itinerary.steps],
     )
 
 
