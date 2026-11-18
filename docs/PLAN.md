@@ -28,6 +28,11 @@ Data Limite: 22/11/2026 23:59
 - [x] Aplicar sanitizacao e tratamento de dados ausentes (coordenadas invalidas, horarios fora de ordem, paradas duplicadas).
 - [x] Instanciar os objetos de dominio `Station`, `Connection` e `VehicleType` com base nos dados higienizados.
 - [x] Validar cobertura de testes unitarios do modulo de ingestao.
+- [x] Impedir a mistura silenciosa de calendarios exigindo selecao explicita de `service_id` quando o feed declarar mais de um servico e ignorar viagens inativas durante a carga.
+- [x] Colocar em quarentena viagens com restricoes de `pickup_type` ou `drop_off_type` enquanto o roteador nao modelar permanencia no mesmo veiculo.
+- [x] Obter os arquivos de calendario de servico (`calendar.txt` e/ou `calendar_dates.txt`) da mesma versao do pacote GTFS oficial, versiona-los com Git LFS e atualizar `data/gtfs/README.md` e os hashes. Se nao existirem na fonte oficial, levar a decisao de selecao manual de `service_id` para a equipe, sem inferencia heuristica. Diagnostico em `docs/ISSUE_SERVICE_CALENDAR.md`.
+- [x] Filtrar no `DataLoader` as viagens pelo calendario ativo (data ou tipo de dia informado na carga), ignorando os `service_id` inativos, sem alterar `Connection`, `TransportGraph` ou `RouteSimulator`. Cobrir com testes TDD: servico inativo nao gera conexoes, servico ativo gera, e excecoes de `calendar_dates.txt` sao aplicadas quando o arquivo existir.
+- [x] Repetir a validacao de `docs/GTFS_VALIDATION.md` com o filtro de calendario e registrar as novas contagens de conexoes, memoria e tempo de carga em `docs/DATA_LOADER.md`.
 
 ## Parte 4: Estrutura do Grafo em Memoria
 - [x] Implementar a classe `Station` com metodos especiais `__hash__`, `__eq__`, atributos geograficos (`latitude`, `longitude`) e identificador unico.
@@ -35,24 +40,24 @@ Data Limite: 22/11/2026 23:59
 - [x] Aplicar a propriedade `__slots__` em `Station` e `Connection` para otimizar o uso de memória RAM da aplicação.
 - [x] Implementar a classe `TransportGraph` utilizando lista de adjacencia baseada em dicionarios nativos do Python (`dict[Station, list[Connection]]`), garantindo que as listas de conexoes sejam mantidas ordenadas por horario de partida para permitir busca binaria.
 - [x] Garantir complexidade $O(1)$ para adicao de vertices e recuperacao de vizinhos (`get_neighbors`).
-- [ ] Implementar metodos para adicao e remocao de vertices e conexoes temporarias (`remove_temporary_vertex`).
+- [x] Implementar metodos para adicao e remocao de vertices e conexoes temporarias (`remove_temporary_vertex`).
 - [x] Proibir terminantemente qualquer dependencia de bibliotecas de grafos prontas nesta camada.
 - [x] Desenvolver bateria de testes unitarios em TDD para validar insercao, busca de adjacencias e consistencia da topologia.
 
 ## Parte 5: Motor de Roteamento (Algoritmo A*)
-- [ ] Implementar a formula da distancia de Haversine em `RouteSimulator` para calculo de distancia geodésica em linha reta entre duas coordenadas.
-- [ ] Formular a funcao heuristica consistente e admissivel $h(u, v) = \text{haversine}(u, v) / V_{\max}$, em que $V_{\max}$ e a velocidade maxima teorica observavel na rede.
+- [x] Implementar a formula da distancia de Haversine em `RouteSimulator` para calculo de distancia geodésica em linha reta entre duas coordenadas.
+- [x] Formular a funcao heuristica consistente e admissivel $h(u, v) = \text{haversine}(u, v) / V_{\max}$, em que $V_{\max}$ e a velocidade maxima teorica observavel na rede.
 - [ ] Implementar a busca heuristica A* dependente do tempo (*Time-Dependent A\**) na classe `RouteSimulator` utilizando a biblioteca nativa `heapq` para controle da fila de prioridade.
 - [ ] Utilizar busca binária (módulo nativo `bisect`) sobre a lista de conexões ordenadas da estação para determinar a próxima partida em $O(\log K)$ e calcular o tempo de espera dinâmico.
 - [ ] Reconstruir o caminho otimo a partir dos ponteiros de predecessores gerados pelo algoritmo.
 - [ ] Escrever testes unitarios cobrindo cenarios com rotas diretas, transferencias entre linhas/modais e casos em que nao ha caminho viavel.
 
 ## Parte 6: Vertices Temporarios e Resposta Estruturada
-- [ ] Implementar a especializacao `TemporaryVertex` e a logica de aproximacao (*snap-to-network*) a partir de cliques do usuario em coordenadas arbitrarias.
-- [ ] Conectar o ponto temporario as estacoes mais proximas dentro de um raio configuravel (ex: 800m) criando arestas do modal `WALK` ponderadas pela velocidade media de caminhada (~5 km/h).
+- [x] Implementar a especializacao `TemporaryVertex` e a logica de aproximacao (*snap-to-network*) a partir de cliques do usuario em coordenadas arbitrarias.
+- [x] Conectar o ponto temporario as estacoes mais proximas dentro de um raio configuravel (ex: 800m) criando arestas do modal `WALK` ponderadas pela velocidade media de caminhada (~5 km/h).
 - [ ] Implementar a classe `Itinerary` para encapsular a solucao (tempo total de viagem, tempo de espera, distancia total percorrida e lista de instrucoes passo a passo).
 - [ ] Implementar serializacao para dicionario e JSON no `Itinerary`.
-- [ ] Garantir limpeza automatica dos vertices temporarios no grafo apos cada consulta.
+- [x] Garantir limpeza automatica dos vertices temporarios no grafo apos cada consulta.
 
 ## Parte 7: Interface Grafica (Frontend)
 - [ ] Integrar o prototipo HTML/Tailwind ao backend FastAPI servido estaticamente.
