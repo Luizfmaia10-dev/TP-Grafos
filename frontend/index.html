@@ -10,6 +10,7 @@
     <link rel="preload" href="/assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/assets/fonts/ibm-plex-mono-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="/assets/app.css">
+    <script type="module" src="/js/app.js"></script>
   </head>
   <body class="bg-rg-paper font-sans text-rg-ink antialiased">
     <a class="skip-link" href="#planner">Ir para o planejador</a>
@@ -39,44 +40,54 @@
           <p class="planner-description text-rg-muted">Escolha duas paradas pelo nome ou no mapa.</p>
         </div>
 
-        <form class="search-form flex flex-col border border-rg-line bg-white shadow-rg-card" aria-label="Planejamento do trajeto">
-          <div class="form-field flex min-w-0 flex-col">
+        <form id="route-form" class="search-form flex flex-col border border-rg-line bg-white shadow-rg-card" aria-label="Planejamento do trajeto" novalidate>
+          <div id="origin-field" class="form-field flex min-w-0 flex-col">
             <label class="field-label font-semibold" for="origin">Origem</label>
-            <div class="field-control flex items-center border border-rg-line bg-rg-field">
+            <div class="field-control flex items-center">
               <span class="station-badge station-badge--origin font-mono" aria-hidden="true">A</span>
-              <input id="origin" class="station-input min-w-0 flex-1" name="origin" type="text" placeholder="Escolha uma parada" autocomplete="off" spellcheck="false">
-              <span class="search-icon icon-slot shrink-0" aria-hidden="true">
+              <input id="origin" class="station-input min-w-0 flex-1" name="origin" type="text" placeholder="Escolha uma parada" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="origin-options" aria-describedby="origin-error" required>
+              <button id="origin-clear" class="clear-field" type="button" aria-label="Limpar origem" hidden>Limpar</button>
+              <span id="origin-search-icon" class="search-icon icon-slot shrink-0" aria-hidden="true">
                 <img src="/assets/icons/search.svg" alt="" width="12.0375" height="12.0375">
               </span>
             </div>
+            <ul id="origin-options" class="station-options" role="listbox" aria-label="Paradas para origem" hidden></ul>
+            <p id="origin-empty" class="field-hint" hidden>Nenhuma parada do exemplo encontrada.</p>
+            <p id="origin-error" class="field-error" hidden></p>
           </div>
 
-          <div class="form-field flex min-w-0 flex-col">
+          <div id="destination-field" class="form-field flex min-w-0 flex-col">
             <label class="field-label font-semibold" for="destination">Destino</label>
-            <div class="field-control flex items-center border border-rg-line bg-rg-field">
+            <div class="field-control flex items-center">
               <span class="station-badge station-badge--destination font-mono" aria-hidden="true">B</span>
-              <input id="destination" class="station-input min-w-0 flex-1" name="destination" type="text" placeholder="Escolha uma parada" autocomplete="off" spellcheck="false">
-              <span class="search-icon icon-slot shrink-0" aria-hidden="true">
+              <input id="destination" class="station-input min-w-0 flex-1" name="destination" type="text" placeholder="Escolha uma parada" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="destination-options" aria-describedby="destination-error" required>
+              <button id="destination-clear" class="clear-field" type="button" aria-label="Limpar destino" hidden>Limpar</button>
+              <span id="destination-search-icon" class="search-icon icon-slot shrink-0" aria-hidden="true">
                 <img src="/assets/icons/search.svg" alt="" width="12.0375" height="12.0375">
               </span>
             </div>
+            <ul id="destination-options" class="station-options" role="listbox" aria-label="Paradas para destino" hidden></ul>
+            <p id="destination-empty" class="field-hint" hidden>Nenhuma parada do exemplo encontrada.</p>
+            <p id="destination-error" class="field-error" hidden></p>
           </div>
 
           <div class="form-field flex min-w-0 flex-col">
             <label class="field-label font-semibold" for="departure-time">Horário de saída</label>
-            <div class="field-control flex items-center border border-rg-line bg-rg-field">
+            <div class="field-control flex items-center">
               <span class="clock-icon icon-slot shrink-0" aria-hidden="true">
                 <img src="/assets/icons/clock.svg" alt="" width="15.5417" height="15.5417">
               </span>
-              <input id="departure-time" class="time-input min-w-0 flex-1 font-mono" name="departure_time" type="text" value="07:45" autocomplete="off" spellcheck="false" aria-describedby="departure-hint">
+              <input id="departure-time" class="time-input min-w-0 flex-1 font-mono" name="departure_time" type="text" value="07:45" autocomplete="off" spellcheck="false" aria-describedby="departure-hint departure-error" required>
             </div>
             <p id="departure-hint" class="sr-only">Use horas e minutos, como 07:45, ou horas, minutos e segundos. Horários após 24 horas pertencem ao mesmo dia de serviço.</p>
+            <p id="departure-error" class="field-error" hidden></p>
           </div>
 
           <button class="search-button flex items-center justify-center font-semibold" type="submit" disabled>Calcular trajeto</button>
+          <p id="selection-status" class="selection-status" role="status" aria-live="polite" aria-atomic="true" hidden></p>
         </form>
 
-        <button class="demo-card flex items-center text-left" type="button" disabled>
+        <button id="demo-trigger" class="demo-card flex items-center text-left" type="button">
           <span class="demo-icon flex shrink-0 items-center justify-center bg-white" aria-hidden="true">
             <img src="/assets/icons/bus.svg" alt="" width="15.7646" height="16.7229">
           </span>
@@ -91,38 +102,30 @@
       </section>
 
       <section class="map-panel relative min-w-0 overflow-hidden bg-rg-map" aria-labelledby="map-title" aria-describedby="map-description">
-        <p id="map-description" class="sr-only">Mapa esquemático da rede de ônibus de Belo Horizonte. Estação Pampulha, plataforma G4, e Avenida Paraná, 162, no Centro, são as paradas do trajeto de exemplo da linha 50.</p>
+        <p id="map-description" class="sr-only">Mapa esquemático da rede de ônibus de Belo Horizonte. Selecione as paradas do exemplo da linha 50 para preencher origem e destino. Os marcadores A e B identificam suas escolhas.</p>
 
-        <div class="network-layer" aria-hidden="true">
-          <img class="network-image" src="/assets/maps/network-desktop.svg" alt="" width="960" height="780" fetchpriority="high">
+        <div class="network-layer">
+          <div class="network-background" aria-hidden="true">
+            <img class="network-image" src="/assets/maps/network-desktop.svg" alt="" width="960" height="780" fetchpriority="high">
 
-          <span class="map-region map-region--pampulha font-mono">PAMPULHA</span>
-          <span class="map-region map-region--centro font-mono">CENTRO</span>
+            <span class="map-region map-region--pampulha font-mono">PAMPULHA</span>
+            <span class="map-region map-region--centro font-mono">CENTRO</span>
 
-          <span class="landmark-label landmark-label--mineirao">Mineirão</span>
-          <img class="landmark-dot landmark-dot--mineirao" src="/assets/icons/landmark.svg" alt="" width="6" height="6">
-          <span class="landmark-label landmark-label--ufmg">UFMG</span>
-          <img class="landmark-dot landmark-dot--ufmg" src="/assets/icons/landmark.svg" alt="" width="6" height="6">
-          <span class="landmark-label landmark-label--liberdade">Praça da Liberdade</span>
-          <img class="landmark-dot landmark-dot--liberdade" src="/assets/icons/landmark.svg" alt="" width="6" height="6">
-
-          <img class="map-point map-point--origin" src="/assets/icons/stop-origin.svg" alt="" width="17" height="17">
-          <span class="map-label map-label--origin">
-            <span class="map-stop-name font-semibold"><span class="station-name--desktop">Estação Pampulha</span><span class="station-name--mobile">Est. Pampulha</span></span>
-            <span class="map-stop-detail text-rg-map-muted">Plataforma G4</span>
-          </span>
-
-          <img class="map-point map-point--destination" src="/assets/icons/stop-destination.svg" alt="" width="17" height="17">
-          <span class="map-label map-label--destination">
-            <span class="map-stop-name font-semibold">Av. Paraná, 162</span>
-            <span class="map-stop-detail text-rg-map-muted">Centro</span>
-          </span>
+            <span class="landmark-label landmark-label--mineirao">Mineirão</span>
+            <img class="landmark-dot landmark-dot--mineirao" src="/assets/icons/landmark.svg" alt="" width="6" height="6">
+            <span class="landmark-label landmark-label--ufmg">UFMG</span>
+            <img class="landmark-dot landmark-dot--ufmg" src="/assets/icons/landmark.svg" alt="" width="6" height="6">
+            <span class="landmark-label landmark-label--liberdade">Praça da Liberdade</span>
+            <img class="landmark-dot landmark-dot--liberdade" src="/assets/icons/landmark.svg" alt="" width="6" height="6">
+          </div>
+          <div id="map-stations"></div>
         </div>
 
         <div class="map-heading absolute border border-rg-map-border bg-rg-map-panel text-rg-map-text">
           <h2 id="map-title" class="map-title font-bold">Mapa da malha</h2>
           <p class="map-subtitle text-rg-map-muted">Recorte da rede de ônibus</p>
         </div>
+        <span id="map-selection-role" class="map-selection-role">Origem</span>
 
         <div class="map-north absolute flex flex-col items-center justify-center bg-rg-map-panel text-rg-map-muted" aria-label="Norte">
           <span class="north-label font-mono" aria-hidden="true">N</span>

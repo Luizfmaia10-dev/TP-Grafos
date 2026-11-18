@@ -1,5 +1,6 @@
 @import "tailwindcss" source(none);
 @source "../index.html";
+@source "../js";
 
 @font-face {
   font-family: "Inter";
@@ -45,6 +46,7 @@
   --color-rg-map-text: #eef5fe;
   --color-rg-map-muted: #b0c3d9;
   --color-rg-map-border: #31516f;
+  --color-rg-error: #9c253d;
   --shadow-rg-card: 0 3px 12px rgb(2 32 61 / 5%);
 }
 
@@ -208,11 +210,101 @@
     gap: 10px;
     padding: 0 11px;
     border-radius: 11px;
+    border: 1px solid var(--color-rg-line);
+    background: var(--color-rg-field);
   }
 
   .field-control:focus-within {
     border-color: var(--color-rg-purple);
     box-shadow: 0 0 0 2px rgb(117 57 145 / 12%);
+  }
+
+  .field-control:has([aria-expanded="true"]) {
+    border-color: var(--color-rg-purple);
+    background: var(--color-rg-soft-purple);
+  }
+
+  .field-control:has([aria-invalid="true"]) {
+    border-color: var(--color-rg-error);
+  }
+
+  .clear-field {
+    align-self: stretch;
+    flex-shrink: 0;
+    min-width: 44px;
+    color: var(--color-rg-muted);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .clear-field:hover {
+    color: var(--color-rg-purple);
+    text-decoration: underline;
+  }
+
+  .station-options {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 216px;
+    padding: 6px;
+    overflow-y: auto;
+    border: 1px solid var(--color-rg-line);
+    border-radius: 11px;
+    background: white;
+  }
+
+  .station-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 59px;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+  }
+
+  .station-option:hover,
+  .station-option[aria-selected="true"] {
+    background: var(--color-rg-soft-purple);
+  }
+
+  .station-option > img {
+    flex-shrink: 0;
+  }
+
+  .suggestion-copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 1px;
+  }
+
+  .suggestion-title {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 18px;
+  }
+
+  .suggestion-detail,
+  .field-hint {
+    color: var(--color-rg-muted);
+    font-size: 12px;
+    line-height: 17px;
+  }
+
+  .field-error {
+    color: var(--color-rg-error);
+    font-size: 12px;
+    line-height: 17px;
+  }
+
+  .selection-status {
+    color: var(--color-rg-muted);
+    font-size: 12px;
+    line-height: 18px;
   }
 
   .station-badge {
@@ -274,6 +366,14 @@
     cursor: default;
   }
 
+  .search-button:enabled {
+    cursor: pointer;
+  }
+
+  .search-button:enabled:hover {
+    background: #632f7b;
+  }
+
   .demo-card {
     width: 100%;
     min-height: 84px;
@@ -281,6 +381,14 @@
     padding: 12px 15px;
     border-radius: 16px;
     background: var(--color-rg-soft-purple);
+  }
+
+  .demo-card:enabled {
+    cursor: pointer;
+  }
+
+  .demo-card:hover {
+    box-shadow: inset 0 0 0 1px rgb(117 57 145 / 16%);
   }
 
   .demo-icon {
@@ -321,6 +429,11 @@
   .network-image {
     width: 100%;
     height: 100%;
+  }
+
+  .network-background {
+    position: absolute;
+    inset: 0;
   }
 
   .map-region {
@@ -383,19 +496,64 @@
     left: 57.4885%;
   }
 
-  .map-point {
+  .map-station {
     position: absolute;
+    z-index: 1;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    pointer-events: none;
     transform: translate(-50%, -50%);
   }
 
-  .map-point--origin {
-    top: 24.5300%;
-    left: 42.3907%;
+  .map-marker {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 27px;
+    height: 27px;
+    border-radius: 50%;
+    pointer-events: auto;
+    cursor: pointer;
+    transform: translate(-50%, -50%);
   }
 
-  .map-point--destination {
-    top: 69.4809%;
-    left: 56.0342%;
+  .map-letter {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 16px;
+  }
+
+  .map-station[data-selection="origin"] .map-marker {
+    background: var(--color-rg-yellow);
+    color: var(--color-rg-navy);
+    box-shadow: 0 0 0 7px rgb(236 173 10 / 16%);
+  }
+
+  .map-station[data-selection="destination"] .map-marker {
+    border: 2px solid var(--color-rg-yellow);
+    background: var(--color-rg-navy);
+    color: white;
+  }
+
+  .map-station[data-selection="both"] .map-marker {
+    width: 33px;
+    border: 2px solid var(--color-rg-error);
+    background: var(--color-rg-yellow);
+    color: var(--color-rg-navy);
+  }
+
+  .map-station:focus-visible {
+    z-index: 2;
+    outline-color: var(--color-rg-yellow);
+  }
+
+  .map-station[aria-pressed="true"] .map-label,
+  .map-station:hover .map-label {
+    border-color: var(--color-rg-yellow);
   }
 
   .map-label {
@@ -408,17 +566,23 @@
     border-radius: 8px;
     background: var(--color-rg-map-panel);
     color: var(--color-rg-map-text);
-  }
-
-  .map-label--origin {
-    top: calc(24.5300% - 23px);
-    left: calc(42.3907% + 18px);
     width: 159px;
+    min-height: 44px;
+    top: -1px;
+    left: 40px;
+    text-align: left;
+    pointer-events: auto;
+    cursor: pointer;
   }
 
-  .map-label--destination {
-    top: calc(69.4809% - 7px);
-    left: calc(56.0342% - 167px);
+  .map-station[data-station-id="14792447"] .map-label {
+    top: -24px;
+    width: 195px;
+  }
+
+  .map-station[data-station-id="14787448"] .map-label {
+    top: 15px;
+    left: -145px;
     width: 148px;
   }
 
@@ -453,6 +617,19 @@
     margin-top: 1px;
     font-size: 12px;
     line-height: 17px;
+  }
+
+  .map-selection-role {
+    position: absolute;
+    top: 32px;
+    right: 70px;
+    padding: 3px 7px;
+    border: 1px solid var(--color-rg-map-border);
+    border-radius: 6px;
+    color: var(--color-rg-yellow);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 16px;
   }
 
   .map-north {
@@ -592,6 +769,11 @@
       letter-spacing: 0;
     }
 
+    .map-selection-role {
+      top: 11px;
+      right: 46px;
+    }
+
     .map-subtitle,
     .map-region,
     .landmark-dot,
@@ -611,15 +793,22 @@
       gap: 0;
     }
 
-    .map-label--origin {
-      top: calc(24.5300% - 5px);
-      left: calc(42.3907% + 14px);
+    .map-label {
+      justify-content: center;
+      top: 17px;
+      left: 36px;
       width: 100px;
     }
 
-    .map-label--destination {
-      top: calc(69.4809% - 15px);
-      left: calc(56.0342% - 123px);
+    .map-station[data-station-id="14792447"] .map-label {
+      top: -38px;
+      left: -131px;
+      width: 139px;
+    }
+
+    .map-station[data-station-id="14787448"] .map-label {
+      top: 12px;
+      left: -101px;
       width: 109px;
     }
 
@@ -628,7 +817,7 @@
       line-height: 14px;
     }
 
-    .map-point {
+    .map-marker > img {
       width: 13px;
       height: 13px;
     }

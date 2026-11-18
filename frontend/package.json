@@ -2,8 +2,10 @@
   "name": "rotasgraph-frontend",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "Static HTML and Tailwind interface for RotasGraph.",
   "scripts": {
+    "test": "node --test",
     "build": "node scripts/copy-fonts.mjs && npm run build:css",
     "build:css": "tailwindcss -i ./styles/app.css -o ./assets/app.css --minify",
     "watch:css": "tailwindcss -i ./styles/app.css -o ./assets/app.css --watch"
