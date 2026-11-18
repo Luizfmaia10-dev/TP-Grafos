@@ -3,7 +3,7 @@
 Data de referencia: 17/11/2026.
 Responsavel pelos commits: Gabriel Aredes.
 Branch proposta para a implementacao: `codigo/30-interface-visual`.
-Status: etapas 1 (base visual) e 2 (selecao de paradas) implementadas e verificadas, com exportacao exata do mapa mobile pendente.
+Status: etapas 1 (base visual), 2 (selecao de paradas) e 3 (consulta demonstrativa) implementadas e verificadas, com exportacao exata do mapa mobile pendente.
 
 ## Referencias e ponto de partida
 
@@ -148,17 +148,17 @@ Os nomes, marcadores e foco se mantem corretos nas duas resolucoes.
 
 ## Etapa 3 - Consulta demonstrativa e resultado
 
-- [ ] Escrever testes para partida exatamente no horario, partida perdida,
+- [x] Escrever testes para partida exatamente no horario, partida perdida,
       espera, segundos, consulta fora da amostra e busca sem conexao disponivel.
-- [ ] Criar a consulta assincrona demonstrativa sobre os horarios da amostra.
+- [x] Criar a consulta assincrona demonstrativa sobre os horarios da amostra.
       Seu limite deve ficar documentado e identificado na interface.
-- [ ] Mostrar carregamento durante a operacao e impedir envios simultaneos.
-- [ ] Renderizar resumo, espera, tempo no veiculo, distancia aproximada e
+- [x] Mostrar carregamento durante a operacao e impedir envios simultaneos.
+- [x] Renderizar resumo, espera, tempo no veiculo, distancia aproximada e
       itinerario com segundos a partir do resultado.
-- [ ] Destacar as arestas e paradas selecionadas no mapa conforme o Figma.
-- [ ] Permitir editar a busca e repetir a consulta. Uma resposta antiga nao pode
+- [x] Destacar as arestas e paradas selecionadas no mapa conforme o Figma.
+- [x] Permitir editar a busca e repetir a consulta. Uma resposta antiga nao pode
       substituir o estado de uma consulta que ja foi alterada.
-- [ ] Mostrar ausencia de viagem na amostra para saidas apos a partida conhecida.
+- [x] Mostrar ausencia de viagem na amostra para saidas apos a partida conhecida.
       Um par fora do recorte deve informar a limitacao do exemplo.
 
 **Criterio de conclusao**
@@ -410,3 +410,114 @@ limpeza, selecao em ambas as ordens, IDs invalidados, horarios, nomes fora da
 amostra e dez tamanhos de janela. As telas de busca e selecao foram revisadas
 visualmente em desktop e celular. Os 138 testes Python tambem passaram, com
 o aviso de descontinuacao do TestClient ja registrado na etapa 1.
+
+## Etapa 3 - Consulta demonstrativa implementada
+
+Os dois commits da etapa 2 foram conferidos na branch codigo/30-interface-visual:
+acb2f00 contem a selecao de paradas e 7c21e82 registra a documentacao. Ambos
+tem Gabriel como autor e committer. A pasta estava limpa antes desta etapa.
+
+A consulta agora percorre o recorte conhecido de uma unica viagem da linha 50.
+Sao aceitos os tres pares de paradas na ordem da viagem: Pampulha -> Rio de
+Janeiro, Pampulha -> Av. Parana e Rio de Janeiro -> Av. Parana. A viagem de
+volta e IDs fora da amostra produzem uma mensagem de limite do exemplo.
+Nao e uma implementacao do A*, uma busca de outras viagens ou um calendario.
+
+Todos os custos sao calculados em segundos inteiros desde o inicio do dia de
+servico. Nao se usa Date nem se aplica resto por 24 horas. Partida exatamente
+no horario do embarque e aceita; um segundo depois ja perde essa viagem.
+Horarios HH:MM sao normalizados para HH:MM:00 antes da consulta.
+
+| Consulta Pampulha -> Av. Parana | Espera | Onibus | Total exato | Chegada |
+|---|---|---|---|---|
+| 07:45:00 | 6 min | 29 min 16 s | 35 min 16 s | 08:20:16 |
+| 07:50:59 | 1 s | 29 min 16 s | 29 min 17 s | 08:20:16 |
+| 07:51:00 | 0 min | 29 min 16 s | 29 min 16 s | 08:20:16 |
+| 07:51:01 ou 25:00 | Sem outra partida na amostra | - | - | - |
+
+A amostra faz uma pausa local de 500 ms para tornar o carregamento observavel.
+O botao fica indisponivel durante a operacao. Editar os campos, escolher uma
+parada, limpar uma escolha ou usar o atalho cancela a consulta atual. Cada
+consulta recebe uma versao: uma resposta anterior e ignorada mesmo quando o
+servico nao respeita AbortSignal. Sem partida, trecho fora do exemplo e falha
+inesperada tem mensagens diferentes. Os campos permanecem para nova tentativa.
+
+No resultado, o total em minutos usa Math.round(totalSeconds / 60), seguindo
+o resumo do desenho. O valor exato continua no texto acessivel e nos horarios
+do itinerario, e a legenda mostra a espera e o tempo no onibus com segundos.
+A barra divide os tempos usando os segundos originais, antes de arredondar.
+As distancias sao a soma de Haversine entre as paradas (raio terrestre 6371 km),
+com exibicao aproximada em km. Nao sao distancias medidas pelas ruas.
+
+O SVG sobreposto liga somente as paradas do resultado, em vermelho de onibus.
+No desktop, resumo e itinerario ficam a esquerda do mapa; no celular, a ordem
+e resumo, mapa e itinerario. Editar busca retoma os mesmos campos e remove o
+trajeto anterior. Para vertices muito proximos, o mapa conserva as coordenadas
+e identifica A/B nas etiquetas, com marcadores menores. A legenda identifica
+a linha e a etiqueta flutuante e omitida nesse trecho curto para evitar choque.
+
+O resultado usa os recursos locais ja obtidos e as referencias das telas
+3:446 e 5:2852. A etiqueta da linha usa o texto Linha 50. O icone branco de
+onibus do resultado e a exportacao exata do mapa mobile continuam dependendo
+da obtencao dos recursos do Figma, cuja limitacao foi registrada na etapa 1.
+O checkbox geral de recursos exatos permanece aberto para esse refinamento.
+
+### Arquivos da etapa 3
+
+| Arquivo | Responsabilidade |
+|---|---|
+| frontend/js/demo-service.js | Recorte da viagem, espera, custos em segundos, distancia e consulta local cancelavel |
+| frontend/js/route-request.js | Carregamento, bloqueio de envios simultaneos, cancelamento e descarte de respostas antigas |
+| frontend/js/route-view.js | Resumo e timeline gerados a partir do resultado |
+| frontend/js/app.js | Eventos de consulta, resultado, avisos, edicao e foco |
+| frontend/js/map.js | Arestas SVG, paradas da rota e legenda, sobre o mapa existente |
+| frontend/index.html | Estrutura semantica dos estados e avisos acessiveis |
+| frontend/styles/app.css | Arranjos do resultado, timeline e carregamento com movimento reduzido |
+| frontend/assets/app.css | CSS compilado para executar sem CDN |
+| frontend/tests/demo-service.test.js | 19 testes de horarios, recortes, distancias e cancelamento |
+| frontend/tests/route-request.test.js | 6 testes de estados, concorrencia, resposta antiga e nova tentativa |
+
+O formato local possui status (found, no-route ou outside-sample). Um resultado
+found contem query, routeId, routeShortName, tripId, serviceId, boardingTime,
+arrivalTime, waitingSeconds, vehicleSeconds, totalSeconds, distanceKm e stops
+ordenadas. A camada de requisicao acrescenta idle, loading e error. Esse e um
+formato da demonstracao: o contrato JSON real continua sendo acordado na #32
+com os responsaveis pelo endpoint e pelo Itinerary, incluindo suas unidades.
+
+Nenhuma dependencia foi adicionada, e nenhum arquivo de backend ou GTFS foi
+alterado. docs/PLAN.md conserva os itens de carregamento da API e integracao
+abertos, como definido neste plano. A consulta local nao conclui esses itens.
+
+### Como testar a etapa 3
+
+Em frontend/, execute npm test para os 63 testes (38 anteriores e 25 novos).
+Use npm run build para reconstruir os recursos. Para abrir a pagina, use o
+servidor FastAPI da etapa 1 com o ambiente Python do projeto ativo.
+
+1. Acione Experimente a linha 50 e Calcular trajeto. Observe o carregamento,
+   o resumo, a barra de tempos, as quatro etapas com segundos e o mapa vermelho.
+2. Acione Editar busca. Confira os campos preservados e a remocao do resultado.
+3. Repita com 07:51:00 e 07:50:59 para esperas de zero e um segundo.
+4. Consulte 07:51:01 e 25:00. A mensagem deve indicar falta de partida nesta
+   amostra, sem manter o resultado anterior nem afirmar indisponibilidade da rede.
+5. Inverta origem e destino para conferir a mensagem de trecho fora do exemplo.
+6. Comece uma consulta e edite o horario ou uma parada durante o carregamento.
+   A resposta cancelada nao deve aparecer sobre a selecao editada.
+7. Escolha Rio de Janeiro como origem e Av. Parana como destino, com 08:16:50.
+   Confira espera de 1 s, percurso de 3 min 25 s e somente esse trecho no mapa.
+8. Repita no celular, por teclado e toque, e redimensione a janela no resultado.
+
+Os testes foram escritos antes dos modulos. As falhas iniciais de importacao
+foram confirmadas e depois os 63 testes passaram. A verificacao no navegador
+servido pelo FastAPI cobriu dez tamanhos de janela entre 320 e 1440 px, baixa
+altura, ordem dos blocos, ausencia de overflow, teclado, toque e movimento
+reduzido. Tambem cobriu envios repetidos, cancelamento por campo e parada,
+resposta antiga de um servico que ignora cancelamento e falha seguida de
+nova tentativa. Esses dois ultimos cenarios foram induzidos apenas no navegador
+de verificacao, sem caminhos de erro artificiais na interface do produto.
+
+As telas de carregamento, resultado desktop/celular, falta de partida e trecho
+curto foram revisadas visualmente. Os recursos HTML/CSS/JS responderam com os
+tipos corretos, sem erros de pagina, recursos ausentes ou chamadas externas.
+Os 138 testes Python passaram; permanece apenas o aviso ja registrado do
+TestClient. As etapas 4 e 5 continuam abertas para suas entregas completas.
