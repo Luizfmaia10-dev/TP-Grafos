@@ -6,6 +6,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
+from app.api.routes import router as routes_router
 from app.api.stations import router as stations_router
 from app.network import RouteNetwork
 
@@ -46,6 +47,7 @@ def create_app(
         return {"status": "ok"}
 
     app.include_router(stations_router)
+    app.include_router(routes_router)
     app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
     return app
 

@@ -66,9 +66,9 @@ Data Limite: 22/11/2026 23:59
 - [ ] Exibir indicadores visuais de carregamento durante a consulta a API.
 
 ## Parte 8: Integracao Frontend + Backend
-- [ ] Desenvolver endpoints REST no FastAPI:
+- [x] Desenvolver endpoints REST no FastAPI:
   - [x] `GET /stations`: listagem de estacoes disponiveis para autocompletar.
-  - [ ] `POST /routes/search`: calculo de rota recebendo origem, destino e horario de partida.
+  - [x] `POST /routes/search`: calculo de rota recebendo origem, destino e horario de partida.
 - [ ] Conectar os eventos de clique e submissao do frontend as chamadas da API via `fetch`.
 - [ ] Renderizar o itinerario retornado na timeline lateral com instrucoes discriminadas por modal.
 - [ ] Desenhar o trajeto no mapa SVG com as cores e espessuras correspondentes a cada trecho.
