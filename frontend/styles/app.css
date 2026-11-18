@@ -1,0 +1,701 @@
+@import "tailwindcss" source(none);
+@source "../index.html";
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("./fonts/inter-latin-wght-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./fonts/ibm-plex-mono-latin-600-normal.woff2") format("woff2");
+}
+
+@theme {
+  --font-sans: "Inter", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+  --color-rg-navy: #032147;
+  --color-rg-paper: #f5f5f1;
+  --color-rg-ink: #11263d;
+  --color-rg-muted: #506078;
+  --color-rg-line: #dfe5ea;
+  --color-rg-field: #f6f8fa;
+  --color-rg-purple: #753991;
+  --color-rg-soft-purple: #f5edf8;
+  --color-rg-yellow: #ecad0a;
+  --color-rg-bus: #e11d48;
+  --color-rg-metro: #209dd7;
+  --color-rg-walk: #888888;
+  --color-rg-map: #0d2947;
+  --color-rg-map-panel: #143352;
+  --color-rg-map-text: #eef5fe;
+  --color-rg-map-muted: #b0c3d9;
+  --color-rg-map-border: #31516f;
+  --shadow-rg-card: 0 3px 12px rgb(2 32 61 / 5%);
+}
+
+@layer base {
+  body {
+    min-width: 320px;
+    min-height: 100svh;
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-rg-purple);
+    outline-offset: 4px;
+  }
+
+  input {
+    border-radius: 0;
+  }
+
+  input::placeholder {
+    color: var(--color-rg-muted);
+    opacity: 1;
+  }
+}
+
+@layer components {
+  .skip-link {
+    position: fixed;
+    z-index: 10;
+    top: 12px;
+    left: 12px;
+    padding: 12px 16px;
+    transform: translateY(-180%);
+    border-radius: 10px;
+    background: white;
+    color: var(--color-rg-navy);
+    font-weight: 600;
+  }
+
+  .skip-link:focus {
+    transform: translateY(0);
+  }
+
+  .site-header {
+    min-height: 72px;
+    gap: 24px;
+    padding: 0 25px;
+  }
+
+  .brand {
+    gap: 9px;
+    min-height: 44px;
+    border-radius: 11px;
+    text-decoration: none;
+  }
+
+  .brand:focus-visible {
+    outline-color: var(--color-rg-yellow);
+  }
+
+  .brand-symbol {
+    width: 39px;
+    height: 39px;
+    border: 1px solid var(--color-rg-map-border);
+    border-radius: 11px;
+    background: var(--color-rg-map-panel);
+  }
+
+  .brand-name {
+    font-size: 23px;
+    font-weight: 700;
+    line-height: 29px;
+    letter-spacing: -0.72px;
+  }
+
+  .location-meta {
+    gap: 10px;
+  }
+
+  .city-label {
+    font-size: 13px;
+    line-height: 18px;
+    white-space: nowrap;
+  }
+
+  .location-divider {
+    width: 1px;
+    height: 18px;
+    background: var(--color-rg-map-border);
+  }
+
+  .data-source {
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.18px;
+  }
+
+  .icon-slot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .location-icon,
+  .search-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .clock-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .arrow-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .planner-shell {
+    display: grid;
+    grid-template-columns: minmax(320px, 412px) minmax(0, 1fr);
+    align-items: start;
+    gap: 20px;
+    padding: 24px;
+  }
+
+  .search-panel {
+    gap: 16px;
+  }
+
+  .planner-title {
+    font-size: 34px;
+    line-height: 40px;
+    letter-spacing: -1.55px;
+  }
+
+  .planner-description {
+    margin-top: 4px;
+  }
+
+  .search-form {
+    gap: 15px;
+    padding: 18px;
+    border-radius: 19px;
+  }
+
+  .form-field {
+    gap: 6px;
+  }
+
+  .field-label {
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  .field-control {
+    height: 50px;
+    gap: 10px;
+    padding: 0 11px;
+    border-radius: 11px;
+  }
+
+  .field-control:focus-within {
+    border-color: var(--color-rg-purple);
+    box-shadow: 0 0 0 2px rgb(117 57 145 / 12%);
+  }
+
+  .station-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 27px;
+    height: 27px;
+    border-radius: 50%;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 16px;
+  }
+
+  .station-badge--origin {
+    background: var(--color-rg-yellow);
+    color: var(--color-rg-navy);
+  }
+
+  .station-badge--destination {
+    background: var(--color-rg-navy);
+    color: white;
+  }
+
+  .station-input,
+  .time-input {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    color: var(--color-rg-ink);
+    outline: 0;
+  }
+
+  .station-input {
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .time-input {
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 22px;
+  }
+
+  .search-button {
+    min-height: 49px;
+    border-radius: 11px;
+    background: var(--color-rg-purple);
+    color: white;
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  .search-button:disabled {
+    background: var(--color-rg-line);
+    color: var(--color-rg-muted);
+    cursor: default;
+  }
+
+  .demo-card {
+    width: 100%;
+    min-height: 84px;
+    gap: 12px;
+    padding: 12px 15px;
+    border-radius: 16px;
+    background: var(--color-rg-soft-purple);
+  }
+
+  .demo-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+  }
+
+  .demo-title {
+    font-size: 17px;
+    line-height: 23px;
+    letter-spacing: -0.25px;
+  }
+
+  .demo-description {
+    margin-top: 2px;
+    font-size: 12px;
+    line-height: 17px;
+  }
+
+  .map-panel {
+    width: 100%;
+    height: max(560px, calc(100svh - 120px));
+    border-radius: 21px;
+    container-type: size;
+  }
+
+  /* Keep the exported SVG and all location labels in the same coordinate plane. */
+  .network-layer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100cqw, calc(100cqh * 960 / 780));
+    height: max(100cqh, calc(100cqw * 780 / 960));
+    transform: translate(-50%, -50%);
+  }
+
+  .network-image {
+    width: 100%;
+    height: 100%;
+  }
+
+  .map-region {
+    position: absolute;
+    color: #829cb3;
+    font-size: 18px;
+    line-height: 24px;
+    letter-spacing: 4px;
+  }
+
+  .map-region--pampulha {
+    top: 17.1795%;
+    left: 10.4167%;
+  }
+
+  .map-region--centro {
+    top: 72.0513%;
+    left: 71.5625%;
+  }
+
+  .landmark-label {
+    position: absolute;
+    color: var(--color-rg-map-muted);
+    font-size: 12px;
+    line-height: 17px;
+    white-space: nowrap;
+  }
+
+  .landmark-label--mineirao {
+    top: 34.8%;
+    left: 37.4833%;
+  }
+
+  .landmark-label--ufmg {
+    top: 35.1256%;
+    left: 48.426%;
+  }
+
+  .landmark-label--liberdade {
+    top: 78.7038%;
+    left: 59.1552%;
+  }
+
+  .landmark-dot {
+    position: absolute;
+  }
+
+  .landmark-dot--mineirao {
+    top: 32.6205%;
+    left: 45.8167%;
+  }
+
+  .landmark-dot--ufmg {
+    top: 36.0231%;
+    left: 46.9677%;
+  }
+
+  .landmark-dot--liberdade {
+    top: 77.6782%;
+    left: 57.4885%;
+  }
+
+  .map-point {
+    position: absolute;
+    transform: translate(-50%, -50%);
+  }
+
+  .map-point--origin {
+    top: 24.5300%;
+    left: 42.3907%;
+  }
+
+  .map-point--destination {
+    top: 69.4809%;
+    left: 56.0342%;
+  }
+
+  .map-label {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 7px 9px;
+    border: 1px solid var(--color-rg-map-border);
+    border-radius: 8px;
+    background: var(--color-rg-map-panel);
+    color: var(--color-rg-map-text);
+  }
+
+  .map-label--origin {
+    top: calc(24.5300% - 23px);
+    left: calc(42.3907% + 18px);
+    width: 159px;
+  }
+
+  .map-label--destination {
+    top: calc(69.4809% - 7px);
+    left: calc(56.0342% - 167px);
+    width: 148px;
+  }
+
+  .map-stop-name {
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  .map-stop-detail {
+    font-size: 12px;
+    line-height: 17px;
+  }
+
+  .station-name--mobile {
+    display: none;
+  }
+
+  .map-heading {
+    top: 20px;
+    left: 20px;
+    padding: 10px 12px;
+    border-radius: 10px;
+  }
+
+  .map-title {
+    font-size: 20px;
+    line-height: 26px;
+    letter-spacing: -0.45px;
+  }
+
+  .map-subtitle {
+    margin-top: 1px;
+    font-size: 12px;
+    line-height: 17px;
+  }
+
+  .map-north {
+    top: 21px;
+    right: 23px;
+    width: 35px;
+    height: 55px;
+    gap: 1px;
+    border-radius: 9px;
+  }
+
+  .north-label {
+    font-size: 11px;
+    line-height: 12px;
+    letter-spacing: 0.18px;
+  }
+
+  .north-icon {
+    width: 21px;
+    height: 21px;
+  }
+
+  .map-footer {
+    right: 20px;
+    bottom: 17px;
+    left: 20px;
+    min-height: 32px;
+    gap: 12px;
+  }
+
+  .map-key {
+    min-height: 31px;
+    gap: 7px;
+    padding: 4px 9px;
+    border-radius: 7px;
+    font-size: 12px;
+    line-height: 17px;
+    white-space: nowrap;
+  }
+
+  .map-caption {
+    font-size: 11px;
+    line-height: 13px;
+    letter-spacing: 0.18px;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  @media (width < 1100px) and (width >= 960px) {
+    .planner-shell {
+      grid-template-columns: 340px minmax(0, 1fr);
+    }
+
+    .planner-title {
+      font-size: 30px;
+      letter-spacing: -1px;
+    }
+
+    .map-caption-source {
+      display: none;
+    }
+  }
+
+  @media (width < 960px) {
+    .site-header {
+      min-height: 62px;
+      gap: 12px;
+      padding: 0 16px;
+    }
+
+    .location-meta {
+      gap: 5px;
+    }
+
+    .location-icon {
+      width: 15px;
+      height: 15px;
+    }
+
+    .location-icon img {
+      width: 9.7813px;
+      height: 11.6563px;
+    }
+
+    .city-label {
+      font-size: 11px;
+      line-height: 16px;
+    }
+
+    .city-state,
+    .location-divider,
+    .data-source {
+      display: none;
+    }
+
+    .planner-shell {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 14px;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .search-panel {
+      gap: 14px;
+    }
+
+    .planner-title {
+      font-size: 27px;
+      line-height: 34px;
+      letter-spacing: -0.85px;
+    }
+
+    .search-form {
+      gap: 12px;
+      padding: 12px;
+      border-radius: 16px;
+    }
+
+    .map-panel {
+      height: auto;
+      min-height: 256px;
+      aspect-ratio: 358 / 256;
+      border-radius: 16px;
+    }
+
+    .map-heading {
+      top: 11px;
+      left: 11px;
+      padding: 6px 9px;
+    }
+
+    .map-title {
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 18px;
+      letter-spacing: 0;
+    }
+
+    .map-subtitle,
+    .map-region,
+    .landmark-dot,
+    .landmark-label,
+    .map-stop-detail,
+    .station-name--desktop,
+    .map-caption-source {
+      display: none;
+    }
+
+    .station-name--mobile {
+      display: inline;
+    }
+
+    .map-label {
+      padding: 4px 6px;
+      gap: 0;
+    }
+
+    .map-label--origin {
+      top: calc(24.5300% - 5px);
+      left: calc(42.3907% + 14px);
+      width: 100px;
+    }
+
+    .map-label--destination {
+      top: calc(69.4809% - 15px);
+      left: calc(56.0342% - 123px);
+      width: 109px;
+    }
+
+    .map-stop-name {
+      font-size: 10.5px;
+      line-height: 14px;
+    }
+
+    .map-point {
+      width: 13px;
+      height: 13px;
+    }
+
+    .map-north {
+      top: 11px;
+      right: 11px;
+      width: 25px;
+      height: 37px;
+    }
+
+    .north-label {
+      font-size: 9px;
+    }
+
+    .north-icon {
+      width: 15px;
+      height: 15px;
+    }
+
+    .north-icon img {
+      width: 7.2813px;
+      height: 10.4063px;
+    }
+
+    .map-footer {
+      right: 11px;
+      bottom: 10px;
+      left: 11px;
+      min-height: 23px;
+      gap: 6px;
+    }
+
+    .map-key {
+      min-height: 23px;
+      gap: 6px;
+      padding: 3px 6px;
+      font-size: 10px;
+      line-height: 15px;
+    }
+
+    .map-caption {
+      font-size: 9px;
+      line-height: 13px;
+    }
+  }
+
+  @media (width < 370px) {
+    .brand-name {
+      font-size: 21px;
+    }
+
+    .location-meta {
+      gap: 3px;
+    }
+
+    .city-label {
+      font-size: 10px;
+    }
+
+    .location-icon {
+      display: none;
+    }
+
+    .map-key {
+      gap: 4px;
+      padding-inline: 5px;
+    }
+  }
+}
