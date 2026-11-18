@@ -195,3 +195,81 @@ def test_max_speed_of_empty_or_zero_time_graph_returns_default_walking_speed():
     )
     assert RouteSimulator.max_speed_of(graph_only_zero) == pytest.approx(5.0 / 60.0)
 
+
+def test_calculate_route_direct_trip_chooses_first_departure_greater_than_or_equal_to_query_time():
+    graph = TransportGraph()
+    origin = Station("A", "Station A", 0.0, 0.0)
+    destination = Station("B", "Station B", 0.0, 0.1)
+    graph.add_station(origin)
+    graph.add_station(destination)
+
+    conn_early = Connection("line-1", destination, VehicleType.BUS, 15.0, 5.0, 480.0)
+    conn_late = Connection("line-1", destination, VehicleType.BUS, 15.0, 5.0, 510.0)
+    graph.add_connection(origin, conn_early)
+    graph.add_connection(origin, conn_late)
+
+    simulator = RouteSimulator(graph, max_speed=1.0)
+    route = simulator.calculate_route(origin, destination, departure_time=450.0)
+
+    assert route == [(origin, conn_early)]
+
+
+def test_calculate_route_accepts_departure_exactly_at_query_time():
+    graph = TransportGraph()
+    origin = Station("A", "Station A", 0.0, 0.0)
+    destination = Station("B", "Station B", 0.0, 0.1)
+    graph.add_station(origin)
+    graph.add_station(destination)
+
+    conn_exact = Connection("line-1", destination, VehicleType.BUS, 15.0, 5.0, 480.0)
+    conn_later = Connection("line-1", destination, VehicleType.BUS, 15.0, 5.0, 510.0)
+    graph.add_connection(origin, conn_exact)
+    graph.add_connection(origin, conn_later)
+
+    simulator = RouteSimulator(graph, max_speed=1.0)
+    route = simulator.calculate_route(origin, destination, departure_time=480.0)
+
+    assert route == [(origin, conn_exact)]
+
+
+def test_calculate_route_ignores_departures_before_query_time():
+    graph = TransportGraph()
+    origin = Station("A", "Station A", 0.0, 0.0)
+    destination = Station("B", "Station B", 0.0, 0.1)
+    graph.add_station(origin)
+    graph.add_station(destination)
+
+    conn_past = Connection("line-1", destination, VehicleType.BUS, 15.0, 5.0, 480.0)
+    conn_future = Connection("line-1", destination, VehicleType.BUS, 15.0, 5.0, 510.0)
+    graph.add_connection(origin, conn_past)
+    graph.add_connection(origin, conn_future)
+
+    simulator = RouteSimulator(graph, max_speed=1.0)
+    route = simulator.calculate_route(origin, destination, departure_time=490.0)
+
+    assert route == [(origin, conn_future)]
+
+
+def test_calculate_route_same_origin_and_destination_returns_empty_list():
+    graph = TransportGraph()
+    station = Station("A", "Station A", 0.0, 0.0)
+    graph.add_station(station)
+
+    simulator = RouteSimulator(graph, max_speed=1.0)
+    assert simulator.calculate_route(station, station, departure_time=480.0) == []
+
+
+def test_calculate_route_returns_none_when_no_departures_after_query_time():
+    graph = TransportGraph()
+    origin = Station("A", "Station A", 0.0, 0.0)
+    destination = Station("B", "Station B", 0.0, 0.1)
+    graph.add_station(origin)
+    graph.add_station(destination)
+
+    conn = Connection("line-1", destination, VehicleType.BUS, 15.0, 5.0, 480.0)
+    graph.add_connection(origin, conn)
+
+    simulator = RouteSimulator(graph, max_speed=1.0)
+    assert simulator.calculate_route(origin, destination, departure_time=500.0) is None
+
+
