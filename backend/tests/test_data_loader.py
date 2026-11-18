@@ -398,3 +398,99 @@ def test_repeated_station_pair_keeps_each_trips_own_schedule(gtfs_feed):
     assert first.distance == second.distance
     assert loader.report.loaded_trips == 2
     assert loader.report.connections == 2
+
+
+def test_multiple_services_require_explicit_selection(gtfs_feed):
+    loader = gtfs_feed(
+        trips=[('route_id','service_id','trip_id'),
+               ('r','weekday','weekday-trip'),
+               ('r','weekend','weekend-trip')],
+        stop_times=[('trip_id','arrival_time','departure_time','stop_id','stop_sequence'),
+                    ('weekday-trip','08:00:00','08:00:00','A','1'),
+                    ('weekday-trip','08:10:00','08:10:00','B','2'),
+                    ('weekend-trip','09:00:00','09:00:00','A','1'),
+                    ('weekend-trip','09:10:00','09:10:00','B','2')])
+
+    with pytest.raises(ValueError, match='active_service_ids'):
+        loader.build_graph()
+
+
+def test_explicit_service_selection_excludes_inactive_trips(gtfs_feed):
+    feed = gtfs_feed(
+        trips=[('route_id','service_id','trip_id'),
+               ('r','weekday','weekday-trip'),
+               ('r','weekend','weekend-trip')],
+        stop_times=[('trip_id','arrival_time','departure_time','stop_id','stop_sequence'),
+                    ('weekday-trip','08:00:00','08:00:00','A','1'),
+                    ('weekday-trip','08:10:00','08:10:00','B','2'),
+                    ('weekend-trip','09:00:00','09:00:00','A','1'),
+                    ('weekend-trip','09:10:00','09:10:00','B','2')])
+    from app.data_loader import DataLoader
+    loader = DataLoader(feed.data_directory, active_service_ids={'weekday'})
+
+    graph = loader.build_graph()
+
+    connection, = graph.get_neighbors(Station('A', '', 0, 0))
+    assert connection.departure_time == 480
+    assert loader.report.loaded_trips == 1
+    assert loader.report.reasons['inactive_service'] == 2
+
+
+@pytest.mark.parametrize('active_service_ids', [set(), {'missing'}])
+def test_invalid_explicit_service_selection_is_rejected(gtfs_feed, active_service_ids):
+    feed = gtfs_feed()
+    from app.data_loader import DataLoader
+    loader = DataLoader(feed.data_directory, active_service_ids=active_service_ids)
+
+    with pytest.raises(ValueError, match='active_service_ids'):
+        loader.build_graph()
+
+
+def test_declared_service_with_invalid_trip_still_produces_load_report(gtfs_feed):
+    feed = gtfs_feed(
+        trips=[('route_id','service_id','trip_id'), ('missing','declared','t')]
+    )
+    from app.data_loader import DataLoader
+    loader = DataLoader(feed.data_directory, active_service_ids={'declared'})
+
+    loader.build_graph()
+
+    assert loader.report.reasons['unknown_route'] == 1
+    assert loader.report.rejected_trips['t'] == 'unknown_trip'
+    assert loader.report.connections == 0
+
+
+@pytest.mark.parametrize('pickup_type,drop_off_type', [('1', '0'), ('0', '1')])
+def test_trip_with_boarding_or_alighting_restriction_is_quarantined(
+    gtfs_feed, pickup_type, drop_off_type
+):
+    header = ('trip_id','arrival_time','departure_time','stop_id','stop_sequence',
+              'pickup_type','drop_off_type')
+    loader = gtfs_feed(stop_times=[
+        header,
+        ('t','08:00:00','08:00:00','A','1',pickup_type,'0'),
+        ('t','08:10:00','08:10:00','B','2','0',drop_off_type),
+    ])
+
+    graph = loader.build_graph()
+
+    assert graph.get_neighbors(Station('A', '', 0, 0)) == []
+    assert loader.report.rejected_trips['t'] == 'restricted_pickup_drop_off'
+    assert loader.report.reasons['restricted_pickup_drop_off'] == 2
+
+
+@pytest.mark.parametrize('pickup_type,drop_off_type', [('9', '0'), ('0', '9')])
+def test_invalid_boarding_or_alighting_value_is_rejected(
+    gtfs_feed, pickup_type, drop_off_type
+):
+    header = ('trip_id','arrival_time','departure_time','stop_id','stop_sequence',
+              'pickup_type','drop_off_type')
+    loader = gtfs_feed(stop_times=[
+        header,
+        ('t','08:00:00','08:00:00','A','1',pickup_type,'0'),
+        ('t','08:10:00','08:10:00','B','2','0',drop_off_type),
+    ])
+
+    loader.build_graph()
+
+    assert loader.report.rejected_trips['t'] == 'invalid_pickup_drop_off'

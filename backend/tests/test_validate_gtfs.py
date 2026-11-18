@@ -56,6 +56,28 @@ def test_cli_writes_json_report(feed):
     assert 'Carregando' in completed.stderr
 
 
+def test_cli_filters_explicit_service_ids(feed):
+    with (feed / 'trips.txt').open('a', encoding='utf-8', newline='') as source:
+        csv.writer(source).writerow(('r', 'weekend', 'weekend-trip'))
+    with (feed / 'stop_times.txt').open('a', encoding='utf-8', newline='') as source:
+        csv.writer(source).writerows([
+            ('weekend-trip', '09:00:00', '09:00:00', 'A', '1'),
+            ('weekend-trip', '09:10:00', '09:10:00', 'B', '2'),
+        ])
+    destination = feed / 'filtered.json'
+
+    completed = subprocess.run(
+        [sys.executable, '-m', 'app.validate_gtfs', str(feed),
+         '--service-id', 'weekday', '--output', str(destination)],
+        cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True, timeout=20,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    result = json.loads(destination.read_text())
+    assert result['graph']['connections'] == 1
+    assert result['load_report']['reasons']['inactive_service'] == 2
+
+
 def test_audit_comparison_detects_changed_snapshot(feed):
     from app.validate_gtfs import validate_dataset
 
@@ -73,6 +95,32 @@ def test_audit_comparison_detects_changed_snapshot(feed):
     result = validate_dataset(feed, audit_path)
     assert result['passed'] is False
     assert result['audit']['files']['stops.txt']['hash_matches'] is False
+
+
+def test_filtered_validation_does_not_compare_global_quarantine_count(feed):
+    with (feed / 'trips.txt').open('a', encoding='utf-8', newline='') as source:
+        csv.writer(source).writerow(('r', 'weekend', 'weekend-trip'))
+    with (feed / 'stop_times.txt').open('a', encoding='utf-8', newline='') as source:
+        csv.writer(source).writerows([
+            ('weekend-trip', '09:00:00', '09:00:00', 'A', '1'),
+            ('weekend-trip', '09:00:00', '09:00:00', 'B', '2'),
+        ])
+    audit = {}
+    for name in ('stops', 'routes', 'trips', 'stop_times'):
+        path = feed / (name + '.txt')
+        audit[name] = {
+            'rows': len(path.read_text(encoding='utf-8').splitlines()) - 1,
+            'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+        }
+    audit['additional_checks'] = {'zero_time_affected_trips': 1}
+    audit_path = feed / 'audit.json'
+    audit_path.write_text(json.dumps(audit), encoding='utf-8')
+    from app.validate_gtfs import validate_dataset
+
+    result = validate_dataset(feed, audit_path, active_service_ids={'weekday'})
+
+    assert result['passed'] is True
+    assert result['audit']['zero_time_quarantine_matches'] is None
 
 
 def test_graph_validation_detects_unsorted_or_invalid_connections():
