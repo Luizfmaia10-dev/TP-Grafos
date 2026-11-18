@@ -31,6 +31,7 @@
   --font-mono: "IBM Plex Mono", monospace;
   --color-rg-navy: #032147;
   --color-rg-paper: #f5f5f1;
+  --color-rg-surface: #ffffff;
   --color-rg-ink: #11263d;
   --color-rg-muted: #506078;
   --color-rg-line: #dfe5ea;
@@ -53,6 +54,31 @@
 }
 
 @layer base {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+
+  html[data-theme="dark"] {
+    color-scheme: dark;
+    --color-rg-navy: #07111d;
+    --color-rg-paper: #0b1118;
+    --color-rg-surface: #111a24;
+    --color-rg-ink: #f2f5f8;
+    --color-rg-muted: #b4c0cc;
+    --color-rg-line: #293745;
+    --color-rg-control: #607284;
+    --color-rg-field: #17232f;
+    --color-rg-purple: #b97ace;
+    --color-rg-soft-purple: #2a2032;
+    --color-rg-map: #080f17;
+    --color-rg-map-panel: #131f2a;
+    --color-rg-map-border: #344859;
+    --color-rg-error: #ff8ca1;
+    --shadow-rg-card: none;
+  }
+
   body {
     min-width: 320px;
     min-height: 100svh;
@@ -73,6 +99,12 @@
     color: var(--color-rg-muted);
     opacity: 1;
   }
+
+  html[data-theme="dark"] .clock-icon img,
+  html[data-theme="dark"] .search-icon img {
+    filter: brightness(0) invert(1);
+    opacity: 0.72;
+  }
 }
 
 @layer components {
@@ -84,7 +116,7 @@
     padding: 12px 16px;
     transform: translateY(-180%);
     border-radius: 10px;
-    background: white;
+    background: var(--color-rg-surface);
     color: var(--color-rg-navy);
     font-weight: 600;
   }
@@ -98,6 +130,53 @@
     min-height: 72px;
     gap: 24px;
     padding: 0 25px;
+  }
+
+  .header-actions {
+    gap: 18px;
+  }
+
+  .theme-switch {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    gap: 8px;
+    padding: 0 4px 0 8px;
+    border-radius: 8px;
+    color: var(--color-rg-map-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .theme-switch:hover {
+    background: var(--color-rg-map-panel);
+  }
+
+  .theme-switch-track {
+    position: relative;
+    width: 38px;
+    height: 22px;
+    flex-shrink: 0;
+    border: 1px solid var(--color-rg-map-border);
+    border-radius: 999px;
+    background: var(--color-rg-map-panel);
+  }
+
+  .theme-switch-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--color-rg-yellow);
+    transition: transform 180ms ease;
+  }
+
+  .theme-switch[aria-checked="true"] .theme-switch-thumb {
+    transform: translateX(16px);
+    background: var(--color-rg-map-text);
   }
 
   .brand {
@@ -213,7 +292,7 @@
     padding: 8px 12px;
     border: 1px solid var(--color-rg-line);
     border-radius: 9px;
-    background: white;
+    background: var(--color-rg-surface);
     color: var(--color-rg-purple);
     font-size: 0.8125rem;
     font-weight: 600;
@@ -233,9 +312,9 @@
 
   .query-feedback {
     padding: 16px 18px;
-    border: 1px solid #e6c6d0;
+    border: 1px solid color-mix(in srgb, var(--color-rg-error) 28%, var(--color-rg-line));
     border-radius: 16px;
-    background: #fff7f9;
+    background: color-mix(in srgb, var(--color-rg-error) 8%, var(--color-rg-surface));
   }
 
   .query-feedback h2 {
@@ -257,7 +336,7 @@
     padding: 18px;
     border: 1px solid var(--color-rg-line);
     border-radius: 17px;
-    background: white;
+    background: var(--color-rg-surface);
   }
 
   .route-summary {
@@ -429,7 +508,7 @@
     margin-top: 6px;
     border: 2px solid var(--color-rg-bus);
     border-radius: 50%;
-    background: white;
+    background: var(--color-rg-surface);
     font-size: 0.625rem;
     line-height: 0.875rem;
   }
@@ -560,7 +639,7 @@
     padding: 12px 14px;
     border: 1px solid var(--color-rg-line);
     border-radius: 11px;
-    background: white;
+    background: var(--color-rg-surface);
   }
 
   .station-options {
@@ -572,7 +651,7 @@
     overflow-y: auto;
     border: 1px solid var(--color-rg-line);
     border-radius: 11px;
-    background: white;
+    background: var(--color-rg-surface);
   }
 
   .station-option {
@@ -720,6 +799,10 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .theme-switch-thumb {
+      transition: none;
+    }
+
     .search-button[data-loading="true"]::before {
       animation: none;
     }
@@ -768,6 +851,16 @@
     border-radius: 21px;
     container-type: size;
     container-name: network;
+  }
+
+  .map-panel[data-origin-confirmed="true"] {
+    outline: 2px solid var(--color-rg-yellow);
+    outline-offset: -2px;
+  }
+
+  .map-station[data-confirmed="true"] .map-marker {
+    outline: 2px solid var(--color-rg-map-text);
+    outline-offset: 5px;
   }
 
   /* Keep the exported SVG and all location labels in the same coordinate plane. */
@@ -1186,6 +1279,14 @@
       gap: 5px;
     }
 
+    .header-actions {
+      gap: 8px;
+    }
+
+    .theme-switch {
+      padding-left: 4px;
+    }
+
     .location-icon {
       width: 15px;
       height: 15px;
@@ -1436,6 +1537,15 @@
 
     .location-icon {
       display: none;
+    }
+
+    .theme-switch-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
     }
 
     .map-key {

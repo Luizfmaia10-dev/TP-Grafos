@@ -23,13 +23,19 @@
         <span class="brand-name">RotasGraph</span>
       </a>
 
-      <div class="location-meta flex items-center text-rg-map-text">
-        <span class="location-icon icon-slot" aria-hidden="true">
-          <img src="/assets/icons/location.svg" alt="">
-        </span>
-        <p class="city-label font-semibold">Belo Horizonte<span class="city-state">, MG</span></p>
-        <span class="location-divider" aria-hidden="true"></span>
-        <p class="data-source font-mono text-rg-map-muted">GTFS / BHTRANS</p>
+      <div class="header-actions flex items-center">
+        <div class="location-meta flex items-center text-rg-map-text">
+          <span class="location-icon icon-slot" aria-hidden="true">
+            <img src="/assets/icons/location.svg" alt="">
+          </span>
+          <p class="city-label font-semibold">Belo Horizonte<span class="city-state">, MG</span></p>
+          <span class="location-divider" aria-hidden="true"></span>
+          <p class="data-source font-mono text-rg-map-muted">GTFS / BHTRANS</p>
+        </div>
+        <button id="theme-switch" class="theme-switch" type="button" role="switch" aria-checked="false" aria-label="Alternar tema claro e escuro">
+          <span class="theme-switch-label">Tema</span>
+          <span class="theme-switch-track" aria-hidden="true"><span class="theme-switch-thumb"></span></span>
+        </button>
       </div>
     </header>
 
@@ -45,7 +51,7 @@
           <button id="edit-search" class="edit-search" type="button" hidden><span class="edit-icon icon-slot" aria-hidden="true"><img src="/assets/icons/arrow-left.svg" alt=""></span> Editar busca</button>
         </div>
 
-        <form id="route-form" class="search-form flex flex-col border border-rg-line bg-white shadow-rg-card" aria-label="Planejamento do trajeto" aria-busy="false" novalidate>
+        <form id="route-form" class="search-form flex flex-col border border-rg-line bg-rg-surface shadow-rg-card" aria-label="Planejamento do trajeto" aria-busy="false" novalidate>
           <p id="station-hint" class="sr-only">Escolha uma sugestão para confirmar a parada. Use as setas, Enter e Escape para navegar.</p>
           <div id="origin-field" class="form-field flex min-w-0 flex-col">
             <label class="field-label font-semibold" for="origin">Origem</label>
@@ -122,7 +128,7 @@
         </section>
 
         <button id="demo-trigger" class="demo-card flex items-center text-left" type="button">
-          <span class="demo-icon flex shrink-0 items-center justify-center bg-white" aria-hidden="true">
+          <span class="demo-icon flex shrink-0 items-center justify-center bg-rg-surface" aria-hidden="true">
             <img src="/assets/icons/bus.svg" alt="">
           </span>
           <span class="min-w-0 flex-1">

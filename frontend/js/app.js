@@ -5,6 +5,7 @@ import { searchDemoRoute } from "./demo-service.js";
 import { createRouteRequest } from "./route-request.js";
 import { formatDuration, renderRoute } from "./route-view.js";
 import { maskDepartureTime } from "./time-mask.js";
+import { createThemeSwitch } from "./theme.js";
 import {
   createSelection,
   editStation,
@@ -27,6 +28,7 @@ const summary = document.querySelector("#route-summary");
 const itinerary = document.querySelector("#route-itinerary");
 const feedback = document.querySelector("#query-feedback");
 const announcement = document.querySelector("#query-announcement");
+createThemeSwitch(document.querySelector("#theme-switch"));
 const touched = new Set();
 const fields = Object.fromEntries(["origin", "destination"].map(field => [field, {
   wrapper: document.getElementById(`${field}-field`),
