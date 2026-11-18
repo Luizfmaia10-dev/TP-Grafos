@@ -1,6 +1,6 @@
 import pytest
 
-from app.domain import Station, TemporaryVertex, VehicleType
+from app.domain import Connection, Station, TemporaryVertex, VehicleType
 from app.graph import TransportGraph
 from app.route_simulator import RouteSimulator, haversine
 
@@ -147,3 +147,51 @@ def test_snap_cleans_up_when_route_search_raises():
 
     assert list(graph.iter_stations()) == [station]
     assert graph.get_neighbors(station) == []
+
+
+def test_max_speed_of_finds_highest_speed_among_edges_with_positive_travel_time():
+    graph = TransportGraph()
+    station_a = Station("A", "Station A", 0.0, 0.0)
+    station_b = Station("B", "Station B", 0.0, 0.1)
+    station_c = Station("C", "Station C", 0.0, 0.2)
+    for station in (station_a, station_b, station_c):
+        graph.add_station(station)
+
+    # 10 km in 10 min -> 1.0 km/min
+    conn_ab = Connection("r1", station_b, VehicleType.BUS, 10.0, 10.0, 480.0)
+    # 20 km in 10 min -> 2.0 km/min
+    conn_bc = Connection("r2", station_c, VehicleType.SUBWAY, 10.0, 20.0, 495.0)
+    graph.add_connection(station_a, conn_ab)
+    graph.add_connection(station_b, conn_bc)
+
+    assert RouteSimulator.max_speed_of(graph) == pytest.approx(2.0)
+
+
+def test_max_speed_of_ignores_edges_with_zero_travel_time():
+    graph = TransportGraph()
+    station_a = Station("A", "Station A", 0.0, 0.0)
+    station_b = Station("B", "Station B", 0.0, 0.1)
+    for station in (station_a, station_b):
+        graph.add_station(station)
+
+    # Edge with travel_time == 0.0 should not raise ZeroDivisionError
+    conn_zero = Connection("r0", station_b, VehicleType.BUS, 0.0, 0.0, 480.0)
+    conn_valid = Connection("r1", station_b, VehicleType.BUS, 15.0, 15.0, 500.0)
+    graph.add_connection(station_a, conn_zero)
+    graph.add_connection(station_a, conn_valid)
+
+    assert RouteSimulator.max_speed_of(graph) == pytest.approx(1.0)
+
+
+def test_max_speed_of_empty_or_zero_time_graph_returns_default_walking_speed():
+    empty_graph = TransportGraph()
+    assert RouteSimulator.max_speed_of(empty_graph) == pytest.approx(5.0 / 60.0)
+
+    graph_only_zero = TransportGraph()
+    station_a = Station("A", "Station A", 0.0, 0.0)
+    graph_only_zero.add_station(station_a)
+    graph_only_zero.add_connection(
+        station_a, Connection("r0", station_a, VehicleType.BUS, 0.0, 0.0, 480.0)
+    )
+    assert RouteSimulator.max_speed_of(graph_only_zero) == pytest.approx(5.0 / 60.0)
+

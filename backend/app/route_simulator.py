@@ -30,6 +30,22 @@ class RouteSimulator:
         self.graph = graph
         self.max_speed = max_speed  # km/min, must bound every edge speed
 
+    @staticmethod
+    def max_speed_of(graph: TransportGraph) -> float:
+        """Find the maximum speed (km/min) across all graph edges with positive duration.
+
+        Edges with travel_time <= 0 are ignored to avoid division by zero.
+        If the graph has no positive duration edges, returns walking speed.
+        """
+        max_speed = 0.0
+        for station in graph.iter_stations():
+            for connection in graph.get_neighbors(station):
+                if connection.travel_time > 0:
+                    speed = connection.distance / connection.travel_time
+                    if speed > max_speed:
+                        max_speed = speed
+        return max_speed if max_speed > 0.0 else WALKING_SPEED_KM_PER_MINUTE
+
     def heuristic(self, current: Station, target: Station) -> float:
         distance = haversine(
             current.latitude, current.longitude, target.latitude, target.longitude
