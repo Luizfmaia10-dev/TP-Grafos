@@ -33,14 +33,19 @@
       </div>
     </header>
 
-    <main id="planner" class="planner-shell" tabindex="-1">
+    <p id="query-announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+
+    <main id="planner" class="planner-shell" data-view="search" tabindex="-1">
       <section class="search-panel flex min-w-0 flex-col" aria-labelledby="planner-title">
         <div class="search-intro">
-          <h1 id="planner-title" class="planner-title font-extrabold">Planeje seu trajeto</h1>
-          <p class="planner-description text-rg-muted">Escolha duas paradas pelo nome ou no mapa.</p>
+          <div class="intro-copy">
+            <h1 id="planner-title" class="planner-title font-extrabold" tabindex="-1">Planeje seu trajeto</h1>
+            <p id="planner-description" class="planner-description text-rg-muted">Escolha duas paradas pelo nome ou no mapa.</p>
+          </div>
+          <button id="edit-search" class="edit-search" type="button" hidden><span aria-hidden="true">←</span> Editar busca</button>
         </div>
 
-        <form id="route-form" class="search-form flex flex-col border border-rg-line bg-white shadow-rg-card" aria-label="Planejamento do trajeto" novalidate>
+        <form id="route-form" class="search-form flex flex-col border border-rg-line bg-white shadow-rg-card" aria-label="Planejamento do trajeto" aria-busy="false" novalidate>
           <div id="origin-field" class="form-field flex min-w-0 flex-col">
             <label class="field-label font-semibold" for="origin">Origem</label>
             <div class="field-control flex items-center">
@@ -87,6 +92,30 @@
           <p id="selection-status" class="selection-status" role="status" aria-live="polite" aria-atomic="true" hidden></p>
         </form>
 
+        <section id="query-feedback" class="query-feedback" aria-labelledby="feedback-title" hidden>
+          <h2 id="feedback-title"></h2>
+          <p id="feedback-description"></p>
+        </section>
+
+        <section id="route-summary" class="route-summary" aria-label="Resumo do trajeto" hidden>
+          <div class="summary-metrics">
+            <div class="summary-metric">
+              <p class="metric-label">Tempo total</p>
+              <p class="metric-value"><span id="total-minutes"></span><span class="metric-unit">min</span></p>
+            </div>
+            <div class="summary-metric summary-arrival">
+              <p class="metric-label">Chegada prevista</p>
+              <p id="arrival-time" class="metric-value"></p>
+            </div>
+          </div>
+          <p id="exact-total" class="sr-only"></p>
+          <div class="duration-bar" aria-hidden="true"><span id="waiting-proportion"></span></div>
+          <div class="duration-key">
+            <p class="duration-wait"><span id="waiting-duration"></span></p>
+            <p class="duration-vehicle"><span id="vehicle-duration"></span></p>
+          </div>
+        </section>
+
         <button id="demo-trigger" class="demo-card flex items-center text-left" type="button">
           <span class="demo-icon flex shrink-0 items-center justify-center bg-white" aria-hidden="true">
             <img src="/assets/icons/bus.svg" alt="" width="15.7646" height="16.7229">
@@ -99,6 +128,16 @@
             <img src="/assets/icons/arrow.svg" alt="" width="15.2625" height="12.5125">
           </span>
         </button>
+        <p id="demo-scope" class="demo-scope">Demonstração com três paradas da linha 50 no sentido Centro e horários de uma viagem de exemplo.</p>
+      </section>
+
+      <section id="route-itinerary" class="route-itinerary" aria-labelledby="itinerary-title" hidden>
+        <div class="itinerary-heading">
+          <h2 id="itinerary-title">Itinerário</h2>
+          <p id="route-distance" class="font-mono" title="Soma das distâncias em linha reta entre as paradas"></p>
+        </div>
+        <ol id="itinerary-steps"></ol>
+        <p class="itinerary-note">Viagem de exemplo, sem consulta por data. Distância aproximada entre paradas; o mapa é esquemático.</p>
       </section>
 
       <section class="map-panel relative min-w-0 overflow-hidden bg-rg-map" aria-labelledby="map-title" aria-describedby="map-description">
@@ -118,6 +157,12 @@
             <span class="landmark-label landmark-label--liberdade">Praça da Liberdade</span>
             <img class="landmark-dot landmark-dot--liberdade" src="/assets/icons/landmark.svg" alt="" width="6" height="6">
           </div>
+          <svg id="map-route" class="map-route" viewBox="0 0 960 780" width="960" height="780" aria-hidden="true" hidden>
+            <polyline class="route-glow" fill="none"></polyline>
+            <polyline class="route-line" fill="none"></polyline>
+            <g class="route-direction"><path d="M-3 -4 L1 0 L-3 4" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></g>
+          </svg>
+          <span id="route-pill" class="route-pill font-mono" aria-hidden="true" hidden><span>Linha</span> 50</span>
           <div id="map-stations"></div>
         </div>
 
@@ -136,8 +181,9 @@
 
         <div class="map-footer absolute flex items-center justify-between">
           <span class="map-key flex items-center border border-rg-map-border bg-rg-map-panel text-rg-map-text">
-            <img src="/assets/icons/stop-key.svg" alt="" width="7" height="7" aria-hidden="true">
-            <span>Paradas de ônibus</span>
+            <img id="map-key-station" src="/assets/icons/stop-key.svg" alt="" width="7" height="7" aria-hidden="true">
+            <span id="map-key-route" class="route-key-line" aria-hidden="true" hidden></span>
+            <span id="map-key-label">Paradas de ônibus</span>
           </span>
           <p class="map-caption font-mono text-rg-map-muted">Mapa esquemático<span class="map-caption-source"> · GTFS BHTRANS</span></p>
         </div>

@@ -1,5 +1,8 @@
 import { DEMO_STATIONS, DEMO_TRIP } from "./demo-data.js";
 import { createStationMap } from "./map.js";
+import { searchDemoRoute } from "./demo-service.js";
+import { createRouteRequest } from "./route-request.js";
+import { formatDuration, renderRoute } from "./route-view.js";
 import {
   createSelection,
   editStation,
@@ -13,6 +16,15 @@ const departureInput = document.querySelector("#departure-time");
 const submitButton = form.querySelector(".search-button");
 const status = document.querySelector("#selection-status");
 const mapRole = document.querySelector("#map-selection-role");
+const planner = document.querySelector("#planner");
+const title = document.querySelector("#planner-title");
+const description = document.querySelector("#planner-description");
+const demoTrigger = document.querySelector("#demo-trigger");
+const editSearch = document.querySelector("#edit-search");
+const summary = document.querySelector("#route-summary");
+const itinerary = document.querySelector("#route-itinerary");
+const feedback = document.querySelector("#query-feedback");
+const announcement = document.querySelector("#query-announcement");
 const touched = new Set();
 const fields = Object.fromEntries(["origin", "destination"].map(field => [field, {
   wrapper: document.getElementById(`${field}-field`),
@@ -33,6 +45,46 @@ let activeOption = -1;
 const map = createStationMap(document.querySelector("#map-stations"), DEMO_STATIONS, station => {
   chooseStation(activeField, station);
 });
+const request = createRouteRequest(searchDemoRoute, renderRequest);
+
+function renderRequest(state) {
+  const loading = state.status === "loading";
+  const found = state.status === "found";
+  planner.dataset.view = found ? "result" : "search";
+  title.textContent = found ? "Seu trajeto" : "Planeje seu trajeto";
+  description.textContent = found ? `Trajeto de exemplo · linha ${state.routeShortName}` : "Escolha duas paradas pelo nome ou no mapa.";
+  form.hidden = found;
+  demoTrigger.hidden = found;
+  document.querySelector("#demo-scope").hidden = found;
+  editSearch.hidden = !found;
+  summary.hidden = !found;
+  itinerary.hidden = !found;
+  form.setAttribute("aria-busy", String(loading));
+  submitButton.dataset.loading = String(loading);
+  submitButton.textContent = loading ? "Consultando exemplo…" : "Calcular trajeto";
+  renderSelection();
+
+  const messages = {
+    "no-route": ["Sem partida neste horário", `A viagem do exemplo parte desta parada às ${state.boardingTime}. Escolha uma saída até esse horário ou use “Experimente a linha 50”.`],
+    "outside-sample": ["Trecho fora do exemplo", "Esta amostra cobre três paradas no sentido Pampulha → Centro. A viagem de volta e outras paradas ficam fora deste exemplo."],
+    error: ["Não foi possível consultar o exemplo", "Tente novamente. Suas paradas e o horário foram mantidos."],
+  };
+  const message = messages[state.status];
+  feedback.hidden = !message;
+  if (message) {
+    document.querySelector("#feedback-title").textContent = message[0];
+    document.querySelector("#feedback-description").textContent = message[1];
+  }
+  if (found) {
+    renderRoute(state);
+    announcement.textContent = `Trajeto de exemplo encontrado. Total: ${formatDuration(state.totalSeconds)}. Chegada às ${state.arrivalTime}.`;
+    title.focus({ preventScroll: true });
+    window.scrollTo({ top: 0 });
+  } else {
+    announcement.textContent = loading ? "Consultando a viagem de exemplo da linha 50." : message ? message.join(". ") : "";
+    if (!loading) document.querySelector("#itinerary-steps").replaceChildren();
+  }
+}
 
 function setStatus(message) {
   status.textContent = message;
@@ -57,11 +109,18 @@ function renderSelection() {
   if (departureInput.value !== selection.departureTime) departureInput.value = selection.departureTime;
   showError(departureInput, document.querySelector("#departure-error"),
     touched.has("departureTime") ? result.errors.departureTime : null);
-  submitButton.disabled = result.query === null;
-  map.update(selection, activeField);
+  const loading = request.state.status === "loading";
+  const found = request.state.status === "found";
+  submitButton.disabled = loading || result.query === null;
+  map.update(selection, activeField, found ? request.state : null);
+  mapRole.hidden = found;
   mapRole.textContent = activeField === "origin" ? "Origem" : "Destino";
+  document.querySelector("#map-description").textContent = found
+    ? `Trajeto de exemplo da linha ${request.state.routeShortName}, de ${selection.originText} até ${selection.destinationText}. O traço vermelho liga as paradas no mapa esquemático. A marca a origem e B marca o destino.`
+    : "Mapa esquemático da rede de ônibus de Belo Horizonte. Selecione as paradas do exemplo da linha 50 para preencher origem e destino. Os marcadores A e B identificam suas escolhas.";
 
-  if (result.query) setStatus(`Paradas selecionadas para o exemplo da linha ${DEMO_TRIP.routeShortName}. Confira o horário de saída.`);
+  if (loading) setStatus("Consultando os horários da viagem de exemplo… Você pode editar os campos para cancelar.");
+  else if (result.query) setStatus(`Paradas selecionadas para o exemplo da linha ${DEMO_TRIP.routeShortName}. Confira o horário de saída.`);
   else if (selection.originId && !selection.destinationId) setStatus("Origem selecionada. Escolha o destino.");
   else if (selection.destinationId && !selection.originId) setStatus("Destino selecionado. Escolha a origem.");
   else setStatus("");
@@ -82,6 +141,7 @@ function closeOptions() {
 
 function chooseStation(field, station, focusNext = false) {
   selection = selectStation(selection, field, station);
+  request.cancel();
   touched.add(field);
   closeOptions();
   activeField = field;
@@ -167,6 +227,7 @@ for (const [field, controls] of Object.entries(fields)) {
   });
   controls.input.addEventListener("input", () => {
     selection = editStation(selection, field, controls.input.value);
+    request.cancel();
     touched.delete(field);
     renderSelection();
     openOptions(field);
@@ -178,6 +239,7 @@ for (const [field, controls] of Object.entries(fields)) {
   });
   controls.clear.addEventListener("click", () => {
     selection = editStation(selection, field, "");
+    request.cancel();
     touched.delete(field);
     renderSelection();
     controls.input.focus();
@@ -188,6 +250,7 @@ for (const [field, controls] of Object.entries(fields)) {
 for (const event of ["input", "blur"]) {
   departureInput.addEventListener(event, () => {
     selection = { ...selection, departureTime: departureInput.value };
+    if (event === "input") request.cancel();
     if (event === "blur") touched.add("departureTime");
     renderSelection();
   });
@@ -200,7 +263,8 @@ document.addEventListener("focusin", event => {
   if (openField && !fields[openField].wrapper.contains(event.target)) closeOptions();
 });
 
-document.querySelector("#demo-trigger").addEventListener("click", () => {
+demoTrigger.addEventListener("click", () => {
+  request.cancel();
   const firstId = DEMO_TRIP.stopTimes[0].stationId;
   const lastId = DEMO_TRIP.stopTimes.at(-1).stationId;
   const origin = DEMO_STATIONS.find(station => station.stationId === firstId);
@@ -215,6 +279,7 @@ document.querySelector("#demo-trigger").addEventListener("click", () => {
 
 form.addEventListener("submit", event => {
   event.preventDefault();
+  if (request.state.status === "loading") return;
   closeOptions();
   ["origin", "destination", "departureTime"].forEach(field => touched.add(field));
   const result = renderSelection();
@@ -224,7 +289,12 @@ form.addEventListener("submit", event => {
     else departureInput.focus();
     return;
   }
-  setStatus(`Consulta preparada: ${selection.originText} → ${selection.destinationText}. Saída ${result.query.departureTime}.`);
+  request.submit(result.query);
+});
+
+editSearch.addEventListener("click", () => {
+  request.cancel();
+  fields.origin.input.focus();
 });
 
 renderSelection();
