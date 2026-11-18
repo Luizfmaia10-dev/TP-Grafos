@@ -1,7 +1,10 @@
 """Time-dependent A* routing engine."""
 
+from bisect import bisect_left
 from contextlib import contextmanager
 from collections.abc import Iterator
+from heapq import heappop, heappush
+from itertools import count
 from math import asin, cos, isfinite, radians, sin, sqrt
 from uuid import uuid4
 
@@ -51,6 +54,85 @@ class RouteSimulator:
             current.latitude, current.longitude, target.latitude, target.longitude
         )
         return distance / self.max_speed
+
+    def calculate_route(
+        self, origin: Station, destination: Station, departure_time: float
+    ) -> list[tuple[Station, Connection]] | None:
+        """Find the earliest arrival route from origin to destination."""
+        if origin == destination:
+            return []
+
+        g: dict[Station, float] = {origin: departure_time}
+        predecessor: dict[Station, tuple[Station, Connection]] = {}
+        closed: set[Station] = set()
+        counter = count()
+        heap: list[tuple[float, int, Station]] = [
+            (departure_time + self.heuristic(origin, destination), next(counter), origin)
+        ]
+
+        while heap:
+            _, _, station = heappop(heap)
+            if station in closed:
+                continue
+            if station == destination:
+                return self._reconstruct_path(predecessor, origin, destination)
+            closed.add(station)
+
+            t = g[station]
+            connections = self.graph.get_neighbors(station)
+
+            # 1. Walk connections: on-demand, departing immediately at t
+            for connection in connections:
+                if connection.vehicle_type is VehicleType.WALK:
+                    arrival = t + connection.travel_time
+                    if arrival < g.get(connection.destination, float("inf")):
+                        g[connection.destination] = arrival
+                        predecessor[connection.destination] = (station, connection)
+                        heappush(
+                            heap,
+                            (
+                                arrival + self.heuristic(connection.destination, destination),
+                                next(counter),
+                                connection.destination,
+                            ),
+                        )
+
+            # 2. Scheduled transit connections: departing at or after t
+            start = bisect_left(connections, t, key=lambda c: c.departure_time)
+            for connection in connections[start:]:
+                if connection.vehicle_type is VehicleType.WALK:
+                    continue
+                if connection.departure_time >= g.get(destination, float("inf")):
+                    break
+                arrival = connection.departure_time + connection.travel_time
+                if arrival < g.get(connection.destination, float("inf")):
+                    g[connection.destination] = arrival
+                    predecessor[connection.destination] = (station, connection)
+                    heappush(
+                        heap,
+                        (
+                            arrival + self.heuristic(connection.destination, destination),
+                            next(counter),
+                            connection.destination,
+                        ),
+                    )
+
+        return None
+
+    def _reconstruct_path(
+        self,
+        predecessor: dict[Station, tuple[Station, Connection]],
+        origin: Station,
+        destination: Station,
+    ) -> list[tuple[Station, Connection]]:
+        path: list[tuple[Station, Connection]] = []
+        current = destination
+        while current != origin:
+            previous_station, connection = predecessor[current]
+            path.append((previous_station, connection))
+            current = previous_station
+        path.reverse()
+        return path
 
     @contextmanager
     def snap_to_network(
