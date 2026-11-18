@@ -31,7 +31,7 @@ npm.cmd run check:server
 ```
 
 Em Linux/macOS, use npm no lugar de npm.cmd. npm ci instala as versoes do
-lockfile. npm test executa 84 testes independentes do servidor. npm run build
+lockfile. npm test executa 86 testes independentes do servidor. npm run build
 copia as fontes e compila styles/app.css para assets/app.css; edite o arquivo
 de origem. npm run watch:css acompanha mudancas de estilo durante a edicao.
 
