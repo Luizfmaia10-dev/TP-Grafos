@@ -79,6 +79,12 @@ def test_search_returns_fastest_route_with_transfer_and_exact_costs(client):
     assert second["arrival_time"] == "08:11:15"
     assert second["waiting_seconds"] == 90
     assert second["travel_seconds"] == 255
+    assert route["instructions"] == [
+        "Wait at Central until 08:00:00.",
+        "Take BUS bus from Central to Transfer at 08:00:00; arrive at 08:05:30.",
+        "Wait at Transfer until 08:07:00.",
+        "Take SUBWAY metro from Transfer to Terminal at 08:07:00; arrive at 08:11:15.",
+    ]
 
 
 def test_direct_route_departing_exactly_at_requested_time(client):

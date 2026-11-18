@@ -126,13 +126,18 @@ Exemplo de resposta HTTP 200 para uma rota direta sintetica:
         "travel_seconds": 600,
         "distance_km": 0.153
       }
+    ],
+    "instructions": [
+      "Wait at Central until 08:00:00.",
+      "Take BUS bus from Central to Terminal at 08:00:00; arrive at 08:10:00."
     ]
   }
 }
 ```
 
 Cada passo corresponde a uma conexao entre duas paradas, na ordem do
-caminho. `vehicle_type` usa `BUS`, `SUBWAY` ou `WALK`. Para transporte
+caminho. `instructions` traz o passo a passo textual ja calculado pelo
+`Itinerary`. `vehicle_type` usa `BUS`, `SUBWAY` ou `WALK`. Para transporte
 agendado, a espera inclui o tempo ate a partida, tambem nas baldeacoes.
 Caminhada parte imediatamente na chegada a parada, sem espera; o horario
 zero armazenado na conexao WALK nao e apresentado como meia-noite.
@@ -162,8 +167,9 @@ Nao sao inventados `trip_id`, `service_id` ou nomes ausentes no dominio.
 A API usa `RouteSimulator.calculate_route` com um simulador por consulta e
 o grafo compartilhado, sem modificar conexoes ou carregar o feed novamente.
 A montagem da resposta fica em `app/api/`, em O(P) para P conexoes no
-caminho; o dominio nao depende de FastAPI ou dos modelos HTTP. Esta entrega
-nao implementa a classe de dominio `Itinerary`, nem coordenadas arbitrarias.
+caminho; o dominio nao depende de FastAPI ou dos modelos HTTP. A classe de
+dominio `Itinerary` concentra os totais, passos e instrucoes. O contrato nao
+aceita coordenadas arbitrarias.
 
 Para testar pelo PowerShell com o servidor configurado e aberto, substitua
 os IDs sinteticos por IDs retornados por `/stations`:

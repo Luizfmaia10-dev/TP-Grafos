@@ -29,6 +29,7 @@ def build_route_result(path: list[tuple[Station, Connection]], departure_time: f
             travel_seconds=0,
             distance_km=0,
             steps=[],
+            instructions=[],
         )
     itinerary = Itinerary(path[0][0], departure_time, path)
     return RouteResult(
@@ -44,6 +45,7 @@ def build_route_result(path: list[tuple[Station, Connection]], departure_time: f
             waiting_seconds=step.waiting_seconds, travel_seconds=step.travel_seconds,
             distance_km=step.distance_km,
         ) for step in itinerary.steps],
+        instructions=list(itinerary.instructions),
     )
 
 

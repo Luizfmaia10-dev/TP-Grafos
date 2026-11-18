@@ -66,6 +66,7 @@ class RouteResult:
     travel_seconds: int
     distance_km: float
     steps: list[RouteStep]
+    instructions: list[str]
 
 
 @dataclass(frozen=True, slots=True)
