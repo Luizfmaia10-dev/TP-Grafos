@@ -5,6 +5,7 @@ import hashlib
 import json
 import platform
 import sys
+from datetime import date
 from math import isfinite
 from pathlib import Path
 from time import perf_counter
@@ -96,11 +97,14 @@ def validate_graph(graph: TransportGraph) -> dict:
     }
 
 
-def validate_dataset(data_directory: str | Path, audit_path: str | Path | None = None) -> dict:
+def validate_dataset(data_directory: str | Path, audit_path: str | Path | None = None,
+                     active_service_ids: set[str] | None = None, *,
+                     service_date: date | None = None) -> dict:
     """Load a feed, verify graph invariants, and optionally compare its audit."""
     data_directory = Path(data_directory)
     start = perf_counter()
-    loader = DataLoader(data_directory)
+    loader = DataLoader(data_directory, active_service_ids=active_service_ids,
+                        service_date=service_date)
     graph = loader.build_graph()
     load_seconds = perf_counter() - start
     start = perf_counter()
@@ -122,7 +126,11 @@ def validate_dataset(data_directory: str | Path, audit_path: str | Path | None =
     }
     audit_result = None
     hashes = {}
-    for name in report['files']:
+    source_files = list(report['files'])
+    if service_date is not None:
+        source_files.extend(name for name in ('calendar.txt', 'calendar_dates.txt')
+                            if (data_directory / name).is_file())
+    for name in source_files:
         with (data_directory / name).open('rb') as source:
             hashes[name] = hashlib.file_digest(source, 'sha256').hexdigest()
     if audit_path is not None:
@@ -139,15 +147,19 @@ def validate_dataset(data_directory: str | Path, audit_path: str | Path | None =
             reason == 'zero_travel_time' for reason in report['rejected_trips'].values()
         )
         expected_quarantine = audit['additional_checks']['zero_time_affected_trips']
+        quarantine_matches = (
+            None if active_service_ids is not None or service_date is not None
+            else quarantine_count == expected_quarantine
+        )
         audit_result = {
             'files': comparisons,
-            'zero_time_quarantine_matches': quarantine_count == expected_quarantine,
+            'zero_time_quarantine_matches': quarantine_matches,
             'expected_zero_time_trips': expected_quarantine,
             'actual_zero_time_trips': quarantine_count,
         }
         checks['audit_matches'] = (
             all(all(values.values()) for values in comparisons.values())
-            and audit_result['zero_time_quarantine_matches']
+            and quarantine_matches is not False
         )
     validation_seconds = perf_counter() - start
     peak_rss_mib = _get_process_peak_rss_mib()
@@ -172,10 +184,20 @@ def main() -> int:
     parser = argparse.ArgumentParser(description='Carrega e valida os arquivos GTFS.')
     parser.add_argument('data_directory', type=Path)
     parser.add_argument('--audit', type=Path, help='JSON da auditoria para comparação')
+    selection = parser.add_mutually_exclusive_group()
+    selection.add_argument('--service-id', action='append', dest='service_ids',
+                           help='service_id ativo; repita para selecionar mais de um')
+    selection.add_argument('--date', dest='service_date', type=date.fromisoformat,
+                           help='data de operação no formato YYYY-MM-DD')
     parser.add_argument('--output', type=Path, help='Arquivo JSON para salvar o resultado')
     arguments = parser.parse_args()
     print('Carregando GTFS; aguarde a carga e a verificação de todas as conexões...', file=sys.stderr)
-    result = validate_dataset(arguments.data_directory, arguments.audit)
+    result = validate_dataset(
+        arguments.data_directory,
+        arguments.audit,
+        None if arguments.service_ids is None else set(arguments.service_ids),
+        service_date=arguments.service_date,
+    )
     serialized = json.dumps(result, ensure_ascii=False, indent=2) + '\n'
     if arguments.output:
         arguments.output.write_text(serialized, encoding='utf-8')

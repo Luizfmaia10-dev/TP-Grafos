@@ -4,6 +4,7 @@ from collections import Counter
 from collections.abc import Callable, Iterator
 from csv import DictReader
 from dataclasses import asdict, dataclass, field
+from datetime import date
 from itertools import groupby, pairwise
 from math import asin, cos, isfinite, radians, sin, sqrt
 from pathlib import Path
@@ -11,6 +12,7 @@ from typing import TypeVar
 
 from app.domain import Connection, Station, VehicleType
 from app.graph import TransportGraph
+from app.service_calendar import get_active_service_ids
 from app.time_utils import TimeUtils
 
 
@@ -34,6 +36,8 @@ class LoadReport:
     rejected_trips: dict[str, str] = field(default_factory=dict)
     loaded_trips: int = 0
     connections: int = 0
+    service_date: str | None = None
+    active_service_ids: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         """Return a JSON-compatible snapshot without exposing mutable counters."""
@@ -46,6 +50,8 @@ class LoadReport:
             'rejected_trips': dict(self.rejected_trips),
             'loaded_trips': self.loaded_trips,
             'connections': self.connections,
+            'service_date': self.service_date,
+            'active_service_ids': list(self.active_service_ids),
         }
 
 
@@ -56,10 +62,14 @@ class DataLoader:
     """Load contiguous trip blocks; quarantine invalid trips before insertion.
 
     Route types 1 and 3 are supported. Distances are Haversine estimates in km.
-    Service calendars and pickup/drop-off restrictions are not applied.
+    Multiple services require a date or explicit selection. Trips with pickup/drop-off
+    restrictions are quarantined because the graph does not track onboard state.
     """
 
-    __slots__ = ('data_directory', 'report', '_times', '_distances', '_durations')
+    __slots__ = (
+        'data_directory', 'active_service_ids', 'service_date', 'report',
+        '_times', '_distances', '_durations',
+    )
 
     _REQUIRED = {
         'stops.txt': ('stop_id', 'stop_name', 'stop_lat', 'stop_lon'),
@@ -69,8 +79,16 @@ class DataLoader:
                            'departure_time', 'stop_sequence'),
     }
 
-    def __init__(self, data_directory: str | Path) -> None:
+    def __init__(self, data_directory: str | Path,
+                 active_service_ids: set[str] | None = None, *,
+                 service_date: date | None = None) -> None:
+        if service_date is not None and active_service_ids is not None:
+            raise ValueError('service_date and active_service_ids are mutually exclusive')
         self.data_directory = Path(data_directory)
+        self.service_date = service_date
+        self.active_service_ids = (
+            None if active_service_ids is None else frozenset(active_service_ids)
+        )
         self.report = LoadReport()
         self._times: dict[str, float] = {}
         self._distances: dict[tuple[Station, Station], float] = {}
@@ -166,13 +184,39 @@ class DataLoader:
         self._durations.clear()
         stations = self._load_records('stops.txt', 'stop_id', self._parse_station)
         routes = self._load_records('routes.txt', 'route_id', self._parse_route)
+        declared_service_ids = set()
 
-        def parse_trip(row: dict[str, str]) -> str:
+        def parse_trip(row: dict[str, str]) -> tuple[str, str]:
+            declared_service_ids.add(row['service_id'])
             if row['route_id'] not in routes:
                 raise ValueError('unknown_route')
-            return row['route_id']
+            return row['route_id'], row['service_id']
 
-        trips = self._load_records('trips.txt', 'trip_id', parse_trip)
+        all_trips = self._load_records('trips.txt', 'trip_id', parse_trip)
+        if self.service_date is not None:
+            active_service_ids = get_active_service_ids(
+                self.data_directory, self.service_date
+            ) & declared_service_ids
+        else:
+            if self.active_service_ids is None and len(declared_service_ids) > 1:
+                raise ValueError('multiple service_id values; provide service_date or active_service_ids')
+            active_service_ids = (
+                declared_service_ids
+                if self.active_service_ids is None else self.active_service_ids
+            )
+        if (self.active_service_ids is not None
+                and (not active_service_ids
+                     or active_service_ids - declared_service_ids)):
+            raise ValueError('active_service_ids must identify services in trips.txt')
+        self.report.service_date = (
+            self.service_date.isoformat() if self.service_date is not None else None
+        )
+        self.report.active_service_ids = sorted(active_service_ids)
+        trips = {
+            trip_id: route_id
+            for trip_id, (route_id, service_id) in all_trips.items()
+            if service_id in active_service_ids
+        }
         graph = TransportGraph()
         for station in stations.values():
             graph.add_station(station)
@@ -184,6 +228,11 @@ class DataLoader:
                 raise ValueError(f'stop_times.txt: trip {trip_id!r} must be contiguous')
             seen_trips.add(trip_id)
             rows = list(records)
+            if trip_id in all_trips and trip_id not in trips:
+                self._reject(
+                    'stop_times.txt', rows[0][0], trip_id, 'inactive_service', len(rows)
+                )
+                continue
             try:
                 if trip_id not in trips:
                     raise ValueError('unknown_trip')
@@ -229,6 +278,13 @@ class DataLoader:
         for line, row in rows:
             if any(not row[key] for key in self._REQUIRED['stop_times.txt']):
                 raise ValueError('missing_required_value')
+            pickup_drop_off = (
+                row.get('pickup_type', ''), row.get('drop_off_type', '')
+            )
+            if any(value not in ('', '0', '1', '2', '3') for value in pickup_drop_off):
+                raise ValueError('invalid_pickup_drop_off')
+            if any(value not in ('', '0') for value in pickup_drop_off):
+                raise ValueError('restricted_pickup_drop_off')
             if row['stop_id'] not in stations:
                 raise ValueError('unknown_stop')
             if not row['stop_sequence'].isascii() or not row['stop_sequence'].isdigit():
