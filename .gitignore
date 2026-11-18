@@ -18,6 +18,8 @@ htmlcov/
 nosetests.xml
 coverage.xml
 *.cover
+.playwright-cli/
+.taste-skill/
 
 # Data Caches
 data/cache/*
