@@ -19,7 +19,8 @@ da demonstração. Revisar os requisitos de `GET /stations`,
 - O botão Limpar apaga a seleção, força foco no campo e reabre as opções com
   `openOptions()`, fazendo a limpeza parecer uma nova seleção.
 - O horário é texto livre validado como `HH:MM` ou `HH:MM:SS` e aceita horas
-  de serviço acima de 24.
+  de serviço acima de 24; o contrato atual ainda permite segundos, contra a
+  regra de entrada definida para esta entrega.
 - `GET /stations` e `POST /routes/search` já existem, usam a rede carregada no
   ciclo de vida do FastAPI e possuem testes de sucesso e erro.
 - `Itinerary` já usa `__slots__`, calcula totais, distância, passos e instruções,
@@ -83,19 +84,22 @@ será tratada como selecionada enquanto o ID for nulo.
 
 ### Máscara do horário
 
-A máscara atuará na entrada sem substituir a validação existente:
+A máscara atuará na entrada, acompanhada da mesma validação estrita na API:
 
 - `0745` vira `07:45`;
 - `2515` vira `25:15`;
-- texto já formatado como `07:45` ou `07:45:30` permanece aceito;
+- texto já formatado como `07:45` permanece aceito;
+- segundos nunca entram no valor: `07:45:30` é reduzido a `07:45` no campo e
+  rejeitado pela API;
 - caracteres que não sejam dígitos ou separadores válidos não entram no valor;
 - apagar continua natural, sem recolocar separadores depois do cursor;
-- na submissão, `HH:MM` continua normalizado para `HH:MM:00`.
+- na submissão, o frontend envia somente `HH:MM`.
 
 O campo permanecerá `type="text"` com `inputmode="numeric"`. `type="time"` não
 será usado porque seu domínio convencional não representa corretamente horas
-GTFS acima de 23. A API e `TimeUtils` continuarão aceitando horas estendidas e
-segundos; a máscara é somente uma ajuda de entrada do frontend.
+GTFS acima de 23. A API aceitará somente `HH:MM`, inclusive para horas
+estendidas. `TimeUtils` e os horários internos do GTFS continuarão usando
+segundos; a rota REST acrescentará `:00` apenas ao entrar no motor.
 
 ### Tema
 
@@ -125,8 +129,10 @@ erros 422/503 possuem cobertura. Nenhuma alteração funcional é necessária.
 
 O requisito está implementado: recebe IDs de origem e destino e horário de
 partida, valida entrada, usa o A* dependente do tempo e distingue rota
-encontrada, rota inexistente, estação desconhecida e rede não configurada.
-Nenhuma mudança no algoritmo ou no formato da requisição é necessária.
+encontrada, rota inexistente, estação desconhecida e rede não configurada. A
+lacuna é o formato ainda aceitar segundos. `departure_time` passará a aceitar
+somente `HH:MM`; a conversão para `HH:MM:00` ocorrerá dentro da rota, antes de
+chamar `TimeUtils`, sem alterar o algoritmo.
 
 ### `Itinerary`
 
@@ -143,7 +149,8 @@ estado real.
 2. `selectStation` armazena ID e rótulo; edição futura invalida o ID.
 3. Ao sair do campo de origem, o controlador verifica se o ID é novo.
 4. O mapa aplica o estado de confirmação e a transição apropriada ao viewport.
-5. O usuário informa o horário com separadores automáticos.
+5. O usuário informa o horário `HH:MM` com separador automático; segundos não
+   são aceitos.
 6. A demonstração local continua responsável pela consulta nesta entrega.
 7. Na API, quando usada diretamente, `Itinerary` continua sendo a fonte única
    dos custos, passos e agora também das instruções retornadas.
@@ -171,9 +178,12 @@ estado real.
 - `frontend/tests/time-mask.test.js`: entrada, edição e horas estendidas.
 - testes atuais de seleção/mapa: regressão da limpeza e confirmação quando
   observável em funções puras.
-- `backend/app/api/route_models.py`: instruções no resultado.
-- `backend/app/api/routes.py`: cópia das instruções de `Itinerary`.
-- `backend/tests/test_routes_api.py`: contrato JSON com instruções.
+- `backend/app/api/route_models.py`: validação `HH:MM` e instruções no
+  resultado.
+- `backend/app/api/routes.py`: conversão interna para segundos e cópia das
+  instruções de `Itinerary`.
+- `backend/tests/test_routes_api.py`: contrato `HH:MM`, rejeição de segundos e
+  JSON com instruções.
 - `docs/API.md` e documentação do frontend: contrato e comportamento real.
 - `docs/PLAN.md`: somente checkboxes dos itens efetivamente concluídos.
 
@@ -185,8 +195,9 @@ Toda função nova não trivial seguirá RED-GREEN-REFACTOR.
   controle que impede repetição da confirmação.
 - Testes existentes do frontend cobrirão regressão de seleção, horários,
   cancelamento e mapa.
-- O teste da API falhará primeiro pela ausência de `instructions`, depois
-  validará a lista produzida por `Itinerary`.
+- Os testes da API falharão primeiro pela aceitação de segundos e pela ausência
+  de `instructions`; depois validarão o contrato `HH:MM` e a lista produzida
+  por `Itinerary`.
 - Serão executados `npm test`, build do Tailwind, verificação HTTP dos recursos,
   suíte Python completa e inspeção responsiva em 375, 768, 1024 e 1440 pixels.
 - Movimento reduzido e navegação por teclado serão conferidos no fluxo final.
