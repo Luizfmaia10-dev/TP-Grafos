@@ -57,8 +57,9 @@ $$h(u, v) = \frac{\text{haversine}(u, v)}{V_{\max}}$$
 
 - **Tempo:**
   - Operações de fila de prioridade: $O((|V| + |E|) \log |V|)$ com inserções e remoções via `heapq`.
-  - Busca binária de partidas: $O(\log K)$ em cada estação expandida, onde $K$ é o número de partidas da estação.
-  - Varredura de conexões: $O(K)$ no pior caso por expansão, mitigada pela poda de corte em $g[\text{destination}]$.
+  - Conexões de caminhada (`WALK`): $O(W)$ por estação expandida, onde $W$ é o número de conexões com horário zero ($0.0$). Como as conexões são mantidas ordenadas por `departure_time` e arestas de caminhada são sob demanda com `departure_time == 0.0`, a varredura percorre apenas o prefixo e interrompe no primeiro elemento com `departure_time > 0.0`, sem custo $O(K)$ sobre toda a lista de partidas.
+  - Busca binária de partidas agendadas: $O(\log K)$ em cada estação expandida para localizar a primeira partida $\ge t$ via `bisect_left`, onde $K$ é o número de partidas da estação.
+  - Varredura de partidas agendadas: $O(K_{\text{relevante}})$ por expansão a partir do índice `start`, iterada diretamente sem alocação de listas intermediárias e interrompida pela poda de parada assim que $c.\text{departure\_time} \ge g[\text{destination}]$.
 - **Espaço:**
   - $O(|V|)$ para a tabela de rótulos de chegada `g`, mapa de predecessores `predecessor`, conjunto de nós fechados `closed` e elementos na fila de prioridade `heap`.
 
@@ -81,26 +82,27 @@ A suíte em `backend/tests/test_route_simulator.py` valida:
 
 ## 6. Validação de Desempenho com Dados Reais da BHTRANS
 
-A validação foi realizada sobre o dataset oficial de Belo Horizonte (`data/gtfs`), filtrando o serviço dominante `307679`:
+A validação foi realizada sobre o dataset oficial de Belo Horizonte (`data/gtfs`), filtrando o serviço `307679` via `active_service_ids`:
 - **Grafo em memória:** 9.659 estações e 1.336.540 conexões temporais.
-- **Velocidade máxima derivada (`max_speed_of`):** $2,60\text{ km/min}$ ($156,2\text{ km/h}$), computada em $0,36\text{ s}$.
+- **Velocidade máxima derivada (`max_speed_of`):** $2,60\text{ km/min}$ ($156,2\text{ km/h}$), computada em $0,38\text{ s}$.
 
 ### Resultados de 10 Consultas em Horários de Pico (07:00) e Fora de Pico (14:00)
 
-| Consulta | Origem | Destino | Horário | Tempo de Resposta | Status / Trechos |
-|:---|:---|:---|:---:|:---:|:---|
-| 01 | Rua Joana Angelica 9 | Rua Chasquiel Zinqui | 07:00 | $784,28\text{ ms}$ | Rota encontrada (31 trechos) |
-| 02 | Rua Sao Fidelis 1052 | Rua Quintino Bocaiuv | 07:00 | $692,65\text{ ms}$ | Rota encontrada (59 trechos) |
-| 03 | Avenida Presidente A | Rua Maria Felicia 15 | 07:00 | $827,78\text{ ms}$ | Rota encontrada (51 trechos) |
-| 04 | Rua Caetano Pirri, 1 | Rua Josue Martins De | 07:00 | $1262,97\text{ ms}$ | Rota encontrada (71 trechos) |
-| 05 | Avenida Tito Fulgenc | Avenida Dos Andradas | 07:00 | $868,38\text{ ms}$ | Rota encontrada (99 trechos) |
-| 06 | Rua Joinville 643 | Rua Major Barbosa 18 | 14:00 | $175,74\text{ ms}$ | Rota encontrada (83 trechos) |
-| 07 | Rua Costa Rica 33 | Rua das Petúnias, 88 | 14:00 | $808,41\text{ ms}$ | Rota encontrada (67 trechos) |
-| 08 | Rua Sao Pedro Da Ald | Estação Barreiro - P | 14:00 | $19,29\text{ ms}$ | Rota encontrada (23 trechos) |
-| 09 | Rua Joao Batista Vie | Rua Regia 123 | 14:00 | $485,07\text{ ms}$ | Rota encontrada (68 trechos) |
-| 10 | Rua Joaquim Cardoso | Rua Mestre Valentim | 14:00 | $103,38\text{ ms}$ | Rota encontrada (44 trechos) |
+| Consulta | Origem | Destino | Horário | Tempo de Resposta | Estações Expandidas | Trechos | Consistência Temporal |
+|:---|:---|:---|:---:|:---:|:---:|:---:|:---:|
+| 01 | Rua Joana Angelica 985 | Rua Chasquiel Zinquier 57 | 07:00 | $751,99\text{ ms}$ | 3.565 | 31 trechos | Válida |
+| 02 | Rua Sao Fidelis 1052 | Rua Quintino Bocaiuva 40 | 07:00 | $652,77\text{ ms}$ | 3.422 | 59 trechos | Válida |
+| 03 | Avenida Presidente Antoni | Rua Maria Felicia 153 | 07:00 | $777,19\text{ ms}$ | 3.873 | 51 trechos | Válida |
+| 04 | Rua Caetano Pirri, 1444 | Rua Josue Martins De Souz | 07:00 | $1212,28\text{ ms}$ | 7.857 | 71 trechos | Válida |
+| 05 | Avenida Tito Fulgencio 60 | Avenida Dos Andradas 5801 | 07:00 | $814,40\text{ ms}$ | 4.708 | 99 trechos | Válida |
+| 06 | Rua Joinville 643 | Rua Major Barbosa 188 | 14:00 | $136,16\text{ ms}$ | 1.779 | 83 trechos | Válida |
+| 07 | Rua Costa Rica 33 | Rua das Petúnias, 881 | 14:00 | $699,12\text{ ms}$ | 7.085 | 67 trechos | Válida |
+| 08 | Rua Sao Pedro Da Aldeia 3 | Estação Barreiro - Plataf | 14:00 | $13,47\text{ ms}$ | 158 | 23 trechos | Válida |
+| 09 | Rua Joao Batista Vieira 4 | Rua Regia 123 | 14:00 | $420,15\text{ ms}$ | 3.963 | 68 trechos | Válida |
+| 10 | Rua Joaquim Cardoso 409 | Rua Mestre Valentim 511 | 14:00 | $75,30\text{ ms}$ | 794 | 44 trechos | Válida |
 
-- **Tempo médio por consulta:** $602,80\text{ ms}$
-- **Tempo máximo:** $1262,97\text{ ms}$ (significativamente abaixo do limiar de $5\text{ s}$)
-- **Taxa de sucesso:** 100% das rotas encontradas respeitando a consistência temporal.
+- **Tempo médio por consulta:** $555,28\text{ ms}$ (redução substancial após eliminação da varredura linear de conexões de caminhada)
+- **Tempo máximo:** $1212,28\text{ ms}$ (significativamente abaixo do limiar de $5\text{ s}$)
+- **Estações expandidas médias:** $3.720,4$ (máximo de $7.857$ no caso mais disperso e mínimo de $158$ na ligação local para o Barreiro)
+- **Consistência temporal:** 100% das rotas verificadas programaticamente (para cada percurso, $u_i = \text{dest}_{i-1}$, $c_i.\text{departure\_time} \ge t_{i-1}$ e tempo estritamente monótono).
 

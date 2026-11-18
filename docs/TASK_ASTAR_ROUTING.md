@@ -51,7 +51,7 @@ Fora de escopo: `Itinerary` e serializacao JSON (restante da Parte 6), endpoints
 | `backend/app/domain.py` | `Station` (frozen, `slots=True`, hash/eq por `station_id`, **nao ordenavel**). `TemporaryVertex` (subclasse de `Station`, `slots=("marker_type",)`). `Connection(route_id, destination, vehicle_type, travel_time, distance, departure_time)`. Tempos em **minutos fracionarios** desde o inicio do dia de servico, podendo passar de 1440 (viagens apos meia-noite). Distancia em km. |
 | `backend/app/graph.py` | `TransportGraph.get_neighbors(station)` retorna a lista **interna** (nao copiar, nao mutar) de conexoes de saida, **ordenada por `departure_time`** (insercao via `bisect_right`). `TransportGraph.remove_temporary_vertex(vertex)` remove vertices e arestas temporarias. |
 | `backend/app/route_simulator.py` | Ja existem `haversine(...)`, `RouteSimulator(graph, max_speed)` com `heuristic(current, target) = haversine / max_speed` e o context manager `snap_to_network(latitude, longitude, marker_type)` que conecta cliques a rede com arestas `WALK`. `max_speed` em **km/min**. Nao quebrar os testes existentes. |
-| `backend/app/data_loader.py` | Carrega GTFS com selecao explicita de calendario (`selected_service_ids`) ou servico dominante, isolando viagens de servicos inativos e tratando restricoes de embarque/desembarque. Cada `Connection` parte em `departure_time` e chega em `departure_time + travel_time`. |
+| `backend/app/data_loader.py` | Carrega GTFS com selecao explicita de calendario (`active_service_ids`), exigido quando ha multiplos servicos declarados no dataset (lanca `ValueError` se omitido com multiplos servicos), isolando viagens de servicos inativos e tratando restricoes de embarque/desembarque. Cada `Connection` parte em `departure_time` e chega em `departure_time + travel_time`. |
 | `backend/tests/test_route_simulator.py` | Testes atuais de Haversine, heuristica e `snap_to_network`. Acrescentar os novos testes aqui. |
 | `docs/DATA_LOADER.md`, `docs/TIME_UTILS.md` | Padrao de documentacao a seguir para `docs/ROUTE_SIMULATOR.md`. |
 
@@ -98,32 +98,32 @@ E admissivel e consistente **somente se** `V_max >= distance / travel_time` para
 ### 4.4 Busca binaria das partidas e tratamento de modais
 
 Para cada estacao expandida no instante `t`:
-Como a lista `connections = self.graph.get_neighbors(station)` e ordenada por `departure_time`, arestas `WALK` (com `departure_time == 0.0`) aparecem no inicio da lista.
+Como a lista `connections = self.graph.get_neighbors(station)` e ordenada por `departure_time`, arestas `WALK` (com `departure_time == 0.0`) aparecem exclusivamente no prefixo da lista.
 
 Estrategia de expansao:
-- **Arestas `WALK`:** expandir com partida imediata `t` e chegada `t + c.travel_time`.
-- **Arestas agendadas (`BUS`, `SUBWAY`):** localizar a primeira partida via `bisect_left`:
+- **Arestas `WALK`:** inspecionar sequencialmente a partir do indice 0 e interromper assim que `c.departure_time > 0.0`. Isso consome tempo $O(W)$ onde $W$ e o numero de conexoes com horario zero (tipicamente 0 ou 1), preservando a complexidade assintotica estrita e evitando a varredura linear de todas as $K$ conexoes da estacao.
+- **Arestas agendadas (`BUS`, `SUBWAY`):** localizar a primeira partida `>= t` via `bisect_left` em $O(\log K)$:
   ```python
   start = bisect_left(connections, t, key=lambda c: c.departure_time)
   ```
-  Iterar a partir de `start` considerando apenas conexoes de modais agendados.
+  Iterar a partir de `start` por indice (`range(start, len(connections))`) sem alocar fatias da lista.
 
 ### 4.5 Varredura e podas (decisao de projeto)
 
 Nao ha garantia de FIFO estrito entre linhas diferentes (uma linha expressa pode sair depois e chegar antes de uma linha paradora). Estrategia **exata** adotada:
 
-1. Para arestas `WALK`, avaliar imediatamente.
+1. Para arestas `WALK`, avaliar imediatamente no prefixo com partida em `t`.
 2. Para conexoes agendadas a partir de `start`:
    - **Poda de parada**: se `c.departure_time >= best_arrival_at_destination` (melhor chegada ja conhecida no destino final), interromper o laco (`break`): nenhuma partida posterior podera chegar mais cedo.
    - **Poda de relaxamento**: so relaxar e colocar na heap se `arr(c) < g.get(c.destination, inf)`.
 
-Isso preserva a otimalidade. O custo pior caso por expansao e $O(\log K + K)$; o desempenho real e medido no Checkpoint 6.
+Isso preserva a otimalidade. O custo por expansao e $O(W + \log K + K_{\text{relevante}})$; o desempenho real e medido no Checkpoint 6.
 
 ### 4.6 Decisoes do MVP (documentar em `docs/ROUTE_SIMULATOR.md`)
 
 - Sem penalidade nem tempo minimo de transferencia: desembarcar e embarcar em outra linha no mesmo instante e permitido.
 - Sem virada de dia: consulta as 23:50 sem partidas posteriores retorna `None`; nao se busca no dia seguinte.
-- Calendarios: o `DataLoader` agora filtra por `selected_service_ids` (ou servico dominante), garantindo grafo cronologicamente consistente.
+- Calendarios: o `DataLoader` requer a definicao de `active_service_ids` quando multiplos calendarios estao presentes no dataset, garantindo grafo cronologicamente consistente.
 - `origin == destination` retorna lista vazia `[]`.
 - Destino inalcancavel retorna `None`.
 
@@ -163,17 +163,21 @@ calculate_route(origin, destination, t0):
         connections = graph.get_neighbors(station)
 
         # 1. Conexoes de caminhada (on-demand: saida imediata em t)
-        walk_connections = [c for c in connections if c.vehicle_type == VehicleType.WALK]
-        for c in walk_connections:
-            arrival = t + c.travel_time
-            if arrival < g.get(c.destination, inf):
-                g[c.destination] = arrival
-                predecessor[c.destination] = (station, c)
-                heappush(heap, (arrival + h(c.destination), next(counter), c.destination))
+        # Caminhadas possuem departure_time == 0.0 e aparecem no prefixo da lista ordenada
+        for c in connections:
+            if c.departure_time > 0.0:
+                break
+            if c.vehicle_type == VehicleType.WALK:
+                arrival = t + c.travel_time
+                if arrival < g.get(c.destination, inf):
+                    g[c.destination] = arrival
+                    predecessor[c.destination] = (station, c)
+                    heappush(heap, (arrival + h(c.destination), next(counter), c.destination))
 
         # 2. Conexoes agendadas (partida >= t localizada via bisect_left)
         start = bisect_left(connections, t, key=lambda c: c.departure_time)
-        for c in connections[start:]:
+        for i in range(start, len(connections)):
+            c = connections[i]
             if c.vehicle_type == VehicleType.WALK:
                 continue
             if c.departure_time >= g.get(destination, inf):
