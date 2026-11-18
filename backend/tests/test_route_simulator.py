@@ -1,3 +1,4 @@
+import random
 import pytest
 
 from app.domain import Connection, Station, TemporaryVertex, VehicleType
@@ -416,6 +417,76 @@ def test_calculate_route_unreachable_destination_returns_none():
 
     simulator = RouteSimulator(graph, max_speed=1.0)
     assert simulator.calculate_route(station_a, isolated_c, departure_time=480.0) is None
+
+
+def test_astar_finds_same_earliest_arrival_as_time_dependent_dijkstra():
+    rng = random.Random(42)
+    graph = TransportGraph()
+    stations = [
+        Station(
+            f"station-{i}",
+            f"Station {i}",
+            -19.92 + rng.uniform(-0.05, 0.05),
+            -43.94 + rng.uniform(-0.05, 0.05),
+        )
+        for i in range(30)
+    ]
+    for station in stations:
+        graph.add_station(station)
+
+    for i in range(300):
+        origin = rng.choice(stations)
+        destination = rng.choice(stations)
+        if origin == destination:
+            continue
+        dist = haversine(
+            origin.latitude, origin.longitude, destination.latitude, destination.longitude
+        )
+        dist = max(dist, 0.2)
+        vehicle_type = rng.choice([VehicleType.BUS, VehicleType.SUBWAY, VehicleType.WALK])
+        if vehicle_type is VehicleType.WALK:
+            dep_time = 0.0
+            travel_time = dist / (5.0 / 60.0)
+        else:
+            speed_km_min = rng.uniform(20.0, 60.0) / 60.0
+            travel_time = dist / speed_km_min
+            dep_time = rng.uniform(360.0, 1200.0)
+        conn = Connection(f"route-{i}", destination, vehicle_type, travel_time, dist, dep_time)
+        graph.add_connection(origin, conn)
+
+    max_speed = RouteSimulator.max_speed_of(graph)
+    astar_sim = RouteSimulator(graph, max_speed=max_speed)
+    dijkstra_sim = RouteSimulator(graph, max_speed=float("inf"))
+
+    for _ in range(50):
+        origin = rng.choice(stations)
+        destination = rng.choice(stations)
+        dep_time = rng.uniform(360.0, 1100.0)
+
+        astar_route = astar_sim.calculate_route(origin, destination, dep_time)
+        dijkstra_route = dijkstra_sim.calculate_route(origin, destination, dep_time)
+
+        if astar_route is None:
+            assert dijkstra_route is None
+            continue
+
+        assert dijkstra_route is not None
+
+        def get_arrival_and_validate(route, start_time):
+            current_time = start_time
+            for station, connection in route:
+                if connection.vehicle_type is VehicleType.WALK:
+                    current_time += connection.travel_time
+                else:
+                    assert connection.departure_time >= current_time - 1e-9
+                    current_time = connection.departure_time + connection.travel_time
+            return current_time
+
+        astar_arrival = get_arrival_and_validate(astar_route, dep_time)
+        dijkstra_arrival = get_arrival_and_validate(dijkstra_route, dep_time)
+
+        assert astar_arrival == pytest.approx(dijkstra_arrival, abs=1e-5)
+
 
 
 
