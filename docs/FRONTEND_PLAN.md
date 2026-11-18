@@ -1,9 +1,10 @@
 # Plano de desenvolvimento do frontend - tarefa #30
 
 Data de referencia: 17/11/2026.
+Revisao final: 18/11/2026.
 Responsavel pelos commits: Gabriel Aredes.
 Branch proposta para a implementacao: `codigo/30-interface-visual`.
-Status: etapas 1 a 4 implementadas e verificadas. Recursos pendentes do celular obtidos na etapa 4; etapa 5 ainda aberta.
+Status: etapas 1 a 5 concluidas para a demonstracao da #30. Commits e envio da entrega final a cargo de Gabriel; integracao real acompanhada na #32.
 
 ## Referencias e ponto de partida
 
@@ -12,17 +13,20 @@ Status: etapas 1 a 4 implementadas e verificadas. Recursos pendentes do celular 
 - `AGENTS.md`, Parte 7 de `docs/PLAN.md` e historias US-01, US-03 e US-04.
 - `Artefatos/Diagramas/diagrama-estados.md` e `docs/ISSUE_SERVICE_CALENDAR.md`.
 
-A verificacao desta rodada confirmou `HEAD`, `origin/main` e a `main` do GitHub
+No inicio do frontend, em 17/11, a verificacao confirmou `HEAD`, `origin/main` e a `main` do GitHub
 em `a2434af46a85029b266999ba5e1e75e5cd60b2f8`. A pasta estava limpa.
 O backend passou nos 138 testes existentes, com um aviso de descontinuacao do
-TestClient relacionado a httpx. O frontend atual e um HTML com resultado fixo.
+TestClient relacionado a httpx. Naquela base, o frontend era um HTML com resultado fixo.
 
 O pull trouxe `TemporaryVertex`, remocao da topologia temporaria,
 `RouteSimulator.snap_to_network`, historias de usuario e diagramas adicionais.
 A heuristica de Haversine e o DataLoader ja existem. A busca A* completa,
-`Itinerary`, `GET /stations` e `POST /routes/search` continuam pendentes.
+`Itinerary`, `GET /stations` e `POST /routes/search` ainda estavam pendentes.
+Na revisao final de 18/11, a main remota ja continha A* e calendario. As
+diferencas entre as bases e os contratos atuais estao em
+[FRONTEND_INTEGRATION.md](FRONTEND_INTEGRATION.md).
 
-O Figma forneceu o contexto detalhado e o screenshot do desktop nesta rodada.
+Na etapa 1, o Figma forneceu o contexto detalhado e o screenshot do desktop.
 A consulta seguinte do celular atingiu a cota MCP do plano Starter. As telas
 mobile e seus screenshots foram construidos e revisados na rodada anterior.
 Na etapa 4, o contexto do resultado celular forneceu o mapa e os icones que
@@ -58,8 +62,8 @@ Uma edicao invalida o resultado anterior. Mensagens preservam os campos para
 permitir nova tentativa.
 
 A linha 50 demonstra horarios de uma viagem especifica da base, sem atribuir
-um dia da semana ao seu `service_id`. A selecao de calendario ativo e uma
-dependencia da ingestao para a integracao real. O seletor de data so devera ser
+um dia da semana ao seu `service_id`. A integracao deve conectar a configuracao
+da API a selecao de calendario ja disponivel na main atualizada. O seletor de data so devera ser
 conectado quando o contrato e o filtro de calendario estiverem definidos.
 
 Cliques nas paradas da amostra fazem parte da #30. A selecao de coordenadas
@@ -199,15 +203,15 @@ A verificacao visual cobre a mudanca do mapa desktop para o recorte celular.
 
 ## Etapa 5 - Regressao, documentacao e passagem para a #32
 
-- [ ] Testar o fluxo servido pelo FastAPI e conferir conteudo e tipo dos recursos
+- [x] Testar o fluxo servido pelo FastAPI e conferir conteudo e tipo dos recursos
       HTML, CSS e JavaScript, evitando respostas HTML para caminhos de assets.
-- [ ] Executar os testes de comportamento do frontend e a suite Python completa.
-- [ ] Registrar comandos de build, execucao e teste, os limites da amostra e a
+- [x] Executar os testes de comportamento do frontend e a suite Python completa.
+- [x] Registrar comandos de build, execucao e teste, os limites da amostra e a
       procedencia dos dados junto deste plano.
-- [ ] Anotar os campos de consulta e resultado que precisarao de acordo com os
+- [x] Anotar os campos de consulta e resultado que precisarao de acordo com os
       responsaveis pela API e pelo Itinerary, incluindo unidades e erros.
-- [ ] Atualizar em `docs/PLAN.md` somente os checkboxes concluidos na #30.
-- [ ] Conferir o diff final e orientar Gabriel a selecionar os arquivos de cada
+- [x] Atualizar em `docs/PLAN.md` somente os checkboxes concluidos na #30.
+- [x] Conferir o diff final e orientar Gabriel a selecionar os arquivos de cada
       commit e enviar a branch `codigo/30-interface-visual`.
 
 **Criterio de conclusao**
@@ -241,8 +245,10 @@ A atualizacao documental da entrega pode acompanhar este commit ou um commit
 | Chegada | `08:20:16` |
 | Consulta de referencia | `07:45:00` |
 
-`stop_times.txt` contem esses registros nas linhas 3906806 a 3906808 nesta
-versao. `trips.txt` associa a viagem a linha e ao servico. A distancia de cerca
+`stop_times.txt` contem esses registros nas linhas 3906806 a 3906808 na
+versao de origem da amostra (base a2434af). `trips.txt` associa a viagem a linha e ao servico.
+O dataset renovado da main precisa de revalidacao dos IDs e horarios para a #32.
+A distancia de cerca
 de 9,0 km do prototipo e a soma aproximada dos segmentos Haversine entre as
 tres paradas, coerente com a representacao atual de `Connection.distance`.
 O desenho do mapa e esquematico. `shape_dist_traveled` tem outro significado
@@ -641,4 +647,115 @@ Confira tambem 390 e 360 px, fonte ampliada e a preferencia por movimento
 reduzido. O CSS compilado ja acompanha a entrega; npm run build o reconstrui.
 
 docs/PLAN.md conserva abertos os itens de consulta real a API e integracao.
-A etapa 5 permanece separada para a consolidacao final e passagem para a #32.
+Ao final da etapa 4, a etapa 5 permanecia separada para a consolidacao final e passagem para a #32.
+
+## Etapa 5 - Revisao final e passagem para integracao
+
+Revisao realizada em 18/11/2026 sobre codigo/30-interface-visual, a partir de
+9b8ca4d. Os commits dcf012b (refinamento) e 9b8ca4d (documentacao) foram
+conferidos com Gabriel como autor e committer; a pasta estava limpa.
+
+### Entrega reproduzivel
+
+frontend/scripts/check-server.mjs acrescenta a verificacao HTTP via
+npm run check:server. O script usa apenas recursos nativos do Node: consulta
+health e HTML, percorre os imports estaticos e as imagens literais dos modulos,
+resolve as fontes do CSS e confere status, MIME e conteudo dos recursos locais.
+URLs repetidas sao verificadas uma vez. CSS, JavaScript e SVG inexistentes
+devem retornar 404, sem receber a pagina inicial como substituicao.
+
+Os comandos completos para abrir, compilar e testar foram consolidados em
+[frontend/README.md](../frontend/README.md). O README principal recebeu apenas
+os links de execucao e de integracao. O navegador continua recebendo os mesmos
+arquivos da interface; esta etapa nao altera a consulta ou o desenho.
+
+| Verificacao nesta branch | Resultado |
+|---|---|
+| npm test | 69 testes JavaScript aprovados |
+| npm run check:server | 31 testes HTTP aprovados, incluindo 25 URLs distintas de recursos |
+| Suite Python completa | 138 testes aprovados; mesmo aviso de descontinuacao do TestClient |
+| Navegador pelo FastAPI | Fluxos da amostra aprovados em desktop e celular, sem erros ou chamadas externas |
+| Layout e acessibilidade | 31 verificacoes de layout e 9 analises axe sem violacoes automaticas |
+| Build com npm ci e npm run build | CSS reproduzido sem mudar o arquivo versionado |
+| Erro de entrega induzido | Servidor isolado devolvendo HTML como JavaScript foi corretamente rejeitado pelo novo comando |
+
+A verificacao de layout retomou onze tamanhos de janela, quatro larguras com
+fonte-base em 200% e nomes maiores no itinerario. A regressao de trajetos
+repetiu carregamento, partida exata, espera de um segundo, viagem perdida,
+25:00, trecho fora da amostra, edicao, cancelamento, resposta antiga ignorada,
+falha seguida de nova tentativa, teclado, toque e movimento reduzido.
+
+As capturas finais de busca/resultado desktop e celular foram conferidas.
+As analises automaticas continuam complementadas pela revisao de cores,
+sobreposicoes e arvore acessivel. NVDA e VoiceOver nao foram executados.
+Ambiente usado: Node 22.20.0, npm 10.9.3, Python 3.14.4 e axe-core 4.14.1
+somente na pasta externa de verificacao. O projeto nao recebeu dependencias novas.
+
+### Situacao da main e acordos para a #32
+
+A main observada em b107e234e70665c433d3708a8f3d48d7fbea21f9 ja trouxe o
+A* calculate_route, selecao de calendario e dataset completo renovado. Foi
+feita uma leitura das referencias remotas, preservando os arquivos e os
+commits da branch da interface. Os numeros de testes desta entrega se referem
+a base local; a nova base integrada precisara de sua propria regressao.
+
+[FRONTEND_INTEGRATION.md](FRONTEND_INTEGRATION.md) registra a assinatura real
+do roteador, a falta dos endpoints/Itinerary na revisao observada, o formato
+local da consulta e resultado, unidades, arredondamento, erros, metadados de
+linhas e pontos a generalizar no mapa, catalogo e timeline. Os IDs da amostra
+historica nao foram revalidados no novo GTFS. O contrato definitivo sera
+acordado com os responsaveis pela API e pelo Itinerary na #32.
+
+docs/PLAN.md foi conferido: os tres itens de interface ja concluidos continuam
+marcados. Carregamento durante consulta real a API e os itens de integracao
+continuam abertos. Nao houve nova marcacao que atribuisse a demonstracao ao
+backend real. As atualizacoes de A*/calendario feitas pelos colegas na main
+serao preservadas ao reunir as bases para a proxima tarefa.
+
+### Arquivos e registro da entrega
+
+Somente estes seis arquivos pertencem a etapa 5:
+
+- frontend/package.json: novo comando check:server, com o lockfile preservado.
+- frontend/scripts/check-server.mjs: regressao da entrega HTTP.
+- frontend/README.md: comandos, casos de conferencia e limites do exemplo.
+- docs/FRONTEND_INTEGRATION.md: passagem para a #32.
+- docs/FRONTEND_PLAN.md: conclusao e evidencias da etapa.
+- README.md: links para os dois guias.
+
+Os arquivos de backend, GTFS, estilos, mapas, fontes e logica da interface
+foram preservados. Nenhum arquivo foi adicionado ao staging e nenhum commit
+ou push foi feito pelo agente.
+
+Na raiz do repositorio, Gabriel pode separar a verificacao no primeiro commit:
+
+```powershell
+git branch --show-current
+git status --short
+git add -- frontend/package.json frontend/scripts/check-server.mjs
+git diff --cached --name-status
+git diff --cached --check
+```
+
+A lista deve conter apenas esses dois arquivos, na codigo/30-interface-visual.
+Depois da conferencia:
+
+```powershell
+git commit -m "test(front): verifica os recursos servidos pelo FastAPI"
+git add -- README.md frontend/README.md docs/FRONTEND_INTEGRATION.md docs/FRONTEND_PLAN.md
+git diff --cached --name-status
+git diff --cached --check
+```
+
+O segundo grupo deve conter somente os quatro documentos. Depois da conferencia:
+
+```powershell
+git commit -m "docs(front): registra a revisao final e a passagem para a #32"
+git log -2 --oneline
+git status
+git push -u origin codigo/30-interface-visual
+```
+
+Antes do envio, o status deve mostrar working tree clean. O envio publica a
+branch da interface; a reuniao com a main atualizada deve seguir o fluxo da
+equipe e a preparacao de base registrada no guia da #32.

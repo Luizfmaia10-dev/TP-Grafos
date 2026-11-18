@@ -17,3 +17,8 @@ Analise de redes de transporte publico: construcao de grafos baseados em linhas 
 - Alunos: Caio Cesar Falinacio dos Santos, Gabriel Aredes, Joaquim Antonio, Luiz Fernando Cunha Maia, Pedro Henrique Nogueira e Wanessa Oliveira Marcos.
 - Disciplina: Teoria dos Grafos e Computabilidade.
 - Professor Responsavel: Leonardo Vilela Cardoso.
+
+## Interface
+
+Execucao e testes do RotasGraph: [frontend/README.md](frontend/README.md).
+Passagem para a integracao da #32: [docs/FRONTEND_INTEGRATION.md](docs/FRONTEND_INTEGRATION.md).
