@@ -3,7 +3,7 @@
 Data de referencia: 17/11/2026.
 Responsavel pelos commits: Gabriel Aredes.
 Branch proposta para a implementacao: `codigo/30-interface-visual`.
-Status: base visual da etapa 1 implementada e verificada, com exportacao exata do mapa mobile pendente.
+Status: etapas 1 (base visual) e 2 (selecao de paradas) implementadas e verificadas, com exportacao exata do mapa mobile pendente.
 
 ## Referencias e ponto de partida
 
@@ -123,16 +123,16 @@ o conteudo excede a altura, com ausencia de corte ou rolagem horizontal indevida
 
 ## Etapa 2 - Dados da linha 50 e selecao de paradas
 
-- [ ] Registrar a origem dos dados de exemplo com `route_id`, `trip_id`,
+- [x] Registrar a origem dos dados de exemplo com `route_id`, `trip_id`,
       `service_id`, IDs das paradas, coordenadas e horarios.
-- [ ] Implementar sugestoes de paradas com selecao por mouse, toque e teclado.
-- [ ] Manter IDs selecionados separados do texto digitado. Editar o nome limpa
+- [x] Implementar sugestoes de paradas com selecao por mouse, toque e teclado.
+- [x] Manter IDs selecionados separados do texto digitado. Editar o nome limpa
       a selecao anterior ate uma sugestao ser escolhida novamente.
-- [ ] Sincronizar as escolhas dos campos e dos marcadores A/B no mapa.
-- [ ] Implementar o atalho "Experimente a linha 50" e a limpeza das selecoes.
-- [ ] Validar origem, destino e formato de horario, aceitando HH:MM e HH:MM:SS
+- [x] Sincronizar as escolhas dos campos e dos marcadores A/B no mapa.
+- [x] Implementar o atalho "Experimente a linha 50" e a limpeza das selecoes.
+- [x] Validar origem, destino e formato de horario, aceitando HH:MM e HH:MM:SS
       com horas acima de 24. Normalizar HH:MM para HH:MM:00 na consulta.
-- [ ] Cobrir primeiro com testes as regras de validacao e transicoes que possam
+- [x] Cobrir primeiro com testes as regras de validacao e transicoes que possam
       deixar um ID antigo associado a um texto novo ou aceitar pontos iguais.
 
 **Criterio de conclusao**
@@ -346,3 +346,67 @@ externas, navegacao por teclado e foco. As previas desktop, celular e tablet
 foram inspecionadas visualmente. A suite Python permaneceu com 138 testes
 aprovados e o aviso de descontinuacao do TestClient ja registrado.
 
+## Etapa 2 - Selecao de paradas implementada
+
+Os commits da etapa 1 foram conferidos na branch codigo/30-interface-visual.
+9d1ed6b registra a base visual e 51be670 registra sua documentacao, ambos com
+a autoria de Gabriel. A pasta de trabalho estava limpa antes da etapa 2.
+
+A interface agora permite selecionar as tres paradas conhecidas do trecho
+por sugestoes de nome ou pelos botoes do mapa. As buscas ignoram acentos e
+maiusculas e consideram tambem as plataformas. As setas percorrem a lista,
+Enter confirma a escolha e Escape fecha as sugestoes. Botoes Limpar apagam
+cada escolha e o atalho da linha 50 preenche Pampulha, Av. Parana e 07:45.
+
+O campo que recebe o proximo clique e identificado no mapa. E possivel
+comecar pelo destino. Origem e destino aparecem como A e B e se mantem
+sincronizados com os campos nas duas resolucoes. Se um nome selecionado for
+editado, o ID antigo e apagado ate a escolha explicita de outra sugestao.
+Paradas iguais geram mensagem de validacao e impedem preparar a consulta.
+
+Horarios HH:MM e HH:MM:SS sao aceitos, com minutos e segundos entre 00 e 59.
+Horas acima de 24 continuam no mesmo dia de servico. A preparacao da consulta
+normaliza HH:MM para HH:MM:00. Nesta etapa, Calcular trajeto valida a selecao
+e mostra a consulta preparada. O processamento assincrono da amostra e o
+itinerario pertencem a etapa 3.
+
+### Arquivos da etapa 2
+
+| Arquivo | Responsabilidade |
+|---|---|
+| frontend/js/demo-data.js | IDs, nomes, coordenadas e procedencia dos horarios do trecho da linha 50 |
+| frontend/js/selection.js | Estado da selecao, busca de nomes e validacao independente do DOM |
+| frontend/js/map.js | Botoes de parada, projecao no SVG existente e marcadores A/B |
+| frontend/js/app.js | Eventos dos campos e mapa, sugestoes, erros e preparacao da consulta |
+| frontend/tests/selection.test.js | 38 casos de busca, horario, IDs e transicoes |
+
+O HTML passou a carregar app.js como modulo. As sugestoes usam combobox e
+listbox com aria-controls, aria-expanded e aria-activedescendant. O CSS de
+origem inclui os arquivos JavaScript em @source e o CSS compilado acompanha
+a entrega. O package.json habilita modulos nativos e o comando npm test com
+o executor de testes do Node.js. A etapa nao acrescenta dependencias npm.
+
+### Como testar a etapa 2
+
+Em frontend/, execute npm test. Para gerar novamente o CSS, use npm run build.
+A pagina continua disponivel pelo FastAPI com o comando da etapa 1.
+
+1. Digite pampulha em Origem e escolha a sugestao por clique ou Enter.
+2. Digite avenida parana em Destino e escolha a sugestao com seta e Enter.
+3. Edite um nome escolhido. O marcador deve perder a letra e o botao de
+   consulta deve ficar indisponivel ate a escolha explicita de outra parada.
+4. Escolha os dois pontos pelos nomes no mapa e confira os campos. Repita
+   com o destino primeiro, focando seu campo antes do clique.
+5. Use Limpar e Experimente a linha 50 e confira os valores resultantes.
+6. Selecione a mesma parada para os dois pontos e verifique a mensagem.
+7. Experimente 25:15:30 e 08:60. O primeiro prepara a consulta sem perder
+   segundos e o segundo produz orientacao de formato quando o campo perde foco.
+8. Repita no celular e redimensione a janela com os campos preenchidos.
+
+Os testes foram escritos antes do modulo de selecao. A falha inicial de
+importacao foi confirmada e, apos a implementacao, os 38 casos passaram.
+A verificacao no navegador pelo FastAPI passou para teclado, mouse e toque,
+limpeza, selecao em ambas as ordens, IDs invalidados, horarios, nomes fora da
+amostra e dez tamanhos de janela. As telas de busca e selecao foram revisadas
+visualmente em desktop e celular. Os 138 testes Python tambem passaram, com
+o aviso de descontinuacao do TestClient ja registrado na etapa 1.
