@@ -25,13 +25,15 @@ Execute a partir de `backend/`:
 import json
 from app.data_loader import DataLoader
 
-loader = DataLoader("../data/gtfs")
+loader = DataLoader("../data/gtfs", active_service_ids={"307679"})
 graph = loader.build_graph()
 print(json.dumps(loader.report.to_dict(), ensure_ascii=False, indent=2))
 ```
 
-O exemplo acima carrega a base completa. A execução real foi validada: 9.659 estações,
-107.621 viagens e 6.110.036 conexões. Resultados, medições e instruções de teste manual
+O exemplo carrega somente o serviço informado. Quando `trips.txt` contém mais de um
+`service_id`, omitir `active_service_ids` interrompe a carga para impedir a mistura de
+calendários. A execução real do serviço `307679` foi validada com 9.659 estações,
+24.363 viagens e 1.336.540 conexões. Resultados, medições e instruções de teste manual
 estão em [GTFS_VALIDATION.md](GTFS_VALIDATION.md).
 
 ## Leitura e construção
@@ -49,6 +51,8 @@ estão em [GTFS_VALIDATION.md](GTFS_VALIDATION.md).
 - Cada viagem é ordenada pelo valor numérico de `stop_sequence` e validada por
   inteiro antes da inserção de qualquer conexão. Rejeitar uma viagem não cria
   atalhos entre paradas nem remove conexões de outras viagens.
+- Viagens de serviços não selecionados são ignoradas com o motivo
+  `inactive_service`. Seleções vazias ou inexistentes são rejeitadas.
 - Cada conexão parte no horário de saída da parada atual e chega no horário de
   chegada à próxima. `TimeUtils` preserva segundos e horários acima de 24h,
   representando os tempos em minutos fracionários.
@@ -79,6 +83,10 @@ estão em [GTFS_VALIDATION.md](GTFS_VALIDATION.md).
 | Tempo zero entre IDs de paradas distintos | Colocar a viagem inteira em quarentena, excluindo suas conexões |
 | Velocidade Haversine acima de 120 km/h, com tempo positivo | Manter a viagem e emitir alerta |
 | Viagem válida no cadastro, mas sem horários | Registrar `missing_stop_times`; não criar conexões |
+| Mais de um `service_id` sem seleção explícita | Interromper a carga antes de criar o grafo |
+| Viagem de serviço não selecionado | Ignorar o bloco com `inactive_service` |
+| `pickup_type` ou `drop_off_type` fora de 0 a 3 | Rejeitar a viagem inteira |
+| `pickup_type` ou `drop_off_type` igual a 1, 2 ou 3 | Colocar a viagem inteira em quarentena |
 
 Os conflitos de IDs são verificados em paradas, linhas e viagens, comparando os
 campos completos dos registros após limpeza. Um registro inválido já rejeitado
@@ -112,7 +120,9 @@ alteram as contagens de aceitação.
 Os motivos incluem `missing_required_value`, `invalid_coordinate`, `duplicate_record`,
 `conflicting_id`, `unsupported_route_type`, `unknown_route`, `unknown_trip`,
 `unknown_stop`, `too_few_stops`, `invalid_sequence`, `duplicate_sequence`,
-`invalid_time`, `departure_before_arrival`, `negative_travel_time` e `zero_travel_time`.
+`invalid_time`, `departure_before_arrival`, `negative_travel_time`,
+`zero_travel_time`, `inactive_service`, `invalid_pickup_drop_off` e
+`restricted_pickup_drop_off`.
 
 Uma linha rejeitada pode provocar `unknown_route` no cadastro de viagens e
 `unknown_trip` no bloco de horários: são rejeições distintas em arquivos diferentes.
@@ -132,16 +142,17 @@ Os testes utilizam arquivos temporários pequenos e cobrem dados válidos, conve
 coordenadas, duplicidades, referências, ordenação, erros temporais, quarentena,
 alertas, isolamento entre viagens e consistência do resumo.
 
-Permanecem fora do escopo: calendário por data, geometria real e aplicação das
-restrições de embarque/desembarque. `Connection` ainda não armazena `trip_id` ou
-`service_id`; o grafo reúne os serviços carregados. Alertas de velocidade não
-garantem admissibilidade da heurística do futuro roteador.
+Permanecem fora do escopo: resolução automática do calendário por data e geometria
+real. Como `Connection` não armazena `trip_id` nem estado de permanência no veículo,
+viagens com restrições de embarque/desembarque são rejeitadas por inteiro. Essa perda
+conservadora evita rotas impossíveis até o roteador modelar esse estado. Alertas de
+velocidade não garantem admissibilidade da heurística do futuro roteador.
 
 Os índices e o grafo permanecem na RAM. Valores numéricos repetidos são compartilhados
 durante a carga, e os índices auxiliares de horários, distâncias e durações são limpos
 ao finalizar ou iniciar uma nova carga. A inserção de conexões utiliza o método
-ordenado existente. Na execução completa registrada, a carga levou 40,893 segundos
-e o pico de RAM do processo foi de 598,641 MiB; os valores variam conforme o ambiente.
+ordenado existente. Na execução do serviço `307679`, a carga levou 123,999 segundos
+e o pico de RAM do processo foi de 205,293 MiB; os valores variam conforme o ambiente.
 
 ## Evidências visuais da carga
 
@@ -149,8 +160,8 @@ O `DataLoader` é chamado pelo comando `app.validate_gtfs` e pelos testes. Ainda
 não é chamado pela aplicação FastAPI em `app/main.py` nem pelo frontend. O comando
 cria o grafo na RAM e o libera ao terminar.
 
-Durante a verificação manual foram geradas imagens de uma carga real: 9.659 paradas
-e 13.765 segmentos direcionados, agregando 6.110.036 conexões horárias.
+Antes da seleção obrigatória de serviço, foram geradas imagens de uma carga histórica:
+9.659 paradas e 13.765 segmentos direcionados, agregando 6.110.036 conexões horárias.
 Um recorte da parada `14785288`, Avenida Dos Andradas 220, mostrou 964 partidas
 e cinco destinos diretos. Essas imagens não estão versionadas no repositório.
 

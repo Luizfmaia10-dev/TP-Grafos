@@ -28,6 +28,8 @@ Data Limite: 22/11/2026 23:59
 - [x] Aplicar sanitizacao e tratamento de dados ausentes (coordenadas invalidas, horarios fora de ordem, paradas duplicadas).
 - [x] Instanciar os objetos de dominio `Station`, `Connection` e `VehicleType` com base nos dados higienizados.
 - [x] Validar cobertura de testes unitarios do modulo de ingestao.
+- [x] Impedir a mistura silenciosa de calendarios exigindo selecao explicita de `service_id` quando o feed declarar mais de um servico e ignorar viagens inativas durante a carga.
+- [x] Colocar em quarentena viagens com restricoes de `pickup_type` ou `drop_off_type` enquanto o roteador nao modelar permanencia no mesmo veiculo.
 - [ ] Obter os arquivos de calendario de servico (`calendar.txt` e/ou `calendar_dates.txt`) da mesma versao do pacote GTFS oficial, versiona-los com Git LFS e atualizar `data/gtfs/README.md` e os hashes. Se nao existirem na fonte oficial, levar a decisao de selecao manual de `service_id` para a equipe, sem inferencia heuristica. Diagnostico em `docs/ISSUE_SERVICE_CALENDAR.md`.
 - [ ] Filtrar no `DataLoader` as viagens pelo calendario ativo (data ou tipo de dia informado na carga), ignorando os `service_id` inativos, sem alterar `Connection`, `TransportGraph` ou `RouteSimulator`. Cobrir com testes TDD: servico inativo nao gera conexoes, servico ativo gera, e excecoes de `calendar_dates.txt` sao aplicadas quando o arquivo existir.
 - [ ] Repetir a validacao de `docs/GTFS_VALIDATION.md` com o filtro de calendario e registrar as novas contagens de conexoes, memoria e tempo de carga em `docs/DATA_LOADER.md`.

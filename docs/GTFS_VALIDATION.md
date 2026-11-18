@@ -19,7 +19,8 @@ por `version https://git-lfs.github.com/spec/v1`.
 A partir de `backend/`, com Python 3.11 ou superior em Linux/macOS:
 
 ```sh
-python3 -m app.validate_gtfs ../data/gtfs --output ../data/cache/gtfs-validation.json
+python3 -m app.validate_gtfs ../data/gtfs --service-id 307679 \
+  --output ../data/cache/gtfs-validation.json
 ```
 
 O comando utiliza a biblioteca padrão e carrega o grafo na RAM. Após verificar
@@ -31,24 +32,30 @@ No resultado, confira `passed: true` e todos os valores de `checks` como `true`.
 O comando verifica contagens, destinos cadastrados, pesos finitos e não negativos
 e ordenação dos horários. `load_report` discrimina aceitação, rejeição e alertas;
 `metrics` informa tempo e pico de RAM do processo.
+Repita `--service-id` para selecionar mais de um serviço. O valor deve vir de
+`trips.txt`; não deduza dias da semana sem o calendário da mesma versão do feed.
+Com seleção ativa, `--audit` ainda compara hashes e contagens dos arquivos, mas deixa
+`zero_time_quarantine_matches` como `null`: a referência atual contém a quarentena
+global, que não pode ser comparada corretamente com um subconjunto de serviços.
 
-## Referência da versão inicial
+## Referência da versão inicial com serviço selecionado
 
 Para os arquivos com os hashes registrados no README do dataset:
 
 | Medida | Resultado |
 |---|---:|
 | Estações | 9.659 |
-| Viagens carregadas | 107.621 |
-| Conexões | 6.110.036 |
-| Viagens em quarentena por tempo zero | 51 |
-| Registros de horários rejeitados | 3.350 |
-| Alertas de velocidade acima de 120 km/h | 414 |
+| Viagens carregadas | 24.363 |
+| Conexões | 1.336.540 |
+| Registros ignorados por serviço inativo | 4.854.964 |
+| Registros rejeitados por tempo zero | 2.106 |
+| Registros em viagens com embarque/desembarque restrito | 3.034 |
+| Alertas de velocidade acima de 120 km/h | 49 |
 
-A execução anterior à migração registrou 40,893 segundos de carga e pico de
-598,641 MiB de RAM do processo. São resultados históricos de uma máquina local;
-tempo e memória variam. A migração preserva os CSVs byte a byte. Uma versão nova
-do GTFS pode alterar os números acima e exige nova avaliação.
+A execução do serviço `307679` registrou 123,999 segundos de carga e pico de
+205,293 MiB de RAM do processo. São resultados de uma máquina local; tempo e
+memória variam. Uma versão nova do GTFS pode alterar os números acima e exige
+nova avaliação.
 
 ## Testes automatizados
 
