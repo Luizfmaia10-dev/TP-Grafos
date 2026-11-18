@@ -3,7 +3,7 @@
 Data de referencia: 17/11/2026.
 Responsavel pelos commits: Gabriel Aredes.
 Branch proposta para a implementacao: `codigo/30-interface-visual`.
-Status: etapas 1 (base visual), 2 (selecao de paradas) e 3 (consulta demonstrativa) implementadas e verificadas, com exportacao exata do mapa mobile pendente.
+Status: etapas 1 a 4 implementadas e verificadas. Recursos pendentes do celular obtidos na etapa 4; etapa 5 ainda aberta.
 
 ## Referencias e ponto de partida
 
@@ -25,8 +25,8 @@ A heuristica de Haversine e o DataLoader ja existem. A busca A* completa,
 O Figma forneceu o contexto detalhado e o screenshot do desktop nesta rodada.
 A consulta seguinte do celular atingiu a cota MCP do plano Starter. As telas
 mobile e seus screenshots foram construidos e revisados na rodada anterior.
-A exportacao e a conferencia dos recursos restantes devem ser resolvidas na
-primeira etapa antes de substituir qualquer recurso do desenho.
+Na etapa 4, o contexto do resultado celular forneceu o mapa e os icones que
+estavam pendentes. Eles foram baixados e integrados sem alterar seus vetores.
 
 ## Forma de trabalho
 
@@ -102,7 +102,7 @@ JavaScript servido estaticamente. A configuracao de build sera minima.
 
 - [x] Criar `codigo/30-interface-visual` a partir da main atualizada e registrar
       o estado inicial do projeto antes da implementacao.
-- [ ] Conferir o contexto do Figma e obter os recursos exatos da marca, icones,
+- [x] Conferir o contexto do Figma e obter os recursos exatos da marca, icones,
       mapa desktop e mapa celular, preservando suas proporcoes.
 - [x] Centralizar as cores do AGENTS.md, tipografia Inter/IBM Plex Mono,
       espacamentos, bordas e estados de foco.
@@ -175,16 +175,16 @@ A consulta de 25:00 demonstra a ausencia de partida na amostra.
 
 ## Etapa 4 - Refinamento visual e acessibilidade
 
-- [ ] Comparar no navegador as telas inicial e de resultado com o Figma em
+- [x] Comparar no navegador as telas inicial e de resultado com o Figma em
       1440 px e 390 px. Verificar tambem 360 px e larguras intermediarias.
-- [ ] Ajustar contraste, alinhamento, tipografia, espessura das arestas e
+- [x] Ajustar contraste, alinhamento, tipografia, espessura das arestas e
       etiquetas do mapa, mantendo nomes e tempos legiveis.
-- [ ] Conferir o fluxo completo por teclado e toque, labels, foco visivel,
+- [x] Conferir o fluxo completo por teclado e toque, labels, foco visivel,
       avisos acessiveis e tamanho dos alvos de interacao.
-- [ ] Garantir que busca, mapa e itinerario conservem o mesmo estado ao mudar
+- [x] Garantir que busca, mapa e itinerario conservem o mesmo estado ao mudar
       o tamanho da janela. Ajustar altura e rolagem para o celular.
-- [ ] Respeitar a preferencia por movimento reduzido em animacoes de interface.
-- [ ] Verificar erros de console, recursos ausentes e funcionamento da pagina
+- [x] Respeitar a preferencia por movimento reduzido em animacoes de interface.
+- [x] Verificar erros de console, recursos ausentes e funcionamento da pagina
       com os recursos locais da demonstracao.
 
 **Criterio de conclusao**
@@ -317,10 +317,10 @@ Font License copiadas dos pacotes Fontsource em assets/fonts/.
 
 As consultas e a exportacao mobile do Figma foram bloqueadas pela cota MCP do
 plano Starter. A tentativa pelo editor terminou porque o controle do navegador
-nao conseguiu verificar a URL da janela. Por isso, o celular usa um recorte
-responsivo do SVG desktop, com as etiquetas alinhadas ao mesmo plano de
-coordenadas. Essa e uma adaptacao da referencia. A exportacao exata do mapa
-mobile 2:503 continua pendente e o checkbox de recursos exatos permanece aberto.
+nao conseguiu verificar a URL da janela. Por isso, ate a etapa 3, o celular
+usou um recorte responsivo do SVG desktop. Essa adaptacao foi substituida na
+etapa 4 pelo SVG mobile exato do componente 2:503, obtido no contexto de 5:2852.
+O checkbox de recursos exatos foi encerrado depois da conferencia dos arquivos.
 
 ### Verificacao manual desta etapa
 
@@ -457,10 +457,9 @@ e identifica A/B nas etiquetas, com marcadores menores. A legenda identifica
 a linha e a etiqueta flutuante e omitida nesse trecho curto para evitar choque.
 
 O resultado usa os recursos locais ja obtidos e as referencias das telas
-3:446 e 5:2852. A etiqueta da linha usa o texto Linha 50. O icone branco de
-onibus do resultado e a exportacao exata do mapa mobile continuam dependendo
-da obtencao dos recursos do Figma, cuja limitacao foi registrada na etapa 1.
-O checkbox geral de recursos exatos permanece aberto para esse refinamento.
+3:446 e 5:2852. Na etapa 3, a etiqueta da linha usava o texto Linha 50, e o
+icone branco e o mapa mobile exato ainda estavam pendentes. Esses recursos
+foram obtidos e integrados na etapa 4, encerrando essa pendencia.
 
 ### Arquivos da etapa 3
 
@@ -520,4 +519,126 @@ As telas de carregamento, resultado desktop/celular, falta de partida e trecho
 curto foram revisadas visualmente. Os recursos HTML/CSS/JS responderam com os
 tipos corretos, sem erros de pagina, recursos ausentes ou chamadas externas.
 Os 138 testes Python passaram; permanece apenas o aviso ja registrado do
-TestClient. As etapas 4 e 5 continuam abertas para suas entregas completas.
+TestClient. Ao final da etapa 3, as etapas 4 e 5 ainda estavam abertas.
+
+## Etapa 4 - Refinamento visual e acessibilidade
+
+Os commits ae7cbb4 (implementacao) e 09762c6 (documentacao) foram conferidos
+na codigo/30-interface-visual, ambos com Gabriel como autor e committer. A
+pasta estava limpa antes desta entrega. Nenhum commit foi feito pelo agente.
+
+### Recursos exatos e leitura visual
+
+O contexto de 5:2852 forneceu o SVG do mapa mobile 2:503, o onibus branco do
+resultado e a seta de voltar. Os tres arquivos foram baixados das URLs do
+Figma e preservados byte a byte. As consultas seguintes voltaram a encontrar
+o limite do Starter, mas os recursos necessarios ja estavam disponiveis.
+
+network-mobile.svg tem 358 x 256 unidades; o desktop conserva 960 x 780.
+Cada layout usa os limites geograficos do respectivo desenho. projectStation
+converte latitude/longitude em pixels nativos desse SVG. O ResizeObserver do
+painel atualiza escala, marcadores, arestas e etiquetas ao redimensionar, sem
+alterar a consulta ou os horarios. A escala conserva as proporcoes e as
+dimensoes intrinsecas dos arquivos. As etiquetas sao mantidas dentro do recorte
+e separadas quando o texto ampliado aproximaria seus retangulos; os vertices
+geograficos permanecem nas coordenadas reais.
+
+O refinamento preserva a paleta do AGENTS.md e aproxima o peso dos titulos e
+do resumo da referencia. O texto dos controles ganhou contraste de borda e
+foco; os nomes do mapa e suas legendas usam fundos solidos para leitura sobre
+a malha. O indicador de norte recebeu role img com nome acessivel.
+
+As fontes e suas alturas de linha passaram a usar rem. Resumo e itinerario
+reorganizam suas colunas quando o espaco disponivel diminui ou a fonte-base
+e ampliada a 200%. Os horarios conservam segundos e os nomes podem quebrar
+linha. No DOM, o mapa vem antes do itinerario, acompanhando a ordem visual do
+celular; a organizacao do desktop continua sendo feita pelas areas do grid.
+
+### Sugestoes, avisos e foco
+
+A medicao inicial reproduziu um clique perdido em Experimente a linha 50:
+fechar as sugestoes e mostrar um erro no blur mudava a altura do formulario
+entre o inicio e o fim do clique. As sugestoes agora sao um popup ancorado ao
+campo. Enquanto um texto ainda nao confirmado e digitado, o espaco do eventual
+erro fica reservado, com sua mensagem oculta ate a validacao. Assim o blur
+nao desloca o alvo do clique. Campos vazios nao recebem erro apenas por
+perderem foco. Confirmar uma sugestao continua sendo necessario para obter o ID.
+
+Uma unica regiao de status anuncia contagens de sugestoes, falta de resultados,
+selecao, limpeza, carregamento, resultado e erros. Mensagens repetidas nao sao
+reescritas. Erros visiveis ficam associados ao campo por aria-describedby e
+aria-invalid; erros ainda nao apresentados ficam fora da descricao acessivel.
+Selecionar paradas iguais pelo mapa tambem anuncia o motivo da validacao.
+
+O foco do teclado aparece no campo, na sugestao ativa e na etiqueta da parada.
+As sugestoes suportam setas, Enter e Escape; Tab segue o fluxo dos controles.
+O resultado transfere foco ao titulo, e Editar busca devolve foco ao formulario
+com os dados preservados. Os alvos de nome das paradas conservam pelo menos
+44 px de altura, oferecendo uma alternativa maior aos pontos do mapa. A
+animacao de carregamento continua respeitando prefers-reduced-motion.
+
+Foram usadas como referencias o
+[padrao de combobox WAI-ARIA](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/),
+as orientacoes de
+[contraste de texto](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html),
+[contraste de componentes](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html)
+e [tamanho dos alvos](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html).
+As cores foram medidas sem arredondar para decidir sua aceitacao. Exemplos:
+texto secundario em branco 6,39:1; texto claro no painel do mapa 7,17:1;
+borda do campo contra sua superficie 3,26:1 e contra o exterior branco 3,48:1;
+foco roxo contra o campo 7,17:1; linha de onibus contra o mapa 3,14:1.
+Os numeros exibidos aqui estao arredondados apenas para documentacao.
+
+### Arquivos da etapa 4
+
+| Arquivo | Responsabilidade nesta entrega |
+|---|---|
+| frontend/index.html | Semantica do norte, descricoes, popup e ordem de leitura; recursos exatos do resultado |
+| frontend/styles/app.css | Contraste, foco, tipografia relativa, colunas adaptativas e leitura do mapa |
+| frontend/assets/app.css | CSS recompilado, servido localmente |
+| frontend/js/app.js | Avisos acessiveis, validacao sem deslocar o alvo e navegacao das sugestoes |
+| frontend/js/map.js | Projecao desktop/mobile, escala e posicionamento das etiquetas no recorte visivel |
+| frontend/js/route-view.js | Horario exato no texto acessivel do resumo |
+| frontend/assets/maps/network-mobile.svg | Base mobile exata do Figma, sem redesenho |
+| frontend/assets/icons/bus-white.svg | Onibus branco do resultado |
+| frontend/assets/icons/arrow-left.svg | Seta de Editar busca |
+| frontend/tests/map.test.js | Seis posicoes de referencia nos dois planos de coordenadas |
+
+### Verificacao e limites
+
+Os seis testes de projecao foram escritos antes da funcao, e a falha inicial
+de importacao foi confirmada. A suite final possui 69 testes JavaScript
+aprovados. Os 138 testes Python passaram, com o mesmo aviso do TestClient.
+Nao houve alteracao de backend, GTFS ou dependencias do projeto.
+
+O navegador verificou onze tamanhos de janela, entre 320 e 1440 px, incluindo
+baixa altura e mudanca somente de largura. Foram 31 verificacoes de layout,
+incluindo busca, resultado, quatro larguras com fonte-base a 200% e nomes
+maiores no itinerario. Os campos e o resultado foram preservados no resize,
+sem overflow horizontal ou corte das etiquetas. O fluxo demonstrativo da
+etapa 3 foi repetido nos dez tamanhos de sua verificacao anterior.
+
+O axe-core 4.14.1 foi usado somente na pasta externa de verificacao, sem entrar
+no package.json. Nove estados foram analisados sem violacoes automaticas:
+inicial desktop, sugestoes desktop, resultado desktop/celular, resultado com
+texto ampliado, busca sem sugestoes, validacao, falta de partida e paradas
+iguais. As ocorrencias de contraste que a ferramenta deixou para conferencia
+manual envolviam sobreposicao do popup ou do SVG; foram conferidas por cores,
+geometria e capturas de tela. Isso nao representa certificacao completa WCAG.
+A semantica foi conferida pela arvore acessivel do navegador; NVDA e VoiceOver
+nao foram executados nesta rodada.
+
+Foram conferidos Tab/Shift+Tab, setas, Enter, Escape, foco visivel, acionamento
+por toque e movimento reduzido. As telas inicial, sugestoes e resultado foram
+comparadas com as referencias disponiveis do Figma; os estados de aviso, nomes
+longos e texto ampliado tambem foram inspecionados. Nao houve erros de pagina
+ou console, recursos ausentes ou requisicoes externas na demonstracao.
+
+Para repetir: execute npm test em frontend/ e abra a pagina pelo FastAPI com
+o comando da etapa 1. Percorra a busca apenas com teclado, repita por toque,
+abra as sugestoes e acione o atalho do exemplo, calcule e edite a busca.
+Confira tambem 390 e 360 px, fonte ampliada e a preferencia por movimento
+reduzido. O CSS compilado ja acompanha a entrega; npm run build o reconstrui.
+
+docs/PLAN.md conserva abertos os itens de consulta real a API e integracao.
+A etapa 5 permanece separada para a consolidacao final e passagem para a #32.
