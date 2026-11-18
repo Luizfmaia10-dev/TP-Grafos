@@ -117,7 +117,7 @@
     transform: translateY(-180%);
     border-radius: 10px;
     background: var(--color-rg-surface);
-    color: var(--color-rg-navy);
+    color: var(--color-rg-ink);
     font-weight: 600;
   }
 
