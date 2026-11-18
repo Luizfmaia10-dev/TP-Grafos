@@ -36,7 +36,7 @@ export function renderRoute(result) {
   document.querySelector("#exact-total").textContent = `Tempo total exato: ${formatDuration(result.totalSeconds)}.`;
   const arrival = document.querySelector("#arrival-time");
   arrival.textContent = result.arrivalTime.slice(0, -3);
-  arrival.setAttribute("aria-label", `Chegada prevista às ${result.arrivalTime}`);
+  document.querySelector("#exact-arrival").textContent = result.arrivalTime;
   arrival.title = result.arrivalTime;
   document.querySelector("#waiting-duration").textContent = `${formatDuration(result.waitingSeconds)} de espera`;
   document.querySelector("#vehicle-duration").textContent = `${formatDuration(result.vehicleSeconds)} no ônibus`;

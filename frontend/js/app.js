@@ -47,6 +47,10 @@ const map = createStationMap(document.querySelector("#map-stations"), DEMO_STATI
 });
 const request = createRouteRequest(searchDemoRoute, renderRequest);
 
+function announce(message) {
+  if (announcement.textContent !== message) announcement.textContent = message;
+}
+
 function renderRequest(state) {
   const loading = state.status === "loading";
   const found = state.status === "found";
@@ -77,11 +81,11 @@ function renderRequest(state) {
   }
   if (found) {
     renderRoute(state);
-    announcement.textContent = `Trajeto de exemplo encontrado. Total: ${formatDuration(state.totalSeconds)}. Chegada às ${state.arrivalTime}.`;
+    announce(`Trajeto de exemplo encontrado. Total: ${formatDuration(state.totalSeconds)}. Chegada às ${state.arrivalTime}.`);
     title.focus({ preventScroll: true });
     window.scrollTo({ top: 0 });
   } else {
-    announcement.textContent = loading ? "Consultando a viagem de exemplo da linha 50." : message ? message.join(". ") : "";
+    announce(loading ? "Consultando a viagem de exemplo da linha 50." : message ? message.join(". ") : "");
     if (!loading) document.querySelector("#itinerary-steps").replaceChildren();
   }
 }
@@ -91,10 +95,16 @@ function setStatus(message) {
   status.hidden = message.length === 0;
 }
 
-function showError(input, element, message) {
+function showError(input, element, message, touchedField, hasText) {
+  const visible = Boolean(message && touchedField);
   element.textContent = message ?? "";
-  element.hidden = !message;
-  input.setAttribute("aria-invalid", String(Boolean(message)));
+  // Reserve the draft error's space while typing so blur cannot move a click target.
+  element.hidden = !message || (!visible && !hasText);
+  element.style.visibility = visible ? "visible" : "hidden";
+  element.setAttribute("aria-hidden", String(!visible));
+  input.setAttribute("aria-invalid", String(visible));
+  const hint = input.id === "departure-time" ? "departure-hint" : "station-hint";
+  input.setAttribute("aria-describedby", `${hint}${visible ? ` ${element.id}` : ""}`);
 }
 
 function renderSelection() {
@@ -104,11 +114,11 @@ function renderSelection() {
     if (controls.input.value !== value) controls.input.value = value;
     controls.clear.hidden = value.length === 0;
     controls.icon.hidden = value.length !== 0;
-    showError(controls.input, controls.error, touched.has(field) ? result.errors[field] : null);
+    showError(controls.input, controls.error, result.errors[field], touched.has(field), value.length > 0);
   }
   if (departureInput.value !== selection.departureTime) departureInput.value = selection.departureTime;
   showError(departureInput, document.querySelector("#departure-error"),
-    touched.has("departureTime") ? result.errors.departureTime : null);
+    result.errors.departureTime, touched.has("departureTime"), selection.departureTime.length > 0);
   const loading = request.state.status === "loading";
   const found = request.state.status === "found";
   submitButton.disabled = loading || result.query === null;
@@ -147,7 +157,10 @@ function chooseStation(field, station, focusNext = false) {
   activeField = field;
   if (field === "origin" && !selection.destinationId) activeField = "destination";
   if (field === "destination" && !selection.originId) activeField = "origin";
-  renderSelection();
+  const result = renderSelection();
+  announce(selection.originId && selection.destinationId && !result.query
+    ? Object.values(result.errors).join(" ")
+    : `${field === "origin" ? "Origem selecionada" : "Destino selecionado"}: ${station.label}.`);
   if (focusNext) fields[activeField].input.focus();
 }
 
@@ -175,8 +188,6 @@ function openOptions(field) {
     const arrow = document.createElement("img");
     arrow.src = "/assets/icons/arrow.svg";
     arrow.alt = "";
-    arrow.width = 15.2625;
-    arrow.height = 12.5125;
     option.append(copy, arrow);
 
     // Keep the input focused until the click chooses an option, including touch.
@@ -188,6 +199,9 @@ function openOptions(field) {
   controls.list.hidden = options.length === 0;
   controls.empty.hidden = options.length !== 0;
   controls.input.setAttribute("aria-expanded", String(options.length > 0));
+  const fieldName = field === "origin" ? "origem" : "destino";
+  announce(options.length ? `${options.length} ${options.length === 1 ? "parada encontrada" : "paradas encontradas"} para ${fieldName}. Use as setas e Enter para selecionar.`
+    : `Nenhuma parada do exemplo encontrada para ${fieldName}.`);
 }
 
 function highlightOption(index) {
@@ -234,8 +248,9 @@ for (const [field, controls] of Object.entries(fields)) {
   });
   controls.input.addEventListener("keydown", event => handleStationKey(event, field));
   controls.input.addEventListener("blur", () => {
-    touched.add(field);
-    renderSelection();
+    if (selection[`${field}Text`]) touched.add(field);
+    const result = renderSelection();
+    if (selection[`${field}Text`] && result.errors[field]) announce(result.errors[field]);
   });
   controls.clear.addEventListener("click", () => {
     selection = editStation(selection, field, "");
@@ -244,6 +259,7 @@ for (const [field, controls] of Object.entries(fields)) {
     renderSelection();
     controls.input.focus();
     openOptions(field);
+    announce(`${field === "origin" ? "Origem limpa" : "Destino limpo"}. Escolha uma parada.`);
   });
 }
 
@@ -251,8 +267,9 @@ for (const event of ["input", "blur"]) {
   departureInput.addEventListener(event, () => {
     selection = { ...selection, departureTime: departureInput.value };
     if (event === "input") request.cancel();
-    if (event === "blur") touched.add("departureTime");
-    renderSelection();
+    if (event === "blur" && selection.departureTime) touched.add("departureTime");
+    const result = renderSelection();
+    if (event === "blur" && result.errors.departureTime) announce(result.errors.departureTime);
   });
 }
 
@@ -275,6 +292,7 @@ demoTrigger.addEventListener("click", () => {
   activeField = "destination";
   closeOptions();
   renderSelection();
+  announce("Exemplo da linha 50 preenchido: Pampulha para Av. Paraná, 162, com saída às 07:45. Você pode calcular o trajeto.");
 });
 
 form.addEventListener("submit", event => {
@@ -284,6 +302,7 @@ form.addEventListener("submit", event => {
   ["origin", "destination", "departureTime"].forEach(field => touched.add(field));
   const result = renderSelection();
   if (!result.query) {
+    announce(Object.values(result.errors).join(" "));
     if (result.errors.origin) fields.origin.input.focus();
     else if (result.errors.destination) fields.destination.input.focus();
     else departureInput.focus();

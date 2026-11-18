@@ -18,14 +18,14 @@
     <header class="site-header flex items-center justify-between bg-rg-navy text-white">
       <a class="brand inline-flex shrink-0 items-center" href="/" aria-label="RotasGraph, página inicial">
         <span class="brand-symbol flex items-center justify-center" aria-hidden="true">
-          <img src="/assets/icons/graph.svg" alt="" width="22.925" height="18.2583">
+          <img src="/assets/icons/graph.svg" alt="">
         </span>
         <span class="brand-name">RotasGraph</span>
       </a>
 
       <div class="location-meta flex items-center text-rg-map-text">
         <span class="location-icon icon-slot" aria-hidden="true">
-          <img src="/assets/icons/location.svg" alt="" width="11.7375" height="13.9875">
+          <img src="/assets/icons/location.svg" alt="">
         </span>
         <p class="city-label font-semibold">Belo Horizonte<span class="city-state">, MG</span></p>
         <span class="location-divider" aria-hidden="true"></span>
@@ -39,40 +39,45 @@
       <section class="search-panel flex min-w-0 flex-col" aria-labelledby="planner-title">
         <div class="search-intro">
           <div class="intro-copy">
-            <h1 id="planner-title" class="planner-title font-extrabold" tabindex="-1">Planeje seu trajeto</h1>
+            <h1 id="planner-title" class="planner-title font-bold" tabindex="-1">Planeje seu trajeto</h1>
             <p id="planner-description" class="planner-description text-rg-muted">Escolha duas paradas pelo nome ou no mapa.</p>
           </div>
-          <button id="edit-search" class="edit-search" type="button" hidden><span aria-hidden="true">←</span> Editar busca</button>
+          <button id="edit-search" class="edit-search" type="button" hidden><span class="edit-icon icon-slot" aria-hidden="true"><img src="/assets/icons/arrow-left.svg" alt=""></span> Editar busca</button>
         </div>
 
         <form id="route-form" class="search-form flex flex-col border border-rg-line bg-white shadow-rg-card" aria-label="Planejamento do trajeto" aria-busy="false" novalidate>
+          <p id="station-hint" class="sr-only">Escolha uma sugestão para confirmar a parada. Use as setas, Enter e Escape para navegar.</p>
           <div id="origin-field" class="form-field flex min-w-0 flex-col">
             <label class="field-label font-semibold" for="origin">Origem</label>
-            <div class="field-control flex items-center">
-              <span class="station-badge station-badge--origin font-mono" aria-hidden="true">A</span>
-              <input id="origin" class="station-input min-w-0 flex-1" name="origin" type="text" placeholder="Escolha uma parada" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="origin-options" aria-describedby="origin-error" required>
-              <button id="origin-clear" class="clear-field" type="button" aria-label="Limpar origem" hidden>Limpar</button>
-              <span id="origin-search-icon" class="search-icon icon-slot shrink-0" aria-hidden="true">
-                <img src="/assets/icons/search.svg" alt="" width="12.0375" height="12.0375">
-              </span>
+            <div class="station-picker">
+              <div class="field-control flex items-center">
+                <span class="station-badge station-badge--origin font-mono" aria-hidden="true">A</span>
+                <input id="origin" class="station-input min-w-0 flex-1" name="origin" type="text" placeholder="Escolha uma parada" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="origin-options" aria-describedby="station-hint" required>
+                <button id="origin-clear" class="clear-field" type="button" aria-label="Limpar origem" hidden>Limpar</button>
+                <span id="origin-search-icon" class="search-icon icon-slot shrink-0" aria-hidden="true">
+                  <img src="/assets/icons/search.svg" alt="">
+                </span>
+              </div>
+              <ul id="origin-options" class="station-options" role="listbox" aria-label="Paradas para origem" hidden></ul>
+              <p id="origin-empty" class="field-hint station-empty" hidden>Nenhuma parada do exemplo encontrada.</p>
             </div>
-            <ul id="origin-options" class="station-options" role="listbox" aria-label="Paradas para origem" hidden></ul>
-            <p id="origin-empty" class="field-hint" hidden>Nenhuma parada do exemplo encontrada.</p>
             <p id="origin-error" class="field-error" hidden></p>
           </div>
 
           <div id="destination-field" class="form-field flex min-w-0 flex-col">
             <label class="field-label font-semibold" for="destination">Destino</label>
-            <div class="field-control flex items-center">
-              <span class="station-badge station-badge--destination font-mono" aria-hidden="true">B</span>
-              <input id="destination" class="station-input min-w-0 flex-1" name="destination" type="text" placeholder="Escolha uma parada" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="destination-options" aria-describedby="destination-error" required>
-              <button id="destination-clear" class="clear-field" type="button" aria-label="Limpar destino" hidden>Limpar</button>
-              <span id="destination-search-icon" class="search-icon icon-slot shrink-0" aria-hidden="true">
-                <img src="/assets/icons/search.svg" alt="" width="12.0375" height="12.0375">
-              </span>
+            <div class="station-picker">
+              <div class="field-control flex items-center">
+                <span class="station-badge station-badge--destination font-mono" aria-hidden="true">B</span>
+                <input id="destination" class="station-input min-w-0 flex-1" name="destination" type="text" placeholder="Escolha uma parada" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="destination-options" aria-describedby="station-hint" required>
+                <button id="destination-clear" class="clear-field" type="button" aria-label="Limpar destino" hidden>Limpar</button>
+                <span id="destination-search-icon" class="search-icon icon-slot shrink-0" aria-hidden="true">
+                  <img src="/assets/icons/search.svg" alt="">
+                </span>
+              </div>
+              <ul id="destination-options" class="station-options" role="listbox" aria-label="Paradas para destino" hidden></ul>
+              <p id="destination-empty" class="field-hint station-empty" hidden>Nenhuma parada do exemplo encontrada.</p>
             </div>
-            <ul id="destination-options" class="station-options" role="listbox" aria-label="Paradas para destino" hidden></ul>
-            <p id="destination-empty" class="field-hint" hidden>Nenhuma parada do exemplo encontrada.</p>
             <p id="destination-error" class="field-error" hidden></p>
           </div>
 
@@ -80,7 +85,7 @@
             <label class="field-label font-semibold" for="departure-time">Horário de saída</label>
             <div class="field-control flex items-center">
               <span class="clock-icon icon-slot shrink-0" aria-hidden="true">
-                <img src="/assets/icons/clock.svg" alt="" width="15.5417" height="15.5417">
+                <img src="/assets/icons/clock.svg" alt="">
               </span>
               <input id="departure-time" class="time-input min-w-0 flex-1 font-mono" name="departure_time" type="text" value="07:45" autocomplete="off" spellcheck="false" aria-describedby="departure-hint departure-error" required>
             </div>
@@ -89,7 +94,7 @@
           </div>
 
           <button class="search-button flex items-center justify-center font-semibold" type="submit" disabled>Calcular trajeto</button>
-          <p id="selection-status" class="selection-status" role="status" aria-live="polite" aria-atomic="true" hidden></p>
+          <p id="selection-status" class="selection-status" hidden></p>
         </form>
 
         <section id="query-feedback" class="query-feedback" aria-labelledby="feedback-title" hidden>
@@ -101,14 +106,14 @@
           <div class="summary-metrics">
             <div class="summary-metric">
               <p class="metric-label">Tempo total</p>
-              <p class="metric-value"><span id="total-minutes"></span><span class="metric-unit">min</span></p>
+              <p class="metric-value" aria-hidden="true"><span id="total-minutes"></span><span class="metric-unit">min</span></p>
+              <p id="exact-total" class="sr-only"></p>
             </div>
             <div class="summary-metric summary-arrival">
               <p class="metric-label">Chegada prevista</p>
-              <p id="arrival-time" class="metric-value"></p>
+              <p class="metric-value"><span id="arrival-time" aria-hidden="true"></span><span id="exact-arrival" class="sr-only"></span></p>
             </div>
           </div>
-          <p id="exact-total" class="sr-only"></p>
           <div class="duration-bar" aria-hidden="true"><span id="waiting-proportion"></span></div>
           <div class="duration-key">
             <p class="duration-wait"><span id="waiting-duration"></span></p>
@@ -118,26 +123,17 @@
 
         <button id="demo-trigger" class="demo-card flex items-center text-left" type="button">
           <span class="demo-icon flex shrink-0 items-center justify-center bg-white" aria-hidden="true">
-            <img src="/assets/icons/bus.svg" alt="" width="15.7646" height="16.7229">
+            <img src="/assets/icons/bus.svg" alt="">
           </span>
           <span class="min-w-0 flex-1">
             <span class="demo-title block font-bold text-rg-purple">Experimente a linha 50</span>
             <span class="demo-description block text-rg-muted">Pampulha → Centro</span>
           </span>
           <span class="arrow-icon icon-slot shrink-0" aria-hidden="true">
-            <img src="/assets/icons/arrow.svg" alt="" width="15.2625" height="12.5125">
+            <img src="/assets/icons/arrow.svg" alt="">
           </span>
         </button>
         <p id="demo-scope" class="demo-scope">Demonstração com três paradas da linha 50 no sentido Centro e horários de uma viagem de exemplo.</p>
-      </section>
-
-      <section id="route-itinerary" class="route-itinerary" aria-labelledby="itinerary-title" hidden>
-        <div class="itinerary-heading">
-          <h2 id="itinerary-title">Itinerário</h2>
-          <p id="route-distance" class="font-mono" title="Soma das distâncias em linha reta entre as paradas"></p>
-        </div>
-        <ol id="itinerary-steps"></ol>
-        <p class="itinerary-note">Viagem de exemplo, sem consulta por data. Distância aproximada entre paradas; o mapa é esquemático.</p>
       </section>
 
       <section class="map-panel relative min-w-0 overflow-hidden bg-rg-map" aria-labelledby="map-title" aria-describedby="map-description">
@@ -145,7 +141,8 @@
 
         <div class="network-layer">
           <div class="network-background" aria-hidden="true">
-            <img class="network-image" src="/assets/maps/network-desktop.svg" alt="" width="960" height="780" fetchpriority="high">
+            <img class="network-image network-image--desktop" src="/assets/maps/network-desktop.svg" alt="" width="960" height="780" fetchpriority="high">
+            <img class="network-image network-image--mobile" src="/assets/maps/network-mobile.svg" alt="" width="358" height="256">
 
             <span class="map-region map-region--pampulha font-mono">PAMPULHA</span>
             <span class="map-region map-region--centro font-mono">CENTRO</span>
@@ -162,7 +159,7 @@
             <polyline class="route-line" fill="none"></polyline>
             <g class="route-direction"><path d="M-3 -4 L1 0 L-3 4" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></g>
           </svg>
-          <span id="route-pill" class="route-pill font-mono" aria-hidden="true" hidden><span>Linha</span> 50</span>
+          <span id="route-pill" class="route-pill font-mono" aria-hidden="true" hidden><span class="route-bus-icon icon-slot"><img src="/assets/icons/bus-white.svg" alt=""></span>50</span>
           <div id="map-stations"></div>
         </div>
 
@@ -172,10 +169,10 @@
         </div>
         <span id="map-selection-role" class="map-selection-role">Origem</span>
 
-        <div class="map-north absolute flex flex-col items-center justify-center bg-rg-map-panel text-rg-map-muted" aria-label="Norte">
+        <div class="map-north absolute flex flex-col items-center justify-center bg-rg-map-panel text-rg-map-muted" role="img" aria-label="Norte">
           <span class="north-label font-mono" aria-hidden="true">N</span>
           <span class="north-icon icon-slot" aria-hidden="true">
-            <img src="/assets/icons/north.svg" alt="" width="10.1938" height="14.5688">
+            <img src="/assets/icons/north.svg" alt="">
           </span>
         </div>
 
@@ -184,9 +181,19 @@
             <img id="map-key-station" src="/assets/icons/stop-key.svg" alt="" width="7" height="7" aria-hidden="true">
             <span id="map-key-route" class="route-key-line" aria-hidden="true" hidden></span>
             <span id="map-key-label">Paradas de ônibus</span>
+            <span id="map-key-short">Paradas</span>
           </span>
           <p class="map-caption font-mono text-rg-map-muted">Mapa esquemático<span class="map-caption-source"> · GTFS BHTRANS</span></p>
         </div>
+      </section>
+
+      <section id="route-itinerary" class="route-itinerary" aria-labelledby="itinerary-title" hidden>
+        <div class="itinerary-heading">
+          <h2 id="itinerary-title">Itinerário</h2>
+          <p id="route-distance" class="font-mono" title="Soma das distâncias em linha reta entre as paradas"></p>
+        </div>
+        <ol id="itinerary-steps"></ol>
+        <p class="itinerary-note">Viagem de exemplo, sem consulta por data. Distância aproximada entre paradas; o mapa é esquemático.</p>
       </section>
     </main>
   </body>
