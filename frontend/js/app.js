@@ -1,5 +1,6 @@
 import { DEMO_STATIONS, DEMO_TRIP } from "./demo-data.js";
 import { createStationMap } from "./map.js";
+import { createOriginConfirmation } from "./origin-confirmation.js";
 import { searchDemoRoute } from "./demo-service.js";
 import { createRouteRequest } from "./route-request.js";
 import { formatDuration, renderRoute } from "./route-view.js";
@@ -46,7 +47,17 @@ let activeOption = -1;
 const map = createStationMap(document.querySelector("#map-stations"), DEMO_STATIONS, station => {
   chooseStation(activeField, station);
 });
+const originConfirmation = createOriginConfirmation(station => {
+  map.confirmOrigin(station.stationId);
+  announce(`Origem confirmada: ${station.label}. O mapa foi atualizado.`);
+});
 const request = createRouteRequest(searchDemoRoute, renderRequest);
+
+function confirmOriginIfLeft() {
+  if (fields.origin.wrapper.contains(document.activeElement)) return;
+  const station = DEMO_STATIONS.find(item => item.stationId === selection.originId);
+  originConfirmation.leave(station);
+}
 
 function announce(message) {
   if (announcement.textContent !== message) announcement.textContent = message;
@@ -163,6 +174,7 @@ function chooseStation(field, station, focusNext = false) {
     ? Object.values(result.errors).join(" ")
     : `${field === "origin" ? "Origem selecionada" : "Destino selecionado"}: ${station.label}.`);
   if (focusNext) fields[activeField].input.focus();
+  if (field === "origin") queueMicrotask(confirmOriginIfLeft);
 }
 
 function openOptions(field) {
@@ -242,6 +254,10 @@ for (const [field, controls] of Object.entries(fields)) {
   });
   controls.input.addEventListener("input", () => {
     selection = editStation(selection, field, controls.input.value);
+    if (field === "origin") {
+      originConfirmation.reset();
+      map.clearOriginConfirmation();
+    }
     request.cancel();
     touched.delete(field);
     renderSelection();
@@ -252,15 +268,23 @@ for (const [field, controls] of Object.entries(fields)) {
     if (selection[`${field}Text`]) touched.add(field);
     const result = renderSelection();
     if (selection[`${field}Text`] && result.errors[field]) announce(result.errors[field]);
+    if (field === "origin") queueMicrotask(confirmOriginIfLeft);
   });
   controls.clear.addEventListener("click", () => {
     selection = editStation(selection, field, "");
+    if (field === "origin") {
+      originConfirmation.reset();
+      map.clearOriginConfirmation();
+    }
     request.cancel();
     touched.delete(field);
     renderSelection();
     controls.input.focus();
-    openOptions(field);
+    closeOptions();
     announce(`${field === "origin" ? "Origem limpa" : "Destino limpo"}. Escolha uma parada.`);
+  });
+  controls.input.addEventListener("pointerdown", () => {
+    if (document.activeElement === controls.input && openField !== field) openOptions(field);
   });
 }
 

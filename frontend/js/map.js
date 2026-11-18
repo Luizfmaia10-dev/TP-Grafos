@@ -55,7 +55,35 @@ export function createStationMap(container, stations, onSelect) {
   container.replaceChildren(...controls.map(control => control.button));
 
   const layer = container.parentElement;
+  const panel = layer.parentElement;
   let view = null;
+
+  function clearOriginConfirmation() {
+    panel.removeAttribute("data-origin-confirmed");
+    controls.forEach(control => control.button.removeAttribute("data-confirmed"));
+  }
+
+  function confirmOrigin(stationId) {
+    const control = controls.find(item => item.station.stationId === stationId);
+    if (!control) return;
+    clearOriginConfirmation();
+    panel.dataset.originConfirmed = "true";
+    control.button.dataset.confirmed = "true";
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion || typeof panel.animate !== "function") return;
+    panel.animate([
+      { clipPath: "inset(5% 4% 5% 4%)", transform: "scale(0.985)", opacity: 0.86 },
+      { clipPath: "inset(0 0 0 0)", transform: "scale(1)", opacity: 1 },
+    ], { duration: 780, easing: "cubic-bezier(0.16, 1, 0.3, 1)" });
+    control.button.querySelector(".map-marker").animate([
+      { transform: "translate(-50%, -50%) scale(0.65)", opacity: 0.5 },
+      { transform: "translate(-50%, -50%) scale(1.45)", opacity: 1, offset: 0.55 },
+      { transform: "translate(-50%, -50%) scale(1)", opacity: 1 },
+    ], { duration: 900, easing: "cubic-bezier(0.16, 1, 0.3, 1)" });
+    if (window.matchMedia("(width < 640px)").matches) {
+      panel.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }
 
   function render() {
     if (!view) return;
@@ -145,5 +173,7 @@ export function createStationMap(container, stations, onSelect) {
       view = { selection, activeField, result };
       render();
     },
+    confirmOrigin,
+    clearOriginConfirmation,
   };
 }
