@@ -22,7 +22,14 @@ router = APIRouter(prefix="/routes", tags=["routes"])
 def build_route_result(path: list[tuple[Station, Connection]], departure_time: float) -> RouteResult:
     """Adapt domain itinerary costs to the existing HTTP response contract."""
     if not path:
-        return RouteResult(TimeUtils.minutes_to_time(departure_time), 0, 0, 0, 0, [])
+        return RouteResult(
+            arrival_time=TimeUtils.minutes_to_time(departure_time),
+            total_seconds=0,
+            waiting_seconds=0,
+            travel_seconds=0,
+            distance_km=0,
+            steps=[],
+        )
     itinerary = Itinerary(path[0][0], departure_time, path)
     return RouteResult(
         arrival_time=itinerary.arrival_time,
@@ -58,7 +65,7 @@ def search_route(
             raise HTTPException(404, detail={"code": "unknown_station", "field": field})
     origin = network.stations[query.origin_id]
     destination = network.stations[query.destination_id]
-    departure_time = TimeUtils.time_to_minutes(query.departure_time)
+    departure_time = TimeUtils.time_to_minutes(f"{query.departure_time}:00")
     simulator = RouteSimulator(network.graph, network.max_speed)
     path = simulator.calculate_route(origin, destination, departure_time)
     return RouteSearchResponse(

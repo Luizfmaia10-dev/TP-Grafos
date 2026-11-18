@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import date
+import re
 from typing import Annotated, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, StringConstraints, field_validator, model_validator
@@ -10,6 +11,7 @@ from app.domain import Station, VehicleType
 from app.time_utils import TimeUtils
 
 StationId = Annotated[str, StringConstraints(strict=True, strip_whitespace=True, min_length=1)]
+DEPARTURE_TIME_PATTERN = re.compile(r"[0-9]{2,}:[0-5][0-9]")
 
 
 class RouteSearchRequest(BaseModel):
@@ -24,8 +26,10 @@ class RouteSearchRequest(BaseModel):
     @field_validator("departure_time")
     @classmethod
     def validate_departure_time(cls, value: str) -> str:
+        if not isinstance(value, str) or DEPARTURE_TIME_PATTERN.fullmatch(value) is None:
+            raise ValueError("Departure time must use HH:MM without seconds")
         try:
-            TimeUtils.time_to_minutes(value)
+            TimeUtils.time_to_minutes(f"{value}:00")
         except OverflowError:
             raise ValueError("Departure time is outside the supported range") from None
         return value

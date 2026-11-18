@@ -13,7 +13,7 @@ from app.network import RouteNetwork, get_network
 from app.route_simulator import RouteSimulator
 
 
-QUERY = {"origin_id": "001", "destination_id": "003", "departure_time": "07:59:30"}
+QUERY = {"origin_id": "001", "destination_id": "003", "departure_time": "07:59"}
 
 
 @pytest.fixture(autouse=True)
@@ -55,13 +55,13 @@ def test_search_returns_fastest_route_with_transfer_and_exact_costs(client):
     result = response.json()
     assert result["status"] == "found"
     assert result["service_date"] == "2026-11-17"
-    assert result["departure_time"] == "07:59:30"
+    assert result["departure_time"] == "07:59"
     assert result["origin"]["station_id"] == "001"
     assert result["destination"]["station_id"] == "003"
     route = result["route"]
     assert route["arrival_time"] == "08:11:15"
-    assert route["total_seconds"] == 705
-    assert route["waiting_seconds"] == 120
+    assert route["total_seconds"] == 735
+    assert route["waiting_seconds"] == 150
     assert route["travel_seconds"] == 585
     assert route["distance_km"] == pytest.approx(3)
     first, second = route["steps"]
@@ -69,7 +69,7 @@ def test_search_returns_fastest_route_with_transfer_and_exact_costs(client):
         "origin": result["origin"],
         "destination": {"station_id": "002", "name": "Transfer", "latitude": -19.901, "longitude": -43.901},
         "route_id": "bus", "vehicle_type": "BUS", "departure_time": "08:00:00",
-        "arrival_time": "08:05:30", "waiting_seconds": 30, "travel_seconds": 330, "distance_km": 1,
+        "arrival_time": "08:05:30", "waiting_seconds": 60, "travel_seconds": 330, "distance_km": 1,
     }
     assert second["origin"] == first["destination"]
     assert second["destination"] == result["destination"]
@@ -82,7 +82,7 @@ def test_search_returns_fastest_route_with_transfer_and_exact_costs(client):
 
 
 def test_direct_route_departing_exactly_at_requested_time(client):
-    response = client.post("/routes/search", json={**QUERY, "destination_id": "002", "departure_time": "08:00:00"})
+    response = client.post("/routes/search", json={**QUERY, "destination_id": "002", "departure_time": "08:00"})
 
     assert response.status_code == 200
     route = response.json()["route"]
@@ -93,7 +93,7 @@ def test_direct_route_departing_exactly_at_requested_time(client):
 
 @pytest.mark.parametrize("changes", [
     {"destination_id": "004"},
-    {"departure_time": "08:00:01"},
+    {"departure_time": "08:01"},
     {"origin_id": "003", "destination_id": "001"},
 ])
 def test_unreachable_or_missed_departure_returns_no_route(client, changes):
@@ -115,8 +115,8 @@ def test_walk_departs_immediately_and_does_not_modify_shared_connections(client,
         assert response.status_code == 200
         route = response.json()["route"]
         assert route["arrival_time"] == "08:07:45"
-        assert route["total_seconds"] == 495
-        assert route["waiting_seconds"] == 30
+        assert route["total_seconds"] == 525
+        assert route["waiting_seconds"] == 60
         assert route["travel_seconds"] == 465
         step = route["steps"][1]
         assert step["vehicle_type"] == "WALK"
@@ -130,21 +130,21 @@ def test_times_above_24_hours_stay_in_the_loaded_service_day(client, network):
     network.graph.add_connection(network.stations["001"], Connection(
         "night", network.stations["003"], VehicleType.BUS, 1.25, 1, 1500.5,
     ))
-    response = client.post("/routes/search", json={**QUERY, "departure_time": "25:00:15"})
+    response = client.post("/routes/search", json={**QUERY, "departure_time": "25:00"})
 
     assert response.status_code == 200
     result = response.json()
     assert result["service_date"] == "2026-11-17"
     assert result["route"]["arrival_time"] == "25:01:45"
-    assert result["route"]["total_seconds"] == 90
-    assert result["route"]["waiting_seconds"] == 15
+    assert result["route"]["total_seconds"] == 105
+    assert result["route"]["waiting_seconds"] == 30
 
 
 def test_fractional_seconds_round_absolute_times_consistently(client, network):
     network.graph.add_connection(network.stations["001"], Connection(
         "fractional", network.stations["003"], VehicleType.BUS, 0.6 / 60, 0, 480 + 0.6 / 60,
     ))
-    response = client.post("/routes/search", json={**QUERY, "departure_time": "08:00:00"})
+    response = client.post("/routes/search", json={**QUERY, "departure_time": "08:00"})
 
     assert response.status_code == 200
     route = response.json()["route"]
@@ -167,11 +167,11 @@ def test_unknown_station_returns_404(client, field):
 @pytest.mark.parametrize("changes", [
     {"origin_id": "003"}, {"origin_id": ""}, {"destination_id": "   "},
     {"origin_id": 1}, {"destination_id": None},
-    {"departure_time": "08:00"}, {"departure_time": "8:00:00"},
-    {"departure_time": "08:60:00"}, {"departure_time": "08:00:60"},
-    {"departure_time": "-01:00:00"}, {"departure_time": "08:00:00\n"},
+    {"departure_time": "08:00:00"}, {"departure_time": "8:00"},
+    {"departure_time": "08:60"}, {"departure_time": "08:00:60"},
+    {"departure_time": "-01:00"}, {"departure_time": "08:00\n"},
     {"departure_time": 480}, {"service_date": "2026-11-18"},
-    {"departure_time": "9" * 400 + ":00:00"},
+    {"departure_time": "9" * 400 + ":00"},
 ])
 def test_invalid_search_returns_422(client, changes):
     response = client.post("/routes/search", json=QUERY | changes)
@@ -219,7 +219,7 @@ def test_synthetic_gtfs_startup_and_search_respect_service_calendar(tmp_path):
         response = client.post("/routes/search", json=QUERY)
         assert response.status_code == 200
         assert response.json()["route"]["arrival_time"] == "08:10:00"
-        assert response.json()["route"]["total_seconds"] == 630
+        assert response.json()["route"]["total_seconds"] == 660
 
     with TestClient(create_app(data_directory=tmp_path, service_date=date(2027, 1, 1))) as client:
         response = client.post("/routes/search", json=QUERY)

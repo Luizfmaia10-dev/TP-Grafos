@@ -75,14 +75,15 @@ Recebe IDs de estacoes do catalogo e horario no dia de servico carregado:
 {
   "origin_id": "001",
   "destination_id": "003",
-  "departure_time": "07:59:30"
+  "departure_time": "07:59"
 }
 ```
 
 Todos os campos sao obrigatorios. IDs devem ser strings nao vazias; espacos
 externos sao removidos. Origem e destino devem ser distintos. O horario usa
-`HH:MM:SS`, preservando segundos e permitindo horas acima de 23, como
-`25:00:15`. Nao enviar data na consulta: `GTFS_SERVICE_DATE` seleciona o
+somente `HH:MM`, sem segundos, e permite horas acima de 23, como `25:00`.
+Internamente, o motor acrescenta segundos zerados sem reduzir a precisao dos
+horarios GTFS. Nao enviar data na consulta: `GTFS_SERVICE_DATE` seleciona o
 calendario na inicializacao. Campos adicionais sao rejeitados para evitar
 que uma data enviada pelo cliente seja ignorada silenciosamente.
 
@@ -100,11 +101,11 @@ Exemplo de resposta HTTP 200 para uma rota direta sintetica:
     "station_id": "003", "name": "Terminal",
     "latitude": -19.901, "longitude": -43.901
   },
-  "departure_time": "07:59:30",
+  "departure_time": "07:59",
   "route": {
     "arrival_time": "08:10:00",
-    "total_seconds": 630,
-    "waiting_seconds": 30,
+    "total_seconds": 660,
+    "waiting_seconds": 60,
     "travel_seconds": 600,
     "distance_km": 0.153,
     "steps": [
@@ -121,7 +122,7 @@ Exemplo de resposta HTTP 200 para uma rota direta sintetica:
         "vehicle_type": "BUS",
         "departure_time": "08:00:00",
         "arrival_time": "08:10:00",
-        "waiting_seconds": 30,
+        "waiting_seconds": 60,
         "travel_seconds": 600,
         "distance_km": 0.153
       }
@@ -171,7 +172,7 @@ os IDs sinteticos por IDs retornados por `/stations`:
 $body = @{
     origin_id = "001"
     destination_id = "003"
-    departure_time = "07:59:30"
+    departure_time = "07:59"
 } | ConvertTo-Json
 Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/routes/search" -ContentType "application/json" -Body $body
 ```
