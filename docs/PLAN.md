@@ -30,9 +30,9 @@ Data Limite: 22/11/2026 23:59
 - [x] Validar cobertura de testes unitarios do modulo de ingestao.
 - [x] Impedir a mistura silenciosa de calendarios exigindo selecao explicita de `service_id` quando o feed declarar mais de um servico e ignorar viagens inativas durante a carga.
 - [x] Colocar em quarentena viagens com restricoes de `pickup_type` ou `drop_off_type` enquanto o roteador nao modelar permanencia no mesmo veiculo.
-- [ ] Obter os arquivos de calendario de servico (`calendar.txt` e/ou `calendar_dates.txt`) da mesma versao do pacote GTFS oficial, versiona-los com Git LFS e atualizar `data/gtfs/README.md` e os hashes. Se nao existirem na fonte oficial, levar a decisao de selecao manual de `service_id` para a equipe, sem inferencia heuristica. Diagnostico em `docs/ISSUE_SERVICE_CALENDAR.md`.
-- [ ] Filtrar no `DataLoader` as viagens pelo calendario ativo (data ou tipo de dia informado na carga), ignorando os `service_id` inativos, sem alterar `Connection`, `TransportGraph` ou `RouteSimulator`. Cobrir com testes TDD: servico inativo nao gera conexoes, servico ativo gera, e excecoes de `calendar_dates.txt` sao aplicadas quando o arquivo existir.
-- [ ] Repetir a validacao de `docs/GTFS_VALIDATION.md` com o filtro de calendario e registrar as novas contagens de conexoes, memoria e tempo de carga em `docs/DATA_LOADER.md`.
+- [x] Obter os arquivos de calendario de servico (`calendar.txt` e/ou `calendar_dates.txt`) da mesma versao do pacote GTFS oficial, versiona-los com Git LFS e atualizar `data/gtfs/README.md` e os hashes. Se nao existirem na fonte oficial, levar a decisao de selecao manual de `service_id` para a equipe, sem inferencia heuristica. Diagnostico em `docs/ISSUE_SERVICE_CALENDAR.md`.
+- [x] Filtrar no `DataLoader` as viagens pelo calendario ativo (data ou tipo de dia informado na carga), ignorando os `service_id` inativos, sem alterar `Connection`, `TransportGraph` ou `RouteSimulator`. Cobrir com testes TDD: servico inativo nao gera conexoes, servico ativo gera, e excecoes de `calendar_dates.txt` sao aplicadas quando o arquivo existir.
+- [x] Repetir a validacao de `docs/GTFS_VALIDATION.md` com o filtro de calendario e registrar as novas contagens de conexoes, memoria e tempo de carga em `docs/DATA_LOADER.md`.
 
 ## Parte 4: Estrutura do Grafo em Memoria
 - [x] Implementar a classe `Station` com metodos especiais `__hash__`, `__eq__`, atributos geograficos (`latitude`, `longitude`) e identificador unico.
@@ -47,10 +47,10 @@ Data Limite: 22/11/2026 23:59
 ## Parte 5: Motor de Roteamento (Algoritmo A*)
 - [x] Implementar a formula da distancia de Haversine em `RouteSimulator` para calculo de distancia geodésica em linha reta entre duas coordenadas.
 - [x] Formular a funcao heuristica consistente e admissivel $h(u, v) = \text{haversine}(u, v) / V_{\max}$, em que $V_{\max}$ e a velocidade maxima teorica observavel na rede.
-- [x] Implementar a busca heuristica A* dependente do tempo (*Time-Dependent A\**) na classe `RouteSimulator` utilizando a biblioteca nativa `heapq` para controle da fila de prioridade.
-- [x] Utilizar busca binária (módulo nativo `bisect`) sobre a lista de conexões ordenadas da estação para determinar a próxima partida em $O(\log K)$ e calcular o tempo de espera dinâmico.
-- [x] Reconstruir o caminho otimo a partir dos ponteiros de predecessores gerados pelo algoritmo.
-- [x] Escrever testes unitarios cobrindo cenarios com rotas diretas, transferencias entre linhas/modais e casos em que nao ha caminho viavel.
+- [ ] Implementar a busca heuristica A* dependente do tempo (*Time-Dependent A\**) na classe `RouteSimulator` utilizando a biblioteca nativa `heapq` para controle da fila de prioridade.
+- [ ] Utilizar busca binária (módulo nativo `bisect`) sobre a lista de conexões ordenadas da estação para determinar a próxima partida em $O(\log K)$ e calcular o tempo de espera dinâmico.
+- [ ] Reconstruir o caminho otimo a partir dos ponteiros de predecessores gerados pelo algoritmo.
+- [ ] Escrever testes unitarios cobrindo cenarios com rotas diretas, transferencias entre linhas/modais e casos em que nao ha caminho viavel.
 
 ## Parte 6: Vertices Temporarios e Resposta Estruturada
 - [x] Implementar a especializacao `TemporaryVertex` e a logica de aproximacao (*snap-to-network*) a partir de cliques do usuario em coordenadas arbitrarias.

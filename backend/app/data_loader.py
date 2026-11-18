@@ -4,6 +4,7 @@ from collections import Counter
 from collections.abc import Callable, Iterator
 from csv import DictReader
 from dataclasses import asdict, dataclass, field
+from datetime import date
 from itertools import groupby, pairwise
 from math import asin, cos, isfinite, radians, sin, sqrt
 from pathlib import Path
@@ -11,6 +12,7 @@ from typing import TypeVar
 
 from app.domain import Connection, Station, VehicleType
 from app.graph import TransportGraph
+from app.service_calendar import get_active_service_ids
 from app.time_utils import TimeUtils
 
 
@@ -34,6 +36,8 @@ class LoadReport:
     rejected_trips: dict[str, str] = field(default_factory=dict)
     loaded_trips: int = 0
     connections: int = 0
+    service_date: str | None = None
+    active_service_ids: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         """Return a JSON-compatible snapshot without exposing mutable counters."""
@@ -46,6 +50,8 @@ class LoadReport:
             'rejected_trips': dict(self.rejected_trips),
             'loaded_trips': self.loaded_trips,
             'connections': self.connections,
+            'service_date': self.service_date,
+            'active_service_ids': list(self.active_service_ids),
         }
 
 
@@ -56,12 +62,12 @@ class DataLoader:
     """Load contiguous trip blocks; quarantine invalid trips before insertion.
 
     Route types 1 and 3 are supported. Distances are Haversine estimates in km.
-    Multiple services require explicit selection. Trips with pickup/drop-off
+    Multiple services require a date or explicit selection. Trips with pickup/drop-off
     restrictions are quarantined because the graph does not track onboard state.
     """
 
     __slots__ = (
-        'data_directory', 'active_service_ids', 'report',
+        'data_directory', 'active_service_ids', 'service_date', 'report',
         '_times', '_distances', '_durations',
     )
 
@@ -74,8 +80,12 @@ class DataLoader:
     }
 
     def __init__(self, data_directory: str | Path,
-                 active_service_ids: set[str] | None = None) -> None:
+                 active_service_ids: set[str] | None = None, *,
+                 service_date: date | None = None) -> None:
+        if service_date is not None and active_service_ids is not None:
+            raise ValueError('service_date and active_service_ids are mutually exclusive')
         self.data_directory = Path(data_directory)
+        self.service_date = service_date
         self.active_service_ids = (
             None if active_service_ids is None else frozenset(active_service_ids)
         )
@@ -183,16 +193,25 @@ class DataLoader:
             return row['route_id'], row['service_id']
 
         all_trips = self._load_records('trips.txt', 'trip_id', parse_trip)
-        if self.active_service_ids is None and len(declared_service_ids) > 1:
-            raise ValueError('multiple service_id values; provide active_service_ids')
-        active_service_ids = (
-            declared_service_ids
-            if self.active_service_ids is None else self.active_service_ids
-        )
+        if self.service_date is not None:
+            active_service_ids = get_active_service_ids(
+                self.data_directory, self.service_date
+            ) & declared_service_ids
+        else:
+            if self.active_service_ids is None and len(declared_service_ids) > 1:
+                raise ValueError('multiple service_id values; provide service_date or active_service_ids')
+            active_service_ids = (
+                declared_service_ids
+                if self.active_service_ids is None else self.active_service_ids
+            )
         if (self.active_service_ids is not None
                 and (not active_service_ids
                      or active_service_ids - declared_service_ids)):
             raise ValueError('active_service_ids must identify services in trips.txt')
+        self.report.service_date = (
+            self.service_date.isoformat() if self.service_date is not None else None
+        )
+        self.report.active_service_ids = sorted(active_service_ids)
         trips = {
             trip_id: route_id
             for trip_id, (route_id, service_id) in all_trips.items()

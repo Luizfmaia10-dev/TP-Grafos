@@ -141,3 +141,67 @@ def test_graph_validation_detects_unsorted_or_invalid_connections():
     result = validate_graph(graph)
     assert result['sorted_departures'] is False
     assert result['valid_weights'] is False
+
+
+def test_cli_resolves_service_date_and_records_calendar_hash(feed):
+    (feed / 'calendar.txt').write_text(
+        'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\n'
+        'weekday,1,1,1,1,1,0,0,20260101,20261231\n', encoding='utf-8',
+    )
+    destination = feed / 'dated.json'
+    completed = subprocess.run(
+        [sys.executable, '-m', 'app.validate_gtfs', str(feed), '--date', '2026-11-17',
+         '--output', str(destination)],
+        cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True, timeout=20,
+    )
+    assert completed.returncode == 0, completed.stderr
+    result = json.loads(destination.read_text())
+    assert result['passed'] is True
+    assert result['load_report']['service_date'] == '2026-11-17'
+    assert result['load_report']['active_service_ids'] == ['weekday']
+    assert result['source_sha256']['calendar.txt'] == hashlib.sha256(
+        (feed / 'calendar.txt').read_bytes()
+    ).hexdigest()
+
+
+def test_cli_rejects_date_combined_with_manual_selection(feed):
+    completed = subprocess.run(
+        [sys.executable, '-m', 'app.validate_gtfs', str(feed), '--date', '2026-11-17',
+         '--service-id', 'weekday'],
+        cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True, timeout=20,
+    )
+    assert completed.returncode == 2
+    assert 'not allowed' in completed.stderr
+
+
+def test_cli_rejects_invalid_date(feed):
+    completed = subprocess.run(
+        [sys.executable, '-m', 'app.validate_gtfs', str(feed), '--date', '2026-02-30'],
+        cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True, timeout=20,
+    )
+    assert completed.returncode == 2
+    assert 'invalid' in completed.stderr
+
+
+def test_dated_validation_does_not_compare_global_quarantine_count(feed):
+    from datetime import date
+    from app.validate_gtfs import validate_dataset
+
+    (feed / 'calendar.txt').write_text(
+        'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\n'
+        'weekday,1,1,1,1,1,0,0,20260101,20261231\n', encoding='utf-8',
+    )
+    audit = {}
+    for name in ('stops', 'routes', 'trips', 'stop_times'):
+        path = feed / (name + '.txt')
+        audit[name] = {
+            'rows': len(path.read_text(encoding='utf-8').splitlines()) - 1,
+            'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+        }
+    audit['additional_checks'] = {'zero_time_affected_trips': 1}
+    audit_path = feed / 'audit.json'
+    audit_path.write_text(json.dumps(audit), encoding='utf-8')
+    result = validate_dataset(feed, audit_path, service_date=date(2026,11,17))
+    assert result['passed'] is True
+    assert result['audit']['zero_time_quarantine_matches'] is None
+    assert 'calendar.txt' in result['source_sha256']

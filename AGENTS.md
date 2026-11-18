@@ -65,7 +65,7 @@ O domínio do sistema é estruturado em inglês com tolerância zero a acoplamen
 - Instalar o Git LFS e inicializá-lo com `git lfs install` uma vez por usuário, ou `git lfs install --local` para configurar somente este repositório.
 - Na raiz do repositório, executar `git lfs pull` para obter os TXT completos antes de carregar a base real. Se os objetos já estiverem disponíveis localmente, `git lfs checkout` restaura os arquivos sem download.
 - Um TXT começando com `version https://git-lfs.github.com/spec/v1` é um ponteiro LFS, não o CSV esperado pelo `DataLoader`. Resolver o download antes de executar a ingestão; não adaptar o parser para interpretar ponteiros como dados.
-- Manter `.gitattributes` versionado e preservar o rastreamento `data/gtfs/*.txt` por LFS. Ao atualizar o dataset, utilizar uma versão coerente dos quatro arquivos e repetir a validação descrita em [docs/GTFS_VALIDATION.md](docs/GTFS_VALIDATION.md).
+- Manter `.gitattributes` versionado e preservar o rastreamento `data/gtfs/*.txt` por LFS. Ao atualizar o dataset, utilizar uma versão coerente dos seis arquivos (incluindo os calendários) e repetir a validação descrita em [docs/GTFS_VALIDATION.md](docs/GTFS_VALIDATION.md).
 - O uso de LFS não altera o domínio nem o processamento em memória. Os testes unitários usam arquivos sintéticos e não dependem do download do dataset real.
 
 ## Documentação
