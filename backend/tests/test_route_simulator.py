@@ -273,3 +273,149 @@ def test_calculate_route_returns_none_when_no_departures_after_query_time():
     assert simulator.calculate_route(origin, destination, departure_time=500.0) is None
 
 
+def test_calculate_route_reconstructs_two_leg_path_in_chronological_order():
+    graph = TransportGraph()
+    station_a = Station("A", "Station A", 0.0, 0.0)
+    station_b = Station("B", "Station B", 0.0, 0.1)
+    station_c = Station("C", "Station C", 0.0, 0.2)
+    for station in (station_a, station_b, station_c):
+        graph.add_station(station)
+
+    conn_ab = Connection("line-1", station_b, VehicleType.BUS, 15.0, 5.0, 480.0)
+    conn_bc = Connection("line-2", station_c, VehicleType.SUBWAY, 10.0, 6.0, 500.0)
+    graph.add_connection(station_a, conn_ab)
+    graph.add_connection(station_b, conn_bc)
+
+    simulator = RouteSimulator(graph, max_speed=1.0)
+    route = simulator.calculate_route(station_a, station_c, departure_time=450.0)
+
+    assert route == [(station_a, conn_ab), (station_b, conn_bc)]
+
+
+def test_calculate_route_transfer_respects_chronological_arrival_at_intermediate_station():
+    graph = TransportGraph()
+    station_a = Station("A", "Station A", 0.0, 0.0)
+    station_b = Station("B", "Station B", 0.0, 0.1)
+    station_c = Station("C", "Station C", 0.0, 0.2)
+    for station in (station_a, station_b, station_c):
+        graph.add_station(station)
+
+    # Arrives at B at 480 + 15 = 495.0
+    conn_ab = Connection("line-1", station_b, VehicleType.BUS, 15.0, 5.0, 480.0)
+    # Departs B at 490.0 (too early!)
+    conn_bc_early = Connection("line-2", station_c, VehicleType.BUS, 10.0, 5.0, 490.0)
+    # Departs B at 505.0 (can board!)
+    conn_bc_valid = Connection("line-2", station_c, VehicleType.BUS, 10.0, 5.0, 505.0)
+    graph.add_connection(station_a, conn_ab)
+    graph.add_connection(station_b, conn_bc_early)
+    graph.add_connection(station_b, conn_bc_valid)
+
+    simulator = RouteSimulator(graph, max_speed=1.0)
+    route = simulator.calculate_route(station_a, station_c, departure_time=450.0)
+
+    assert route == [(station_a, conn_ab), (station_b, conn_bc_valid)]
+
+
+def test_calculate_route_walk_connection_departs_immediately_without_waiting():
+    graph = TransportGraph()
+    origin = Station("A", "Station A", 0.0, 0.0)
+    destination = Station("B", "Station B", 0.0, 0.005)
+    graph.add_station(origin)
+    graph.add_station(destination)
+
+    # Walk connections have departure_time == 0.0
+    conn_walk = Connection("walk", destination, VehicleType.WALK, 6.0, 0.5, 0.0)
+    graph.add_connection(origin, conn_walk)
+
+    simulator = RouteSimulator(graph, max_speed=1.0)
+    # Query at t = 500.0; walk departs at 500.0 and arrives at 506.0
+    route = simulator.calculate_route(origin, destination, departure_time=500.0)
+
+    assert route == [(origin, conn_walk)]
+
+
+def test_calculate_route_integrates_with_snap_to_network():
+    graph = TransportGraph()
+    station_a = Station("A", "Station A", 0.0, 0.0)
+    station_b = Station("B", "Station B", 0.0, 0.1)
+    graph.add_station(station_a)
+    graph.add_station(station_b)
+
+    # BUS departs A at 500.0, arrives at B at 520.0
+    conn_bus = Connection("line-1", station_b, VehicleType.BUS, 20.0, 10.0, 500.0)
+    graph.add_connection(station_a, conn_bus)
+
+    simulator = RouteSimulator(graph, max_speed=1.0)
+    # Click near station A (lat=0.001, lon=0.0)
+    with simulator.snap_to_network(0.001, 0.0, "origin") as origin_temp:
+        route = simulator.calculate_route(origin_temp, station_b, departure_time=480.0)
+
+        assert route is not None
+        assert len(route) == 2
+        assert route[0][0] == origin_temp
+        assert route[0][1].vehicle_type is VehicleType.WALK
+        assert route[0][1].destination == station_a
+        assert route[1] == (station_a, conn_bus)
+
+
+def test_calculate_route_faster_line_departing_later_is_chosen_over_slower_earlier_line():
+    graph = TransportGraph()
+    origin = Station("A", "Station A", 0.0, 0.0)
+    destination = Station("B", "Station B", 0.0, 0.1)
+    graph.add_station(origin)
+    graph.add_station(destination)
+
+    # Departs 480.0, duration 60.0 -> arrives 540.0
+    conn_slow = Connection("slow", destination, VehicleType.BUS, 60.0, 10.0, 480.0)
+    # Departs 490.0, duration 20.0 -> arrives 510.0 (faster arrival!)
+    conn_fast = Connection("fast", destination, VehicleType.BUS, 20.0, 10.0, 490.0)
+    graph.add_connection(origin, conn_slow)
+    graph.add_connection(origin, conn_fast)
+
+    simulator = RouteSimulator(graph, max_speed=1.0)
+    route = simulator.calculate_route(origin, destination, departure_time=450.0)
+
+    assert route == [(origin, conn_fast)]
+
+
+def test_calculate_route_two_leg_faster_route_chosen_over_slower_direct_route():
+    graph = TransportGraph()
+    station_a = Station("A", "Station A", 0.0, 0.0)
+    station_b = Station("B", "Station B", 0.0, 0.1)
+    station_c = Station("C", "Station C", 0.0, 0.2)
+    for station in (station_a, station_b, station_c):
+        graph.add_station(station)
+
+    # Direct line A -> C departs 480.0, duration 120.0 -> arrives 600.0
+    conn_direct = Connection("direct", station_c, VehicleType.BUS, 120.0, 20.0, 480.0)
+    # Transfer route A -> B -> C:
+    # A -> B departs 480.0, duration 30.0 -> arrives 510.0
+    conn_ab = Connection("transfer-1", station_b, VehicleType.BUS, 30.0, 10.0, 480.0)
+    # B -> C departs 520.0, duration 40.0 -> arrives 560.0 (earlier than 600.0!)
+    conn_bc = Connection("transfer-2", station_c, VehicleType.SUBWAY, 40.0, 10.0, 520.0)
+    graph.add_connection(station_a, conn_direct)
+    graph.add_connection(station_a, conn_ab)
+    graph.add_connection(station_b, conn_bc)
+
+    simulator = RouteSimulator(graph, max_speed=1.0)
+    route = simulator.calculate_route(station_a, station_c, departure_time=480.0)
+
+    assert route == [(station_a, conn_ab), (station_b, conn_bc)]
+
+
+def test_calculate_route_unreachable_destination_returns_none():
+    graph = TransportGraph()
+    station_a = Station("A", "Station A", 0.0, 0.0)
+    station_b = Station("B", "Station B", 0.0, 0.1)
+    isolated_c = Station("C", "Isolated C", 1.0, 1.0)
+    for station in (station_a, station_b, isolated_c):
+        graph.add_station(station)
+
+    conn_ab = Connection("line-1", station_b, VehicleType.BUS, 15.0, 5.0, 480.0)
+    graph.add_connection(station_a, conn_ab)
+
+    simulator = RouteSimulator(graph, max_speed=1.0)
+    assert simulator.calculate_route(station_a, isolated_c, departure_time=480.0) is None
+
+
+
