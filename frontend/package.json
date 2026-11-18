@@ -6,6 +6,7 @@
   "description": "Static HTML and Tailwind interface for RotasGraph.",
   "scripts": {
     "test": "node --test",
+    "check:server": "node --test scripts/check-server.mjs",
     "build": "node scripts/copy-fonts.mjs && npm run build:css",
     "build:css": "tailwindcss -i ./styles/app.css -o ./assets/app.css --minify",
     "watch:css": "tailwindcss -i ./styles/app.css -o ./assets/app.css --watch"
