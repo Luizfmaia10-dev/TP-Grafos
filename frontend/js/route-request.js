@@ -26,9 +26,9 @@ export function createRouteRequest(search, onChange) {
       try {
         const result = await search(query, { signal: currentController.signal });
         if (currentVersion === version) publish(result);
-      } catch {
+      } catch (error) {
         if (currentVersion === version && !currentController.signal.aborted) {
-          publish({ status: "error" });
+          publish({ status: "error", error });
         }
       } finally {
         if (currentVersion === version) controller = null;

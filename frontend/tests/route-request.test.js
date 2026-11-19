@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { ApiError } from "../js/api-service.js";
 import { createRouteRequest } from "../js/route-request.js";
 
 function deferred() {
@@ -71,6 +72,17 @@ test("a failed request can be retried", async () => {
   assert.equal(request.state.status, "error");
   await request.submit({});
   assert.equal(request.state.status, "found");
+});
+
+test("a failed request preserves the error in its published state", async () => {
+  const failure = new ApiError("unavailable", 503, "unavailable");
+  const states = [];
+  const request = createRouteRequest(async () => { throw failure; }, state => states.push(state));
+
+  await request.submit({});
+
+  assert.equal(request.state.error, failure);
+  assert.deepEqual(states, [{ status: "loading" }, { status: "error", error: failure }]);
 });
 
 test("a rejected cancelled query cannot turn into a visible error", async () => {
