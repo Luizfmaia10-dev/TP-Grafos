@@ -75,7 +75,7 @@ Data Limite: 22/11/2026 23:59
 - [ ] Tratar cenarios extremos no frontend (origem/destino identicos, estacoes desconexas, horario sem viagens disponiveis).
 
 ## Parte 9: Avaliacao de Desempenho e Complexidade
-- [ ] Desenvolver scripts de benchmark comparando tempo de execucao e consumo de memoria do motor proprio de A* com o algoritmo de Dijkstra/A* do NetworkX (uso exclusivo para analise comparativa).
+- [x] Desenvolver scripts de benchmark comparando tempo de execucao e consumo de memoria do motor proprio de A* com o algoritmo de Dijkstra/A* do NetworkX (uso exclusivo para analise comparativa).
 - [ ] Avaliar a escalabilidade variando o tamanho da base de dados e a distancia entre os pares de teste.
 - [ ] Documentar analise formal da complexidade temporal e espacial na notacao Big-O para todas as estruturas centrais.
 - [ ] Implementar a classe `GraphAnalyzer` no backend com métodos para identificar Pontos de Articulação (DFS + `lowpt`) e Componentes Fortemente Conexos (Kosaraju ou Tarjan).

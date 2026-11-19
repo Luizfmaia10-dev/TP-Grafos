@@ -1,0 +1,359 @@
+{
+  "status": "valid",
+  "runs": [
+    {
+      "engine": "native_astar",
+      "mode": "timing",
+      "load_ns": 25917601615,
+      "selection_ns": 167962413,
+      "stations": 100,
+      "connections": 205,
+      "active_service_ids": [
+        "307679",
+        "307682"
+      ],
+      "baseline": {
+        "rss_bytes": 20770816,
+        "peak_rss_bytes": 20770816
+      },
+      "after_load": {
+        "rss_bytes": 219770880,
+        "peak_rss_bytes": 227385344
+      },
+      "after_selection": {
+        "rss_bytes": 147935232,
+        "peak_rss_bytes": 227385344
+      },
+      "samples": [
+        {
+          "case": "bh-direct-early",
+          "repetition": 0,
+          "query_prepare_ns": 0,
+          "search_ns": 10619,
+          "cleanup_ns": 0,
+          "query_total_ns": 10619,
+          "arrival": 255.18333333333334,
+          "legs": 1,
+          "path": [
+            [
+              "15140072",
+              "14788235",
+              "561787",
+              254.0,
+              255.18333333333334
+            ]
+          ],
+          "rss_bytes": 112803840,
+          "peak_rss_bytes": 227385344
+        },
+        {
+          "case": "bh-direct-early",
+          "repetition": 1,
+          "query_prepare_ns": 0,
+          "search_ns": 6914,
+          "cleanup_ns": 0,
+          "query_total_ns": 6914,
+          "arrival": 255.18333333333334,
+          "legs": 1,
+          "path": [
+            [
+              "15140072",
+              "14788235",
+              "561787",
+              254.0,
+              255.18333333333334
+            ]
+          ],
+          "rss_bytes": 112803840,
+          "peak_rss_bytes": 227385344
+        }
+      ],
+      "before_prepare": {
+        "rss_bytes": 112803840,
+        "peak_rss_bytes": 227385344
+      },
+      "prepare_ns": 40945,
+      "after_prepare": {
+        "rss_bytes": 112803840,
+        "peak_rss_bytes": 227385344
+      },
+      "prepared_memory": {
+        "rss_bytes": 112803840,
+        "peak_rss_bytes": 227385344
+      },
+      "rss_bytes": 112803840,
+      "peak_rss_bytes": 227385344
+    },
+    {
+      "engine": "native_astar",
+      "mode": "memory",
+      "load_ns": 25546737949,
+      "selection_ns": 174237472,
+      "stations": 100,
+      "connections": 205,
+      "active_service_ids": [
+        "307679",
+        "307682"
+      ],
+      "baseline": {
+        "rss_bytes": 20709376,
+        "peak_rss_bytes": 20709376
+      },
+      "after_load": {
+        "rss_bytes": 219725824,
+        "peak_rss_bytes": 227291136
+      },
+      "after_selection": {
+        "rss_bytes": 149401600,
+        "peak_rss_bytes": 227291136
+      },
+      "samples": [
+        {
+          "case": "bh-direct-early",
+          "repetition": 0,
+          "query_prepare_ns": 0,
+          "search_ns": 34011,
+          "cleanup_ns": 0,
+          "query_total_ns": 34011,
+          "arrival": 255.18333333333334,
+          "legs": 1,
+          "path": [
+            [
+              "15140072",
+              "14788235",
+              "561787",
+              254.0,
+              255.18333333333334
+            ]
+          ],
+          "rss_bytes": 115347456,
+          "peak_rss_bytes": 227291136
+        }
+      ],
+      "before_prepare": {
+        "rss_bytes": 115347456,
+        "peak_rss_bytes": 227291136
+      },
+      "prepare_ns": 38331,
+      "after_prepare": {
+        "rss_bytes": 115347456,
+        "peak_rss_bytes": 227291136
+      },
+      "prepared_memory": {
+        "rss_bytes": 115347456,
+        "peak_rss_bytes": 227291136
+      },
+      "rss_bytes": 115347456,
+      "peak_rss_bytes": 227291136
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "mode": "timing",
+      "load_ns": 27964543281,
+      "selection_ns": 295551654,
+      "stations": 100,
+      "connections": 205,
+      "active_service_ids": [
+        "307679",
+        "307682"
+      ],
+      "baseline": {
+        "rss_bytes": 20660224,
+        "peak_rss_bytes": 20660224
+      },
+      "after_load": {
+        "rss_bytes": 219660288,
+        "peak_rss_bytes": 226873344
+      },
+      "after_selection": {
+        "rss_bytes": 147824640,
+        "peak_rss_bytes": 226873344
+      },
+      "samples": [
+        {
+          "case": "bh-direct-early",
+          "repetition": 0,
+          "query_prepare_ns": 45242,
+          "search_ns": 15986,
+          "cleanup_ns": 16651,
+          "query_total_ns": 77879,
+          "arrival": 255.18333333333334,
+          "legs": 1,
+          "path": [
+            [
+              "15140072",
+              "14788235",
+              "561787",
+              254.0,
+              255.18333333333334
+            ]
+          ],
+          "rss_bytes": 113532928,
+          "peak_rss_bytes": 226873344
+        },
+        {
+          "case": "bh-direct-early",
+          "repetition": 1,
+          "query_prepare_ns": 50191,
+          "search_ns": 15750,
+          "cleanup_ns": 8997,
+          "query_total_ns": 74938,
+          "arrival": 255.18333333333334,
+          "legs": 1,
+          "path": [
+            [
+              "15140072",
+              "14788235",
+              "561787",
+              254.0,
+              255.18333333333334
+            ]
+          ],
+          "rss_bytes": 113532928,
+          "peak_rss_bytes": 226873344
+        }
+      ],
+      "before_prepare": {
+        "rss_bytes": 112693248,
+        "peak_rss_bytes": 226873344
+      },
+      "expanded_nodes": 410,
+      "expanded_edges": 609,
+      "prepare_ns": 91498225,
+      "after_prepare": {
+        "rss_bytes": 113532928,
+        "peak_rss_bytes": 226873344
+      },
+      "prepared_memory": {
+        "rss_bytes": 113532928,
+        "peak_rss_bytes": 226873344
+      },
+      "rss_bytes": 113532928,
+      "peak_rss_bytes": 226873344
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "mode": "memory",
+      "load_ns": 25710690082,
+      "selection_ns": 206275840,
+      "stations": 100,
+      "connections": 205,
+      "active_service_ids": [
+        "307679",
+        "307682"
+      ],
+      "baseline": {
+        "rss_bytes": 20692992,
+        "peak_rss_bytes": 20692992
+      },
+      "after_load": {
+        "rss_bytes": 219701248,
+        "peak_rss_bytes": 227282944
+      },
+      "after_selection": {
+        "rss_bytes": 148045824,
+        "peak_rss_bytes": 227282944
+      },
+      "samples": [
+        {
+          "case": "bh-direct-early",
+          "repetition": 0,
+          "query_prepare_ns": 55487,
+          "search_ns": 356563,
+          "cleanup_ns": 12563,
+          "query_total_ns": 424613,
+          "arrival": 255.18333333333334,
+          "legs": 1,
+          "path": [
+            [
+              "15140072",
+              "14788235",
+              "561787",
+              254.0,
+              255.18333333333334
+            ]
+          ],
+          "rss_bytes": 120008704,
+          "peak_rss_bytes": 227282944
+        }
+      ],
+      "before_prepare": {
+        "rss_bytes": 119173120,
+        "peak_rss_bytes": 227282944
+      },
+      "expanded_nodes": 410,
+      "expanded_edges": 609,
+      "prepare_ns": 68038839,
+      "after_prepare": {
+        "rss_bytes": 120008704,
+        "peak_rss_bytes": 227282944
+      },
+      "prepared_memory": {
+        "rss_bytes": 120008704,
+        "peak_rss_bytes": 227282944
+      },
+      "rss_bytes": 120008704,
+      "peak_rss_bytes": 227282944
+    }
+  ],
+  "errors": [],
+  "summary": [
+    {
+      "engine": "native_astar",
+      "case": "bh-direct-early",
+      "phase": "search",
+      "count": 2,
+      "median_ns": 8766.5,
+      "min_ns": 6914,
+      "max_ns": 10619,
+      "iqr_ns": 1852.5
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "case": "bh-direct-early",
+      "phase": "search",
+      "count": 2,
+      "median_ns": 15868.0,
+      "min_ns": 15750,
+      "max_ns": 15986,
+      "iqr_ns": 118.0
+    }
+  ],
+  "queries": [
+    {
+      "id": "bh-direct-early",
+      "origin": "15140072",
+      "destination": "14788235",
+      "departure": "04:00:00",
+      "departure_minutes": 240.0
+    }
+  ],
+  "metadata": {
+    "started_at_utc": "2026-11-19T18:33:03.967023+00:00",
+    "python": "3.12.0 (main, Oct  1 2026, 11:24:30) [GCC 13.3.0]",
+    "networkx": "3.7",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.39",
+    "cpu": "13th Gen Intel(R) Core(TM) i5-13420H",
+    "memory_info": "MemTotal:        7823124 kB\nMemFree:          326040 kB\nMemAvailable:    2153796 kB\nBuffers:           83164 kB\nCached:          2539440 kB\nSwapCached:        42972 kB\nActive:          3924544 kB\nInactive:        2084196 kB\nActive(anon):    3109204 kB\nInactive(anon):   992360 kB\nActive(file):     815340 kB\nInactive(file):  1091836 kB\nUnevictable:      200700 kB\nMlocked:             152 kB\nSwapTotal:       3998716 kB\nSwapFree:        3201356 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:             10316 kB\nWriteback:             0 kB\nAnonPages:       3570796 kB\nMapped:          1019820 kB\nShmem:            715428 kB\nKReclaimable:     234056 kB\nSlab:             454320 kB\nSReclaimable:     234056 kB\nSUnreclaim:       220264 kB\nKernelStack:       23200 kB\nPageTables:        73428 kB\nSecPageTables:      5028 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:     7910276 kB\nCommitted_AS:   29401156 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:      116652 kB\nVmallocChunk:          0 kB\nPercpu:            10656 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:         0 kB\nShmemHugePages:   339968 kB\nShmemPmdMapped:        0 kB\nFileHugePages:     10240 kB\nFilePmdMapped:         0 kB\nCmaTotal:              0 kB\nCmaFree:               0 kB\nUnaccepted:            0 kB\nBalloon:               0 kB\nGPUActive:             0 kB\nGPUReclaim:            0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:      835840 kB\nDirectMap2M:     6201344 kB\nDirectMap1G:     1048576 kB\n",
+    "commit": "5a2924fc3d6c03decb02937c1083d7825242e2b9",
+    "dirty": true,
+    "input_sha256": {
+      "stops.txt": "294f5330e5750b37c824609ee6dbbb531b0248c8e08e40fed864f34b12002127",
+      "routes.txt": "ca0f00d27cf61774ad0d2f191e6e820311ae26be67e33ed612278c24dbdf07ff",
+      "trips.txt": "fb41ac59bce19d52f6274fcb159e2c71d8ccd510fe324fbe948631bbb7847ce5",
+      "stop_times.txt": "ee3db9ff1dce3b5d5db9091a0ea07526796fb7f5f42f6aad326326fe78da6930",
+      "calendar.txt": "a537a8b0f39a671079a9d70ac1380f834759d3b0e48d2e44ccc774552675d57c",
+      "calendar_dates.txt": "4274d1317758dc25c4fa2051105f38c1c8918c5a885ac0abb9114cb5b1105efd"
+    },
+    "queries_sha256": "0349fd66535a297806b19e22da45f64a95804d0f9cea4d19519b39766a3c21b1",
+    "service_date": "2026-11-17",
+    "data_dir": "/home/joaquim/workspace/puc/TP-Grafos/data/gtfs",
+    "repetitions": 2,
+    "warmups": 1,
+    "timeout_seconds": 120,
+    "memory_limit_mib": 2048,
+    "station_limit": 100,
+    "seed": 42,
+    "tolerance_minutes": 1e-07
+  }
+}
