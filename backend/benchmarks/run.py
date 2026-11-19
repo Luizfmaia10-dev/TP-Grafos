@@ -211,11 +211,13 @@ def summarize(runs):
         if run['mode'] != 'timing':
             continue
         for sample in run['samples']:
-            groups.setdefault((run['engine'], sample['case']), []).append(sample['search_ns'])
+            for phase in ('query_total', 'search'):
+                groups.setdefault((run['engine'], sample['case'], phase), []).append(
+                    sample[f'{phase}_ns'])
     summary = []
-    for (engine, case), values in groups.items():
+    for (engine, case, phase), values in groups.items():
         quartiles = statistics.quantiles(values, n=4, method='inclusive') if len(values) > 1 else [values[0]] * 3
-        summary.append({'engine': engine, 'case': case, 'phase': 'search',
+        summary.append({'engine': engine, 'case': case, 'phase': phase,
                         'count': len(values), 'median_ns': statistics.median(values),
                         'min_ns': min(values), 'max_ns': max(values),
                         'iqr_ns': quartiles[2] - quartiles[0]})

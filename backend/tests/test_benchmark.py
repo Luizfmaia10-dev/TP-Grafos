@@ -11,7 +11,7 @@ from app.domain import Connection, Station, VehicleType
 from app.graph import TransportGraph
 from app.route_simulator import RouteSimulator
 from benchmarks.networkx_adapter import NetworkXAdapter
-from benchmarks.run import compare_results, validate_path
+from benchmarks.run import compare_results, summarize, validate_path
 
 
 def make_graph(edges):
@@ -121,7 +121,8 @@ def test_cli_end_to_end(small_feed):
     assert report['schema_version'] == 2
     assert report['metadata']['memory_limit_kind'] == 'sampled_worker_rss'
     assert len(report['runs']) == 6  # two timed workers and four fresh memory workers
-    assert len(report['summary']) == 4
+    assert len(report['summary']) == 8
+    assert {entry['phase'] for entry in report['summary']} == {'query_total', 'search'}
     for run in report['runs']:
         if run['mode'] == 'memory':
             assert run['sampled_peak_rss_bytes'] > 0
@@ -211,3 +212,29 @@ def test_subsets_are_nested_and_keep_query_endpoints():
     assert small.get_neighbors(stations['B']) == []
     with pytest.raises(ValueError, match='endpoints'):
         select_graph(graph, queries, 1, 42)
+
+
+def test_summary_reports_complete_query_time_before_internal_search_time():
+    runs = [{
+        'engine': 'networkx_dijkstra',
+        'mode': 'timing',
+        'samples': [
+            {'case': 'direct', 'search_ns': 10, 'query_total_ns': 40},
+            {'case': 'direct', 'search_ns': 20, 'query_total_ns': 60},
+        ],
+    }]
+
+    summary = summarize(runs)
+
+    assert summary == [
+        {
+            'engine': 'networkx_dijkstra', 'case': 'direct',
+            'phase': 'query_total', 'count': 2, 'median_ns': 50.0,
+            'min_ns': 40, 'max_ns': 60, 'iqr_ns': 10.0,
+        },
+        {
+            'engine': 'networkx_dijkstra', 'case': 'direct',
+            'phase': 'search', 'count': 2, 'median_ns': 15.0,
+            'min_ns': 10, 'max_ns': 20, 'iqr_ns': 5.0,
+        },
+    ]
