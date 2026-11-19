@@ -63,16 +63,16 @@ Data Limite: 22/11/2026 23:59
 - [x] Integrar o prototipo HTML/Tailwind ao backend FastAPI servido estaticamente.
 - [x] Garantir a aplicacao das cores do guia de design do `AGENTS.md` (Metro em Blue `#209dd7`, Onibus em Red `#e11d48`, Acoes em Purple `#753991`, Cabecalho em Navy `#032147`, Caminhada/Temporario em Yellow `#ecad0a` e Gray `#888888`).
 - [x] Implementar a interacao de selecao de origem e destino diretamente no mapa e via campos de texto.
-- [ ] Exibir indicadores visuais de carregamento durante a consulta a API.
+- [x] Exibir indicadores visuais de carregamento durante a consulta a API.
 
 ## Parte 8: Integracao Frontend + Backend
 - [x] Desenvolver endpoints REST no FastAPI:
   - [x] `GET /stations`: listagem de estacoes disponiveis para autocompletar.
   - [x] `POST /routes/search`: calculo de rota recebendo origem, destino e horario de partida.
-- [ ] Conectar os eventos de clique e submissao do frontend as chamadas da API via `fetch`.
-- [ ] Renderizar o itinerario retornado na timeline lateral com instrucoes discriminadas por modal.
-- [ ] Desenhar o trajeto no mapa SVG com as cores e espessuras correspondentes a cada trecho.
-- [ ] Tratar cenarios extremos no frontend (origem/destino identicos, estacoes desconexas, horario sem viagens disponiveis).
+- [x] Conectar os eventos de clique e submissao do frontend as chamadas da API via `fetch`.
+- [x] Renderizar o itinerario retornado na timeline lateral com instrucoes discriminadas por modal.
+- [x] Desenhar o trajeto no mapa SVG com as cores e espessuras correspondentes a cada trecho.
+- [x] Tratar cenarios extremos no frontend (origem/destino identicos, estacoes desconexas, horario sem viagens disponiveis).
 
 ## Parte 9: Avaliacao de Desempenho e Complexidade
 - [x] Desenvolver scripts de benchmark comparando tempo de execucao e consumo de memoria do motor proprio de A* com o algoritmo de Dijkstra/A* do NetworkX (uso exclusivo para analise comparativa).

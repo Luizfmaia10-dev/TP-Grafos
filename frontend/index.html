@@ -65,7 +65,8 @@
                 </span>
               </div>
               <ul id="origin-options" class="station-options" role="listbox" aria-label="Paradas para origem" hidden></ul>
-              <p id="origin-empty" class="field-hint station-empty" hidden>Nenhuma parada do exemplo encontrada.</p>
+              <p id="origin-loading" class="station-loading" role="status" aria-live="polite" hidden>Buscando paradas…</p>
+              <p id="origin-empty" class="field-hint station-empty" hidden>Nenhuma parada encontrada na rede para esta busca.</p>
             </div>
             <p id="origin-error" class="field-error" hidden></p>
           </div>
@@ -82,7 +83,8 @@
                 </span>
               </div>
               <ul id="destination-options" class="station-options" role="listbox" aria-label="Paradas para destino" hidden></ul>
-              <p id="destination-empty" class="field-hint station-empty" hidden>Nenhuma parada do exemplo encontrada.</p>
+              <p id="destination-loading" class="station-loading" role="status" aria-live="polite" hidden>Buscando paradas…</p>
+              <p id="destination-empty" class="field-hint station-empty" hidden>Nenhuma parada encontrada na rede para esta busca.</p>
             </div>
             <p id="destination-error" class="field-error" hidden></p>
           </div>
@@ -151,20 +153,6 @@
             <p class="duration-vehicle"><span id="vehicle-duration"></span></p>
           </div>
         </section>
-
-        <button id="demo-trigger" class="demo-card flex items-center text-left" type="button">
-          <span class="demo-icon flex shrink-0 items-center justify-center bg-rg-surface" aria-hidden="true">
-            <img src="/assets/icons/bus.svg" alt="">
-          </span>
-          <span class="min-w-0 flex-1">
-            <span class="demo-title block font-bold text-rg-purple">Experimente a linha 50</span>
-            <span class="demo-description block text-rg-muted">Pampulha → Centro</span>
-          </span>
-          <span class="arrow-icon icon-slot shrink-0" aria-hidden="true">
-            <img src="/assets/icons/arrow.svg" alt="">
-          </span>
-        </button>
-        <p id="demo-scope" class="demo-scope">Demonstração com três paradas da linha 50 no sentido Centro e horários de uma viagem de exemplo.</p>
       </section>
 
       <section class="map-panel min-w-0 overflow-hidden bg-rg-map" aria-labelledby="map-title" aria-describedby="map-description">
@@ -191,7 +179,7 @@
 
         <div class="map-heading absolute border border-rg-map-border bg-rg-map-panel text-rg-map-text">
           <h2 id="map-title" class="map-title font-bold">Mapa da malha</h2>
-          <p class="map-subtitle text-rg-map-muted">Recorte da rede de ônibus</p>
+          <p class="map-subtitle text-rg-map-muted">Paradas e trajetos consultados</p>
         </div>
         <span id="map-selection-role" class="map-selection-role">Origem</span>
 
@@ -206,7 +194,7 @@
           <span class="map-key flex items-center border border-rg-map-border bg-rg-map-panel text-rg-map-text">
             <img id="map-key-station" src="/assets/icons/stop-key.svg" alt="" width="7" height="7" aria-hidden="true">
             <span id="map-key-route" class="map-route-legend" hidden></span>
-            <span id="map-key-label">Paradas de ônibus</span>
+            <span id="map-key-label">Paradas da rede</span>
             <span id="map-key-short">Paradas</span>
           </span>
           <p class="map-caption font-mono text-rg-map-muted">Mapa esquemático<span class="map-caption-source"> · GTFS BHTRANS</span></p>

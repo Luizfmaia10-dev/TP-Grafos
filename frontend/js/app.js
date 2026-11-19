@@ -1,7 +1,7 @@
-import { DEMO_STATIONS, DEMO_TRIP } from "./demo-data.js";
+import { listStations, searchRoute, ApiError } from "./api-service.js";
+import { createStationRequest } from "./station-request.js";
 import { createFieldActivity } from "./field-activity.js";
 import { createStationMap } from "./map.js";
-import { searchDemoRoute } from "./demo-service.js";
 import { createRouteRequest } from "./route-request.js";
 import { formatDuration, renderRoute } from "./route-view.js";
 import { maskDepartureTime } from "./time-mask.js";
@@ -10,7 +10,6 @@ import { createThemeSwitch } from "./theme.js";
 import {
   createSelection,
   editStation,
-  searchStations,
   selectStation,
   validateSelection,
 } from "./selection.js";
@@ -23,7 +22,6 @@ const mapRole = document.querySelector("#map-selection-role");
 const planner = document.querySelector("#planner");
 const title = document.querySelector("#planner-title");
 const description = document.querySelector("#planner-description");
-const demoTrigger = document.querySelector("#demo-trigger");
 const editSearch = document.querySelector("#edit-search");
 const summary = document.querySelector("#route-summary");
 const itinerary = document.querySelector("#route-itinerary");
@@ -38,6 +36,7 @@ const fields = Object.fromEntries(["origin", "destination"].map(field => [field,
   icon: document.getElementById(`${field}-search-icon`),
   list: document.getElementById(`${field}-options`),
   empty: document.getElementById(`${field}-empty`),
+  loading: document.getElementById(`${field}-loading`),
   error: document.getElementById(`${field}-error`),
 }]));
 
@@ -46,10 +45,10 @@ const fieldActivity = createFieldActivity();
 let openField = null;
 let options = [];
 let activeOption = -1;
+const knownStations = new Map();
 
 const map = createStationMap(
   document.querySelector("#map-stations"),
-  DEMO_STATIONS,
   station => {
     const field = fieldActivity.activeField;
     if (!field) return;
@@ -61,7 +60,27 @@ const timePicker = createTimePicker(
   departureInput,
   document.querySelector("#departure-picker-trigger"),
 );
-const request = createRouteRequest(searchDemoRoute, renderRequest);
+const request = createRouteRequest(searchRoute, renderRequest);
+const stationRequests = Object.fromEntries(Object.keys(fields).map(field => [
+  field, createStationRequest(listStations, state => renderOptions(field, state)),
+]));
+const ERROR_MESSAGES = {
+  "unknown-station": ["Parada não encontrada", "Escolha novamente a origem e o destino."],
+  invalid: ["Dados inválidos", "Confira as paradas e o horário de saída."],
+  unavailable: ["Rede indisponível", "O servidor ainda não carregou a rede de transporte."],
+};
+
+function errorMessage(error) {
+  if (error instanceof ApiError) {
+    return ERROR_MESSAGES[error.kind] ?? ["Não foi possível consultar a rede", "O servidor não concluiu a consulta. Tente novamente."];
+  }
+  return ["Falha de conexão", "Não foi possível receber os dados. Verifique sua conexão e tente novamente."];
+}
+
+function rememberStations(stations) {
+  for (const station of stations) knownStations.set(station.stationId, station);
+  map.setStations(Array.from(knownStations.values()));
+}
 
 function editStationField(field) {
   fields[field].input.focus();
@@ -76,22 +95,20 @@ function renderRequest(state) {
   const found = state.status === "found";
   planner.dataset.view = found ? "result" : "search";
   title.textContent = found ? "Seu trajeto" : "Planeje seu trajeto";
-  description.textContent = found ? `Trajeto de exemplo · linha ${state.routeShortName}` : "Escolha duas paradas pelo nome ou no mapa.";
+  description.textContent = found ? `Dia de serviço: ${state.serviceDate}` : "Escolha duas paradas pelo nome ou no mapa.";
   form.hidden = found;
-  demoTrigger.hidden = found;
-  document.querySelector("#demo-scope").hidden = found;
   editSearch.hidden = !found;
   summary.hidden = !found;
   itinerary.hidden = !found;
   form.setAttribute("aria-busy", String(loading));
   submitButton.dataset.loading = String(loading);
-  submitButton.textContent = loading ? "Consultando exemplo…" : "Calcular trajeto";
+  submitButton.textContent = loading ? "Calculando trajeto…" : "Calcular trajeto";
+  if (found) rememberStations([state.origin, state.destination, ...state.steps.flatMap(step => [step.origin, step.destination])]);
   renderSelection();
 
   const messages = {
-    "no-route": ["Sem partida neste horário", `A viagem do exemplo parte desta parada às ${state.boardingTime}. Escolha uma saída até esse horário ou use “Experimente a linha 50”.`],
-    "outside-sample": ["Trecho fora do exemplo", "Esta amostra cobre três paradas no sentido Pampulha → Centro. A viagem de volta e outras paradas ficam fora deste exemplo."],
-    error: ["Não foi possível consultar o exemplo", "Tente novamente. Suas paradas e o horário foram mantidos."],
+    "no-route": ["Nenhum trajeto encontrado", "Não há ligação disponível para essas paradas e esse horário no dia de serviço. Ajuste a busca."],
+    error: errorMessage(state.error),
   };
   const message = messages[state.status];
   feedback.hidden = !message;
@@ -102,12 +119,12 @@ function renderRequest(state) {
   if (found) {
     timePicker.close({ restoreFocus: false });
     renderRoute(state);
-    announce(`Trajeto de exemplo encontrado. Total: ${formatDuration(state.totalSeconds)}. Chegada às ${state.arrivalTime}.`);
+    announce(`Trajeto encontrado. Total: ${formatDuration(state.totalSeconds)}. Chegada às ${state.arrivalTime}.`);
     title.focus({ preventScroll: true });
     window.scrollTo({ top: 0 });
   } else {
-    announce(loading ? "Consultando a viagem de exemplo da linha 50." : message ? message.join(". ") : "");
-    if (!loading) document.querySelector("#itinerary-steps").replaceChildren();
+    announce(loading ? "Calculando trajeto. Edite os campos para cancelar." : message ? message.join(" ") : "Busca pronta para edição.");
+    document.querySelector("#itinerary-steps").replaceChildren();
   }
 }
 
@@ -148,11 +165,11 @@ function renderSelection() {
   mapRole.hidden = found;
   mapRole.textContent = activeField === "origin" ? "Origem" : activeField === "destination" ? "Destino" : "Escolha um campo";
   document.querySelector("#map-description").textContent = found
-    ? `Trajeto de exemplo da linha ${request.state.routeShortName}, de ${selection.originText} até ${selection.destinationText}. O traço vermelho liga as paradas no mapa esquemático. A marca a origem e B marca o destino.`
-    : "Mapa esquemático da rede de ônibus de Belo Horizonte. Selecione as paradas do exemplo da linha 50 para preencher origem e destino. Os marcadores A e B identificam suas escolhas.";
+    ? `Trajeto de ${selection.originText} até ${selection.destinationText}. Os trechos são identificados por modal na legenda. A marca a origem e B marca o destino.`
+    : "Mapa esquemático da rede de transporte de Belo Horizonte. Busque paradas pelo nome para exibi-las no mapa. Os marcadores A e B identificam suas escolhas.";
 
-  if (loading) setStatus("Consultando os horários da viagem de exemplo… Você pode editar os campos para cancelar.");
-  else if (result.query) setStatus(`Paradas selecionadas para o exemplo da linha ${DEMO_TRIP.routeShortName}. Confira o horário de saída.`);
+  if (loading) setStatus("Consultando os horários da rede… Você pode editar os campos para cancelar.");
+  else if (result.query) setStatus("Paradas selecionadas. Confira o horário de saída.");
   else if (selection.originId && !selection.destinationId) setStatus("Origem selecionada. Escolha o destino.");
   else if (selection.destinationId && !selection.originId) setStatus("Destino selecionado. Escolha a origem.");
   else setStatus("");
@@ -160,18 +177,22 @@ function renderSelection() {
 }
 
 function closeOptions() {
+  openField = null;
+  for (const stationRequest of Object.values(stationRequests)) stationRequest.cancel();
   for (const controls of Object.values(fields)) {
     controls.list.hidden = true;
     controls.empty.hidden = true;
+    controls.loading.hidden = true;
+    controls.input.closest(".station-picker").setAttribute("aria-busy", "false");
     controls.input.setAttribute("aria-expanded", "false");
     controls.input.removeAttribute("aria-activedescendant");
   }
-  openField = null;
   options = [];
   activeOption = -1;
 }
 
 function chooseStation(field, station, focusNext = false) {
+  rememberStations([station]);
   selection = selectStation(selection, field, station);
   request.cancel();
   touched.add(field);
@@ -193,8 +214,19 @@ function chooseStation(field, station, focusNext = false) {
 function openOptions(field) {
   closeOptions();
   openField = field;
+  stationRequests[field].submit(selection[`${field}Text`]);
+}
+
+function renderOptions(field, state) {
+  if (openField !== field) return;
   const controls = fields[field];
-  options = searchStations(selection[`${field}Text`]);
+  const loading = state.status === "loading";
+  controls.input.closest(".station-picker").setAttribute("aria-busy", String(loading));
+  controls.loading.hidden = !loading;
+  options = state.status === "ready" ? state.stations : [];
+  activeOption = -1;
+  controls.input.removeAttribute("aria-activedescendant");
+  if (options.length) rememberStations(options);
   const items = options.map(station => {
     const option = document.createElement("li");
     option.id = `${field}-option-${station.stationId}`;
@@ -209,7 +241,7 @@ function openOptions(field) {
     title.textContent = station.mapName;
     const detail = document.createElement("span");
     detail.className = "suggestion-detail";
-    detail.textContent = `Plataforma ${station.platform} · ${station.district}`;
+    detail.textContent = `Parada ${station.stationId}`;
     copy.append(title, detail);
     const arrow = document.createElement("img");
     arrow.src = "/assets/icons/arrow.svg";
@@ -223,11 +255,13 @@ function openOptions(field) {
   });
   controls.list.replaceChildren(...items);
   controls.list.hidden = options.length === 0;
-  controls.empty.hidden = options.length !== 0;
+  controls.empty.hidden = !["empty", "error"].includes(state.status);
+  controls.empty.textContent = state.status === "error"
+    ? errorMessage(state.error).join(". ") : "Nenhuma parada encontrada na rede para esta busca.";
   controls.input.setAttribute("aria-expanded", String(options.length > 0));
   const fieldName = field === "origin" ? "origem" : "destino";
-  announce(options.length ? `${options.length} ${options.length === 1 ? "parada encontrada" : "paradas encontradas"} para ${fieldName}. Use as setas e Enter para selecionar.`
-    : `Nenhuma parada do exemplo encontrada para ${fieldName}.`);
+  if (!loading) announce(options.length ? `${options.length} ${options.length === 1 ? "parada encontrada" : "paradas encontradas"} para ${fieldName}. Use as setas e Enter para selecionar.`
+    : controls.empty.hidden ? "" : controls.empty.textContent);
 }
 
 function highlightOption(index) {
@@ -309,21 +343,6 @@ document.addEventListener("pointerdown", event => {
 });
 document.addEventListener("focusin", event => {
   if (openField && !fields[openField].wrapper.contains(event.target)) closeOptions();
-});
-
-demoTrigger.addEventListener("click", () => {
-  request.cancel();
-  const firstId = DEMO_TRIP.stopTimes[0].stationId;
-  const lastId = DEMO_TRIP.stopTimes.at(-1).stationId;
-  const origin = DEMO_STATIONS.find(station => station.stationId === firstId);
-  const destination = DEMO_STATIONS.find(station => station.stationId === lastId);
-  selection = selectStation(createSelection(), "origin", origin);
-  selection = selectStation(selection, "destination", destination);
-  touched.clear();
-  fieldActivity.activate("destination");
-  closeOptions();
-  renderSelection();
-  announce("Exemplo da linha 50 preenchido: Pampulha para Av. Paraná, 162, com saída às 07:45. Você pode calcular o trajeto.");
 });
 
 form.addEventListener("submit", event => {
