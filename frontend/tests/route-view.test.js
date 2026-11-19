@@ -98,11 +98,19 @@ test("renderer fills the multimodal summary and keeps exact service-day times ac
     assert.deepEqual(rows.slice(1, 5).map(row => row.children[2].children[1].textContent),
       result.instructions);
     assert.deepEqual(rows.map(row => row.dataset.stationId), ["001", "001", "001", "002", "003", "004"]);
-    assert.deepEqual(rows.map(row => row.children[0].textContent),
+    assert.equal(rows[3].children[0].children[1]?.className, "sr-only");
+    assert.deepEqual(rows.map(row => row.children[0].children[0].textContent),
       ["25:05", "25:06", "25:06", "25:11", "25:15", "25:18"]);
+    assert.deepEqual(rows.map(row => row.children[0].children[1].textContent),
+      ["25:05", "25:06:00", "25:06:00", "25:11:30", "25:15:45", "25:18:00"]);
+    for (const row of rows) {
+      const clock = row.children[0];
+      assert.equal(clock.children[0].attributes["aria-hidden"], "true");
+      assert.equal(clock.children[1].className, "sr-only");
+      assert.equal(clock.children[1].attributes["aria-hidden"], undefined);
+    }
     assert.equal(rows[0].children[0].title, "25:05");
     assert.equal(rows[3].children[0].title, "25:11:30");
-    assert.equal(rows[3].children[0].attributes["aria-label"], "25:11:30");
     assert.equal(rows[0].children[1].textContent, "A");
     assert.equal(rows.at(-1).children[1].textContent, "B");
     renderRoute(result);

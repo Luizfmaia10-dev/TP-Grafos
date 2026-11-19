@@ -46,9 +46,14 @@ function timelineStep(time, station, title, description, kind) {
   const clock = document.createElement("span");
   clock.className = "step-time font-mono";
   // GTFS service-day hours can exceed 23, unlike an HTML time datetime value.
-  clock.textContent = time.replace(/^(\d+:\d{2}):\d{2}$/, "$1");
   clock.title = time;
-  clock.setAttribute("aria-label", time);
+  const compactTime = document.createElement("span");
+  compactTime.textContent = time.replace(/^(\d+:\d{2}):\d{2}$/, "$1");
+  compactTime.setAttribute("aria-hidden", "true");
+  const exactTime = document.createElement("span");
+  exactTime.className = "sr-only";
+  exactTime.textContent = time;
+  clock.append(compactTime, exactTime);
   const marker = document.createElement("span");
   marker.className = "step-marker font-mono";
   marker.setAttribute("aria-hidden", "true");
