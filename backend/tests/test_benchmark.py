@@ -1,4 +1,5 @@
 """Correctness and measurement contracts for the offline benchmark."""
+import csv
 import json
 import random
 import subprocess
@@ -11,7 +12,7 @@ from app.domain import Connection, Station, VehicleType
 from app.graph import TransportGraph
 from app.route_simulator import RouteSimulator
 from benchmarks.networkx_adapter import NetworkXAdapter
-from benchmarks.run import compare_results, summarize, validate_path
+from benchmarks.run import compare_results, export, summarize, validate_path
 
 
 def make_graph(edges):
@@ -118,7 +119,7 @@ def test_cli_end_to_end(small_feed):
     assert process.returncode == 0, process.stderr
     report = json.loads((output / 'results.json').read_text())
     assert report['status'] == 'valid'
-    assert report['schema_version'] == 2
+    assert report['schema_version'] == 3
     assert report['metadata']['memory_limit_kind'] == 'sampled_worker_rss'
     assert len(report['runs']) == 6  # two timed workers and four fresh memory workers
     assert len(report['summary']) == 8
@@ -238,3 +239,27 @@ def test_summary_reports_complete_query_time_before_internal_search_time():
             'min_ns': 10, 'max_ns': 20, 'iqr_ns': 5.0,
         },
     ]
+
+
+def test_csv_exports_memory_after_the_engine_is_fully_prepared(tmp_path):
+    report = {'runs': [{
+        'engine': 'networkx_dijkstra',
+        'mode': 'memory',
+        'sampled_peak_rss_bytes': 999,
+        'load_ns': 10,
+        'selection_ns': 20,
+        'prepare_ns': 30,
+        'after_load': {'rss_bytes': 111},
+        'after_selection': {'rss_bytes': 222},
+        'after_prepare': {'rss_bytes': 333},
+        'prepared_memory': {'rss_bytes': 444},
+        'samples': [],
+    }]}
+    export(tmp_path, report)
+    with (tmp_path / 'measurements.csv').open(newline='', encoding='utf-8') as stream:
+        rows = list(csv.DictReader(stream))
+    assert [row['phase'] for row in rows] == [
+        'load', 'selection', 'prepare', 'prepared',
+    ]
+    assert rows[-1]['rss_bytes'] == '444'
+    assert rows[-1]['duration_ns'] == ''

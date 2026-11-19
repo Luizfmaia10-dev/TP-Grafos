@@ -239,6 +239,7 @@ def export(output, report):
             for phase, snapshot in (('load', run['after_load']), ('selection', run['after_selection']),
                                     ('prepare', run['after_prepare'])):
                 writer.writerow({**base, 'phase': phase, 'duration_ns': run[f'{phase}_ns'], **snapshot})
+            writer.writerow({**base, 'phase': 'prepared', **run['prepared_memory']})
             for sample in run['samples']:
                 for phase in ('query_prepare', 'search', 'cleanup', 'query_total'):
                     writer.writerow({**base, 'case': sample['case'],
@@ -271,7 +272,7 @@ def main(argv=None):
     if args.warmups < 0:
         parser.error('warmups must be nonnegative')
     args.service_date = args.service_date.isoformat()
-    report = {'schema_version': 2, 'status': 'incomplete', 'runs': [], 'errors': [], 'summary': []}
+    report = {'schema_version': 3, 'status': 'incomplete', 'runs': [], 'errors': [], 'summary': []}
     try:
         queries = load_queries(args.queries)
         report['queries'] = queries
