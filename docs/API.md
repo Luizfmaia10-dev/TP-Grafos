@@ -128,8 +128,8 @@ Exemplo de resposta HTTP 200 para uma rota direta sintetica:
       }
     ],
     "instructions": [
-      "Wait at Central until 08:00:00.",
-      "Take BUS bus from Central to Terminal at 08:00:00; arrive at 08:10:00."
+      "Aguarde em Central até 08:00:00.",
+      "Pegue o ônibus bus de Central até Terminal às 08:00:00; chegada às 08:10:00."
     ]
   }
 }
@@ -137,7 +137,8 @@ Exemplo de resposta HTTP 200 para uma rota direta sintetica:
 
 Cada passo corresponde a uma conexao entre duas paradas, na ordem do
 caminho. `instructions` traz o passo a passo textual ja calculado pelo
-`Itinerary`. `vehicle_type` usa `BUS`, `SUBWAY` ou `WALK`. Para transporte
+`Itinerary` em português. Uma instrução de espera aparece quando o tempo de
+espera arredondado em segundos é positivo. `vehicle_type` usa `BUS`, `SUBWAY` ou `WALK`. Para transporte
 agendado, a espera inclui o tempo ate a partida, tambem nas baldeacoes.
 Caminhada parte imediatamente na chegada a parada, sem espera; o horario
 zero armazenado na conexao WALK nao e apresentado como meia-noite.

@@ -68,18 +68,19 @@ class Itinerary:
                 arrival_seconds - departure_seconds, connection.distance,
             )
             steps.append(step)
-            if departure > current_time:
-                instructions.append(f"Wait at {station.name} until {step.departure_time}.")
+            if step.waiting_seconds > 0:
+                instructions.append(f"Aguarde em {station.name} até {step.departure_time}.")
             if step.vehicle_type is VehicleType.WALK:
                 instructions.append(
-                    f"Walk from {station.name} to {step.destination.name} "
-                    f"at {step.departure_time}; arrive at {step.arrival_time}."
+                    f"Caminhe de {station.name} até {step.destination.name} "
+                    f"às {step.departure_time}; chegada às {step.arrival_time}."
                 )
             else:
+                mode = "ônibus" if step.vehicle_type is VehicleType.BUS else "metrô"
                 instructions.append(
-                    f"Take {step.vehicle_type.value} {step.route_id} from {station.name} "
-                    f"to {step.destination.name} at {step.departure_time}; "
-                    f"arrive at {step.arrival_time}."
+                    f"Pegue o {mode} {step.route_id} de {station.name} "
+                    f"até {step.destination.name} às {step.departure_time}; "
+                    f"chegada às {step.arrival_time}."
                 )
             current_time = arrival
             current_station = connection.destination

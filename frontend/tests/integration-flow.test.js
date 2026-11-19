@@ -24,7 +24,8 @@ test("station search and confirmed selection produce a normalized itinerary and 
       status: "found", service_date: "2026-11-19", origin, destination,
       route: {
         arrival_time: "07:55:00", total_seconds: 600, waiting_seconds: 0,
-        travel_seconds: 600, distance_km: 1.5, instructions: ["Siga até Terminal."],
+        travel_seconds: 600, distance_km: 1.5,
+        instructions: ["Pegue o ônibus bus de Central até Terminal às 07:45:00; chegada às 07:55:00."],
         steps: [{ origin, destination, route_id: "bus", vehicle_type: "BUS",
           departure_time: "07:45:00", arrival_time: "07:55:00", waiting_seconds: 0,
           travel_seconds: 600, distance_km: 1.5 }],
@@ -44,6 +45,8 @@ test("station search and confirmed selection produce a normalized itinerary and 
   assert.deepEqual(routeStates, ["loading", "found"]);
   assert.equal(routeRequest.state.status, "found");
   assert.deepEqual(buildTimelineEntries(routeRequest.state).map(item => item.kind), ["origin", "bus", "destination"]);
+  assert.equal(buildTimelineEntries(routeRequest.state)[1].description,
+    "Pegue o ônibus bus de Central até Terminal às 07:45:00; chegada às 07:55:00.");
   assert.equal(buildRouteSegments(routeRequest.state.steps, "desktop")[0].mode, "bus");
   routeRequest.cancel();
   assert.equal(routeRequest.state.status, "idle");

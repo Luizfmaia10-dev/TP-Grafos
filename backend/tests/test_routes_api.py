@@ -80,10 +80,10 @@ def test_search_returns_fastest_route_with_transfer_and_exact_costs(client):
     assert second["waiting_seconds"] == 90
     assert second["travel_seconds"] == 255
     assert route["instructions"] == [
-        "Wait at Central until 08:00:00.",
-        "Take BUS bus from Central to Transfer at 08:00:00; arrive at 08:05:30.",
-        "Wait at Transfer until 08:07:00.",
-        "Take SUBWAY metro from Transfer to Terminal at 08:07:00; arrive at 08:11:15.",
+        "Aguarde em Central até 08:00:00.",
+        "Pegue o ônibus bus de Central até Transfer às 08:00:00; chegada às 08:05:30.",
+        "Aguarde em Transfer até 08:07:00.",
+        "Pegue o metrô metro de Transfer até Terminal às 08:07:00; chegada às 08:11:15.",
     ]
 
 

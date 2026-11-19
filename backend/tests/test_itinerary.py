@@ -25,11 +25,11 @@ def test_transfer_totals_and_instructions():
     assert itinerary.arrival_time == "08:11:45"
     assert itinerary.destination == c
     assert len(itinerary.instructions) == 4
-    assert "Wait" in itinerary.instructions[0]
-    assert "BUS" in itinerary.instructions[1]
+    assert "Aguarde" in itinerary.instructions[0]
+    assert "ônibus" in itinerary.instructions[1]
     assert "10" in itinerary.instructions[1]
     assert "Estação Central" in itinerary.instructions[1]
-    assert "SUBWAY" in itinerary.instructions[3]
+    assert "metrô" in itinerary.instructions[3]
     assert not hasattr(itinerary, "__dict__")
     assert not hasattr(itinerary.steps[0], "__dict__")
 
@@ -44,7 +44,9 @@ def test_walk_departs_immediately_and_preserves_service_day():
     assert itinerary.waiting_seconds == 15
     assert itinerary.total_seconds == 105
     assert itinerary.steps[0].departure_time == "24:00:15"
-    assert itinerary.instructions[0].startswith("Walk")
+    assert itinerary.instructions[0] == (
+        "Caminhe de Origem até Estação Central às 24:00:15; chegada às 24:00:45."
+    )
 
 
 def test_empty_path_stays_at_origin():
@@ -66,6 +68,16 @@ def test_rounding_absolute_timestamps_keeps_durations_additive():
     assert itinerary.total_seconds == 1
     assert itinerary.waiting_seconds == 1
     assert itinerary.travel_seconds == 0
+
+
+def test_same_second_transfer_has_no_extra_wait_instruction():
+    a, b, c = stations()
+    itinerary = Itinerary(a, 416 + 42 / 60, [
+        (a, Connection("10", b, VehicleType.BUS, 5 / 60, 1, 416 + 42 / 60)),
+        (b, Connection("M1", c, VehicleType.SUBWAY, 1, 1, 416 + 47 / 60)),
+    ])
+    assert itinerary.steps[1].waiting_seconds == 0
+    assert len(itinerary.instructions) == 2
 
 
 @pytest.mark.parametrize("disconnected", [False, True])
