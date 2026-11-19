@@ -1,7 +1,6 @@
 import { DEMO_STATIONS, DEMO_TRIP } from "./demo-data.js";
 import { createFieldActivity } from "./field-activity.js";
 import { createStationMap } from "./map.js";
-import { createOriginConfirmation } from "./origin-confirmation.js";
 import { searchDemoRoute } from "./demo-service.js";
 import { createRouteRequest } from "./route-request.js";
 import { formatDuration, renderRoute } from "./route-view.js";
@@ -55,14 +54,8 @@ const map = createStationMap(
     const field = fieldActivity.activeField;
     if (!field) return;
     chooseStation(field, station);
-    if (field === "destination") map.collapse(departureInput);
   },
-  () => fields.destination.input.focus(),
 );
-const originConfirmation = createOriginConfirmation(station => {
-  map.confirmOrigin(station);
-  announce(`Origem confirmada: ${station.label}. O mapa foi expandido para a escolha do destino.`);
-});
 const timePicker = createTimePicker(
   document.querySelector("#departure-picker"),
   departureInput,
@@ -70,10 +63,8 @@ const timePicker = createTimePicker(
 );
 const request = createRouteRequest(searchDemoRoute, renderRequest);
 
-function confirmOriginIfLeft() {
-  if (fields.origin.wrapper.contains(document.activeElement)) return;
-  const station = DEMO_STATIONS.find(item => item.stationId === selection.originId);
-  originConfirmation.leave(station);
+function editStationField(field) {
+  fields[field].input.focus();
 }
 
 function announce(message) {
@@ -109,7 +100,6 @@ function renderRequest(state) {
     document.querySelector("#feedback-description").textContent = message[1];
   }
   if (found) {
-    map.collapse();
     timePicker.close({ restoreFocus: false });
     renderRoute(state);
     announce(`Trajeto de exemplo encontrado. Total: ${formatDuration(state.totalSeconds)}. Chegada às ${state.arrivalTime}.`);
@@ -193,8 +183,11 @@ function chooseStation(field, station, focusNext = false) {
   announce(selection.originId && selection.destinationId && !result.query
     ? Object.values(result.errors).join(" ")
     : `${field === "origin" ? "Origem selecionada" : "Destino selecionado"}: ${station.label}.`);
-  if (focusNext) fields[fieldActivity.activeField].input.focus();
-  if (field === "origin") queueMicrotask(confirmOriginIfLeft);
+  if (focusNext) {
+    if (!selection.originId) fields.origin.input.focus();
+    else if (!selection.destinationId) fields.destination.input.focus();
+    else departureInput.focus();
+  }
 }
 
 function openOptions(field) {
@@ -274,10 +267,6 @@ for (const [field, controls] of Object.entries(fields)) {
   });
   controls.input.addEventListener("input", () => {
     selection = editStation(selection, field, controls.input.value);
-    if (field === "origin") {
-      originConfirmation.reset();
-      map.clearOriginConfirmation();
-    }
     request.cancel();
     touched.delete(field);
     renderSelection();
@@ -288,15 +277,10 @@ for (const [field, controls] of Object.entries(fields)) {
     if (selection[`${field}Text`]) touched.add(field);
     const result = renderSelection();
     if (selection[`${field}Text`] && result.errors[field]) announce(result.errors[field]);
-    if (field === "origin") queueMicrotask(confirmOriginIfLeft);
   });
   controls.clear.addEventListener("click", () => {
     closeOptions();
     selection = editStation(selection, field, "");
-    if (field === "origin") {
-      originConfirmation.reset();
-      map.clearOriginConfirmation();
-    }
     request.cancel();
     touched.delete(field);
     fieldActivity.deactivate();
@@ -351,8 +335,8 @@ form.addEventListener("submit", event => {
   const result = renderSelection();
   if (!result.query) {
     announce(Object.values(result.errors).join(" "));
-    if (result.errors.origin) fields.origin.input.focus();
-    else if (result.errors.destination) fields.destination.input.focus();
+    if (result.errors.origin) editStationField("origin");
+    else if (result.errors.destination) editStationField("destination");
     else departureInput.focus();
     return;
   }
@@ -361,7 +345,7 @@ form.addEventListener("submit", event => {
 
 editSearch.addEventListener("click", () => {
   request.cancel();
-  fields.origin.input.focus();
+  editStationField("origin");
 });
 
 renderSelection();

@@ -31,14 +31,14 @@ npm.cmd run check:server
 ```
 
 Em Linux/macOS, use npm no lugar de npm.cmd. npm ci instala as versoes do
-lockfile. npm test executa 91 testes independentes do servidor. npm run build
+lockfile. npm test executa 88 testes independentes do servidor. npm run build
 copia as fontes e compila styles/app.css para assets/app.css; edite o arquivo
 de origem. npm run watch:css acompanha mudancas de estilo durante a edicao.
 
 check:server exige o FastAPI aberto no primeiro terminal. Usa o executor de
 testes e o fetch do Node, sem dependencias novas: verifica /health, HTML,
 imports JavaScript, imagens, fontes do CSS, tipos HTTP e arquivos ausentes.
-Os 37 testes incluem 31 URLs distintas de recursos. O script percorre imports
+Os 35 testes incluem 29 URLs distintas de recursos. O script percorre imports
 estaticos e atribuicoes literais de imagens dos modulos atuais; ele complementa
 a verificacao dos fluxos no navegador.
 
@@ -67,13 +67,9 @@ python -m pytest -c backend/pytest.ini backend/tests
    precisa ser confirmado por uma sugestao ou pelo mapa para obter o ID.
 5. Consulte e edite rapidamente uma parada ou o horario durante o carregamento;
    o resultado cancelado nao deve substituir a selecao nova.
-6. Percorra o formulario com Tab/Shift+Tab, setas, Enter e Escape. Ao confirmar
-   a origem e sair do campo, confira o mapa em tela expandida e escolha o
-   destino ou use Continuar busca. Limpar deve fechar as sugestoes e deixar
-   origem/destino sem campo ativo.
-7. Alterne o tema no cabecalho e recarregue a pagina para conferir a escolha
+6. Alterne o tema no cabecalho e recarregue a pagina para conferir a escolha
    salva. Repita com movimento reduzido ativado no sistema.
-8. Confira desktop e celular (1440, 390 e 360 px), redimensione com o resultado
+7. Confira desktop e celular (1440, 390 e 360 px), redimensione com o resultado
    aberto e amplie o texto. Horarios e nomes devem continuar legiveis.
 
 ## Procedencia e proximos passos

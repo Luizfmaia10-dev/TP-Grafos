@@ -1091,106 +1091,6 @@
     container-name: network;
   }
 
-  body[data-map-expanded="true"] {
-    overflow: hidden;
-  }
-
-  .map-backdrop {
-    position: fixed;
-    z-index: 30;
-    inset: 0;
-    background: rgb(3 33 71 / 76%);
-  }
-
-  .map-backdrop[hidden],
-  .map-expanded-bar[hidden] {
-    display: none;
-  }
-
-  .map-panel[data-expanded="true"] {
-    position: fixed;
-    z-index: 40;
-    inset: 1rem;
-    width: auto;
-    height: auto;
-    border-radius: 18px;
-    box-shadow: 0 24px 70px rgb(0 0 0 / 38%);
-  }
-
-  .map-expanded-bar {
-    position: absolute;
-    z-index: 8;
-    top: 18px;
-    left: 50%;
-    display: flex;
-    align-items: center;
-    min-width: min(32rem, calc(100% - 36px));
-    gap: 11px;
-    padding: 10px 11px;
-    transform: translateX(-50%);
-    border: 1px solid var(--color-rg-map-border);
-    border-radius: 14px;
-    background: var(--color-rg-map-panel);
-    color: var(--color-rg-map-text);
-    box-shadow: 0 12px 30px rgb(0 0 0 / 20%);
-  }
-
-  .map-expanded-marker {
-    display: grid;
-    flex: 0 0 2rem;
-    width: 2rem;
-    height: 2rem;
-    place-items: center;
-    border-radius: 50%;
-    background: var(--color-rg-yellow);
-    color: var(--color-rg-navy);
-    font-weight: 700;
-  }
-
-  .map-expanded-copy {
-    min-width: 0;
-    flex: 1;
-  }
-
-  .map-expanded-copy p {
-    color: var(--color-rg-map-muted);
-    font-size: 0.6875rem;
-    line-height: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-  }
-
-  .map-expanded-copy strong {
-    display: block;
-    overflow: hidden;
-    font-size: 0.8125rem;
-    line-height: 1.125rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .map-close {
-    min-height: 44px;
-    flex: 0 0 auto;
-    padding: 0 14px;
-    border-radius: 10px;
-    background: var(--color-rg-purple);
-    color: white;
-    font-size: 0.75rem;
-    font-weight: 700;
-    cursor: pointer;
-  }
-
-  .map-panel[data-origin-confirmed="true"] {
-    outline: 2px solid var(--color-rg-yellow);
-    outline-offset: -2px;
-  }
-
-  .map-station[data-confirmed="true"] .map-marker {
-    outline: 2px solid var(--color-rg-map-text);
-    outline-offset: 5px;
-  }
-
   /* Keep the exported SVG and all location labels in the same coordinate plane. */
   .network-layer {
     position: absolute;
@@ -1704,29 +1604,6 @@
       min-height: 16rem;
       aspect-ratio: 358 / 256;
       border-radius: 16px;
-    }
-
-    .map-panel[data-expanded="true"] {
-      inset: 0;
-      width: auto;
-      height: auto;
-      min-height: 100svh;
-      aspect-ratio: auto;
-      border-radius: 0;
-    }
-
-    .map-expanded-bar {
-      top: 12px;
-      right: 12px;
-      left: 12px;
-      width: auto;
-      min-width: 0;
-      transform: none;
-    }
-
-    .map-panel[data-expanded="true"] .map-heading,
-    .map-panel[data-expanded="true"] .map-north {
-      display: none;
     }
 
     .map-heading {

@@ -1,5 +1,3 @@
-import { animateMapLayout } from "./map-expansion.js";
-
 const MAP_LAYOUTS = {
   desktop: { width: 960, height: 780, west: -44.045, east: -43.861, north: -19.803, south: -19.968 },
   mobile: { width: 358, height: 256, west: -44.018, east: -43.895, north: -19.814, south: -19.955 },
@@ -15,7 +13,7 @@ export function projectStation(station, layout) {
   };
 }
 
-export function createStationMap(container, stations, onSelect, onClose) {
+export function createStationMap(container, stations, onSelect) {
   const controls = stations.map(station => {
     const button = document.createElement("button");
     button.type = "button";
@@ -57,76 +55,14 @@ export function createStationMap(container, stations, onSelect, onClose) {
   container.replaceChildren(...controls.map(control => control.button));
 
   const layer = container.parentElement;
-  const panel = layer.parentElement;
-  const backdrop = document.querySelector("#map-backdrop");
-  const expandedBar = document.querySelector("#map-expanded-bar");
-  const originName = document.querySelector("#map-confirmed-origin");
-  const closeButton = document.querySelector("#map-close");
-  const pageRegions = [document.querySelector(".site-header"), document.querySelector(".search-panel")];
   let view = null;
-  let expanded = false;
-
-  function setPageInert(value) {
-    pageRegions.forEach(region => {
-      if (region) region.inert = value;
-    });
-  }
-
-  function setExpanded(next, focusTarget = null) {
-    if (expanded === next) return;
-    const before = panel.getBoundingClientRect();
-    expanded = next;
-    if (next) panel.dataset.expanded = "true";
-    else panel.removeAttribute("data-expanded");
-    document.body.toggleAttribute("data-map-expanded", next);
-    backdrop.hidden = !next;
-    expandedBar.hidden = !next;
-    panel.setAttribute("aria-modal", String(next));
-    if (next) panel.setAttribute("role", "dialog");
-    else {
-      panel.removeAttribute("role");
-      panel.removeAttribute("aria-modal");
-    }
-    setPageInert(next);
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!reduceMotion) animateMapLayout(panel, before, 620);
-    if (next) closeButton.focus({ preventScroll: true });
-    else if (focusTarget) focusTarget.focus({ preventScroll: true });
-  }
-
-  function collapse(focusTarget = null) {
-    setExpanded(false, focusTarget);
-  }
-
-  function clearOriginConfirmation() {
-    collapse();
-    panel.removeAttribute("data-origin-confirmed");
-    controls.forEach(control => control.button.removeAttribute("data-confirmed"));
-  }
-
-  function confirmOrigin(station) {
-    const control = controls.find(item => item.station.stationId === station.stationId);
-    if (!control) return;
-    clearOriginConfirmation();
-    panel.dataset.originConfirmed = "true";
-    control.button.dataset.confirmed = "true";
-    originName.textContent = station.label;
-    setExpanded(true);
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduceMotion || typeof control.button.querySelector(".map-marker").animate !== "function") return;
-    control.button.querySelector(".map-marker").animate([
-      { transform: "translate(-50%, -50%) scale(0.65)", opacity: 0.5 },
-      { transform: "translate(-50%, -50%) scale(1.45)", opacity: 1, offset: 0.55 },
-      { transform: "translate(-50%, -50%) scale(1)", opacity: 1 },
-    ], { duration: 900, easing: "cubic-bezier(0.16, 1, 0.3, 1)" });
-  }
 
   function render() {
     if (!view) return;
     const { selection, activeField, result } = view;
     const layout = window.matchMedia("(width < 960px)").matches ? "mobile" : "desktop";
     const size = MAP_LAYOUTS[layout];
-    const scale = layer.getBoundingClientRect().width / size.width;
+    const scale = layer.clientWidth / size.width;
     layer.querySelector(`.network-image--${layout}`).style.transform = `scale(${scale})`;
     const route = document.querySelector("#map-route");
     const pill = document.querySelector("#route-pill");
@@ -205,33 +141,11 @@ export function createStationMap(container, stations, onSelect, onClose) {
     }
   }
 
-  closeButton.addEventListener("click", () => {
-    collapse();
-    onClose?.();
-  });
-  backdrop.addEventListener("click", () => {
-    collapse();
-    onClose?.();
-  });
-  document.addEventListener("keydown", event => {
-    if (expanded && event.key === "Escape") {
-      event.preventDefault();
-      collapse();
-      onClose?.();
-    }
-  });
-
   new ResizeObserver(render).observe(layer.parentElement);
   return {
     update(selection, activeField, result = null) {
       view = { selection, activeField, result };
       render();
-    },
-    confirmOrigin,
-    clearOriginConfirmation,
-    collapse,
-    get expanded() {
-      return expanded;
     },
   };
 }
