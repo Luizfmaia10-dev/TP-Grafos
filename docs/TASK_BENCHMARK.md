@@ -66,7 +66,7 @@ O pico de RSS é cumulativo durante a vida do processo: não apresentar sua dife
 
 O processo NetworkX inicialmente precisa do grafo nativo para a conversão. Registrar o pico de conversão como tal; liberar o grafo nativo e referências auxiliares antes da RSS da rede preparada. Memória retida pelo alocador pode permanecer: documentar que RSS mede o processo, não o tamanho exato dos objetos. Não atribuir o pico de ingestão à estrutura final.
 
-Para tempo de busca, comparar a chamada do motor próprio com Dijkstra e reconstrução equivalente. Mostrar também custo completo por consulta e preparação amortizável. Não incluir CSV/JSON, validação ou impressão no cronômetro da busca. Manter a política de coleta de lixo igual para ambos.
+Para tempo de busca, comparar a chamada do motor próprio com Dijkstra e reconstrução equivalente. Resumir `query_total` como comparação principal do custo completo por consulta e manter `search` como decomposição interna; preparação amortizável permanece separada. Não incluir CSV/JSON, validação ou impressão no cronômetro da busca. Manter a política de coleta de lixo igual para ambos.
 
 ## 4. Resultados reproduzíveis
 
@@ -79,7 +79,7 @@ Exportar medições brutas em CSV e metadados/resumos em JSON:
 - Versões de Python e NetworkX, sistema, CPU, RAM disponível, commit Git e indicação de alterações locais.
 - Aquecimentos, repetições, resultados da verificação e eventuais erros.
 
-Resumir tempo por caso e motor com mediana, mínimo, máximo e intervalo interquartil. Preservar amostras, inclusive valores extremos. Razões de desempenho devem identificar a fase comparada; casos inválidos ou incompletos não entram no resumo comparativo.
+Resumir `query_total` e `search` por caso e motor com mediana, mínimo, máximo e intervalo interquartil, apresentando `query_total` primeiro. Preservar amostras, inclusive valores extremos. Razões de desempenho devem identificar a fase comparada; casos inválidos ou incompletos não entram no resumo comparativo.
 
 Um limite de memória/tempo atingido deve ser registrado como experimento incompleto. Não reduzir silenciosamente o dataset para conseguir executar a expansão.
 
@@ -110,7 +110,7 @@ Um limite de memória/tempo atingido deve ser registrado como experimento incomp
 - O comando documentado executa os dois motores e gera CSV/JSON reproduzíveis.
 - Todos os casos concluídos têm caminhos temporalmente válidos e a mesma chegada ótima ou concordam sobre ausência de rota.
 - NetworkX não é importado pelo domínio, roteador ou API.
-- Preparação, busca e picos de processo são identificados sem confundir RSS com memória exclusiva do algoritmo.
+- Preparação, RSS do motor preparado, busca e picos de processo são identificados sem confundir RSS com memória exclusiva do algoritmo.
 - O relatório distingue comparação entre implementações e representações de uma comparação isolada entre algoritmos: A* nativo e Dijkstra temporalmente expandido usam estruturas diferentes.
 - Ao entregar o script validado, marcar apenas o item de scripts de benchmark da Parte 9 em `docs/PLAN.md`.
 - Marcar escalabilidade, análise formal de complexidade e limitações apenas quando suas respectivas análises estiverem concluídas. A fila com entradas obsoletas do A* e o tamanho da expansão temporal precisam ser considerados na análise espacial; não copiar limites existentes sem revisão.

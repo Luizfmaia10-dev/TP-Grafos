@@ -45,6 +45,7 @@ a ingestão; manifestos grandes podem tornar o experimento demorado.
 | `load` | `DataLoader.build_graph` |
 | `selection` | Seleção opcional de subgrafo induzido |
 | `prepare` | Velocidade máxima nativa ou importação/construção NetworkX |
+| `prepared` | RSS do worker após liberar a referência local ao grafo de conversão e executar a coleta de lixo; não possui duração própria |
 | `query_prepare` | Fonte, sumidouro e arestas auxiliares NetworkX |
 | `search` | Busca e reconstrução dos trechos de transporte |
 | `cleanup` | Remoção dos nós auxiliares NetworkX |
@@ -69,7 +70,9 @@ limite de RAM. Os snapshots de RSS dentro do worker ficam fora do cronômetro de
 
 RSS mede o processo, não o tamanho exato das
 estruturas. O JSON registra snapshots antes/depois das fases e após liberar o grafo
-nativo no worker NetworkX. O pico amostrado pode incluir as duas representações;
+nativo no worker NetworkX. O CSV expõe esse último snapshot na fase `prepared`;
+`prepare` continua representando o instante imediatamente posterior à construção.
+O pico amostrado pode incluir as duas representações;
 o alocador pode reter memória após liberar objetos. O motor próprio mantém seu
 grafo nativo, necessário às consultas.
 
@@ -81,10 +84,13 @@ Picos são cumulativos: não subtrair para obter memória exclusiva da busca.
 
 `results.json` contém caminhos, chegada absoluta em minutos, contagens das duas
 representações, serviços ativos, hashes das entradas e manifesto, versões, CPU,
-memória disponível/total do sistema, commit e alterações locais. `schema_version: 2`
-identifica a medição portátil; método, intervalo e tipo do limite são registrados.
-O resumo por caso/motor inclui mediana,
-mínimo, máximo e intervalo interquartil do tempo `search`. As amostras brutas,
+memória disponível/total do sistema, commit e alterações locais. `schema_version: 3`
+identifica a medição portátil com RSS preparada explícita e resumos de custo completo;
+método, intervalo e tipo do limite são registrados.
+O resumo por caso/motor inclui mediana, mínimo, máximo e intervalo interquartil
+para `query_total` e `search`. `query_total` é a comparação principal entre motores,
+pois inclui todo o trabalho necessário por consulta; `search` serve para decompor a
+busca interna. As amostras brutas,
 incluindo valores extremos e custos completos, permanecem no CSV.
 
 ## Corretude e limites
@@ -123,7 +129,8 @@ Os testes usam
 somente grafos e GTFS sintéticos. Cobrem equivalência temporal, esperas, baldeações,
 ultrapassagens, empates, duração zero, horários acima de 24h, ausência de caminho,
 limpeza após erros, subgrafos aninhados, exportação, parâmetros inválidos, falhas
-de worker, timeout e limite de RSS. Testam processos reais, caminhos com espaços e
+de worker, timeout, limite de RSS, resumo do custo completo e exportação da RSS
+preparada. Testam processos reais, caminhos com espaços e
 acentos, comunicação UTF-8, saídas maiores que um buffer de pipe e encerramento
 dos workers após falhas. Não exigem valores específicos de tempo ou RAM.
 Execuções reais no Windows e macOS continuam pendentes; simulações não comprovam
@@ -131,7 +138,8 @@ compatibilidade nesses sistemas. Compare desempenho entre motores no mesmo ambie
 
 ## Verificação inicial com dados reais
 
-Registro histórico da implementação Linux anterior à adaptação portátil. Os campos
+Registro histórico da implementação Linux anterior à adaptação portátil e ao schema 3.
+Os campos
 `peak_rss_bytes` desses arquivos representam picos do sistema operacional e não
 devem ser confundidos com o novo `sampled_peak_rss_bytes`. Os arquivos originais
 foram preservados; a campanha real não foi repetida com o novo método nesta entrega.
