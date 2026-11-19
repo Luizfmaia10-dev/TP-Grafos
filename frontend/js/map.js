@@ -24,6 +24,17 @@ export function buildRouteSegments(steps, layout) {
   }));
 }
 
+export function currentMapStations(previous, suggestions, selection, result) {
+  const selectedIds = new Set([selection.originId, selection.destinationId]);
+  const routeStations = result
+    ? [result.origin, result.destination, ...result.steps.flatMap(step => [step.origin, step.destination])]
+    : [];
+  return [...new Map([
+    ...previous.filter(station => selectedIds.has(station.stationId)),
+    ...suggestions, ...routeStations,
+  ].map(station => [station.stationId, station])).values()];
+}
+
 export function createStationMap(container, onSelect) {
   const document = container.ownerDocument;
   let controls = [];

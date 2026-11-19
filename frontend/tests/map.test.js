@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildRouteSegments, createStationMap, projectStation } from "../js/map.js";
+import * as mapState from "../js/map.js";
 
 const stations = [
   { stationId: "001", longitude: -43.96700111, latitude: -19.84347457 },
@@ -105,6 +106,18 @@ const result = {
   })),
 };
 const selection = { originId: "001", destinationId: "004" };
+
+test("successive searches replace old suggestions while keeping selections and current route", () => {
+  assert.equal(typeof mapState.currentMapStations, "function");
+  const current = mapState.currentMapStations;
+  let registry = current([], [routeStations[0], routeStations[1]], {}, null);
+  registry = current(registry, [routeStations[2]], { originId: "001" }, null);
+  assert.deepEqual(registry.map(station => station.stationId), ["001", "003"]);
+  registry = current(registry, [routeStations[3]], { originId: "001", destinationId: "003" }, result);
+  assert.deepEqual(new Set(registry.map(station => station.stationId)), new Set(["001", "002", "003", "004"]));
+  registry = current(registry, [], { originId: "001", destinationId: "003" }, null);
+  assert.deepEqual(registry.map(station => station.stationId), ["001", "003"]);
+});
 
 test("station registry replaces controls, deduplicates IDs and keeps station selection", t => {
   const { container, resizeToMobile } = createMapFixture(t);

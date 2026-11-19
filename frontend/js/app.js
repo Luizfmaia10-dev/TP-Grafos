@@ -1,7 +1,7 @@
 import { listStations, searchRoute, ApiError } from "./api-service.js";
 import { createStationRequest } from "./station-request.js";
 import { createFieldActivity } from "./field-activity.js";
-import { createStationMap } from "./map.js";
+import { createStationMap, currentMapStations } from "./map.js";
 import { createRouteRequest } from "./route-request.js";
 import { formatDuration, renderRoute } from "./route-view.js";
 import { maskDepartureTime } from "./time-mask.js";
@@ -45,7 +45,7 @@ const fieldActivity = createFieldActivity();
 let openField = null;
 let options = [];
 let activeOption = -1;
-const knownStations = new Map();
+let knownStations = [];
 
 const map = createStationMap(
   document.querySelector("#map-stations"),
@@ -77,9 +77,10 @@ function errorMessage(error) {
   return ["Falha de conexão", "Não foi possível receber os dados. Verifique sua conexão e tente novamente."];
 }
 
-function rememberStations(stations) {
-  for (const station of stations) knownStations.set(station.stationId, station);
-  map.setStations(Array.from(knownStations.values()));
+function refreshMapStations() {
+  knownStations = currentMapStations(knownStations, options, selection,
+    request.state.status === "found" ? request.state : null);
+  map.setStations(knownStations);
 }
 
 function editStationField(field) {
@@ -103,7 +104,6 @@ function renderRequest(state) {
   form.setAttribute("aria-busy", String(loading));
   submitButton.dataset.loading = String(loading);
   submitButton.textContent = loading ? "Calculando trajeto…" : "Calcular trajeto";
-  if (found) rememberStations([state.origin, state.destination, ...state.steps.flatMap(step => [step.origin, step.destination])]);
   renderSelection();
 
   const messages = {
@@ -161,6 +161,7 @@ function renderSelection() {
   const found = request.state.status === "found";
   submitButton.disabled = loading || result.query === null;
   const activeField = fieldActivity.activeField;
+  refreshMapStations();
   map.update(selection, activeField, found ? request.state : null);
   mapRole.hidden = found;
   mapRole.textContent = activeField === "origin" ? "Origem" : activeField === "destination" ? "Destino" : "Escolha um campo";
@@ -178,6 +179,7 @@ function renderSelection() {
 
 function closeOptions() {
   openField = null;
+  options = [];
   for (const stationRequest of Object.values(stationRequests)) stationRequest.cancel();
   for (const controls of Object.values(fields)) {
     controls.list.hidden = true;
@@ -187,12 +189,11 @@ function closeOptions() {
     controls.input.setAttribute("aria-expanded", "false");
     controls.input.removeAttribute("aria-activedescendant");
   }
-  options = [];
   activeOption = -1;
+  refreshMapStations();
 }
 
 function chooseStation(field, station, focusNext = false) {
-  rememberStations([station]);
   selection = selectStation(selection, field, station);
   request.cancel();
   touched.add(field);
@@ -226,7 +227,7 @@ function renderOptions(field, state) {
   options = state.status === "ready" ? state.stations : [];
   activeOption = -1;
   controls.input.removeAttribute("aria-activedescendant");
-  if (options.length) rememberStations(options);
+  refreshMapStations();
   const items = options.map(station => {
     const option = document.createElement("li");
     option.id = `${field}-option-${station.stationId}`;
