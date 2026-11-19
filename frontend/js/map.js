@@ -181,7 +181,13 @@ export function createStationMap(container, onSelect) {
   new ResizeObserver(render).observe(layer.parentElement);
   return {
     setStations(stations) {
-      controls = [...new Map(stations.map(station => [station.stationId, station])).values()].map(createControl);
+      const nextStations = [...new Map(stations.map(station => [station.stationId, station])).values()];
+      if (controls.length === nextStations.length
+        && controls.every((control, index) => control.station.stationId === nextStations[index].stationId)) {
+        render();
+        return;
+      }
+      controls = nextStations.map(createControl);
       container.replaceChildren(...controls.map(control => control.button));
       render();
     },

@@ -1,6 +1,6 @@
 import { listStations, searchRoute, ApiError } from "./api-service.js";
 import { createStationRequest } from "./station-request.js";
-import { createFieldActivity } from "./field-activity.js";
+import { createFieldActivity, shouldCloseStationOptions } from "./field-activity.js";
 import { createStationMap, currentMapStations } from "./map.js";
 import { createRouteRequest } from "./route-request.js";
 import { formatDuration, renderRoute } from "./route-view.js";
@@ -340,10 +340,10 @@ for (const event of ["input", "blur"]) {
 }
 
 document.addEventListener("pointerdown", event => {
-  if (openField && !fields[openField].wrapper.contains(event.target)) closeOptions();
+  if (openField && shouldCloseStationOptions(fields[openField].wrapper, event.target)) closeOptions();
 });
 document.addEventListener("focusin", event => {
-  if (openField && !fields[openField].wrapper.contains(event.target)) closeOptions();
+  if (openField && shouldCloseStationOptions(fields[openField].wrapper, event.target)) closeOptions();
 });
 
 form.addEventListener("submit", event => {

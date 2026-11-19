@@ -142,6 +142,17 @@ test("station registry replaces controls, deduplicates IDs and keeps station sel
   assert.notEqual(container.children[0].style.left, "0%");
 });
 
+test("unchanged station registry keeps the active map control", t => {
+  const { container } = createMapFixture(t);
+  const map = createStationMap(container, () => {});
+  map.setStations([{ ...routeStations[0] }]);
+  const control = container.children[0];
+
+  map.setStations([routeStations[0]]);
+
+  assert.equal(container.children[0], control);
+});
+
 test("map creates safe SVG lines per modal and resets route and legend", t => {
   const { container, find } = createMapFixture(t);
   const map = createStationMap(container, () => {});

@@ -12,3 +12,7 @@ export function createFieldActivity(initialField = "origin") {
     },
   };
 }
+
+export function shouldCloseStationOptions(fieldWrapper, target) {
+  return !fieldWrapper.contains(target) && !target.closest?.(".map-station");
+}
