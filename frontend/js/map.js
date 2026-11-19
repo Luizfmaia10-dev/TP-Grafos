@@ -3,6 +3,7 @@ const MAP_LAYOUTS = {
   mobile: { width: 358, height: 256, west: -44.018, east: -43.895, north: -19.814, south: -19.955 },
 };
 const MARKER_LETTERS = { origin: "A", destination: "B", both: "A/B" };
+const MODE_LABELS = { bus: "Ônibus", subway: "Metrô", walk: "Caminhada" };
 
 /** Native pixel coordinates in the matching Figma SVG, before responsive scaling. */
 export function projectStation(station, layout) {
@@ -13,8 +14,21 @@ export function projectStation(station, layout) {
   };
 }
 
-export function createStationMap(container, stations, onSelect) {
-  const controls = stations.map(station => {
+export function buildRouteSegments(steps, layout) {
+  return steps.map(step => ({
+    mode: step.vehicleType.toLowerCase(),
+    points: [step.origin, step.destination].map(station => {
+      const point = projectStation(station, layout);
+      return `${point.x},${point.y}`;
+    }).join(" "),
+  }));
+}
+
+export function createStationMap(container, onSelect) {
+  const document = container.ownerDocument;
+  let controls = [];
+
+  function createControl(station) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "map-station";
@@ -47,12 +61,12 @@ export function createStationMap(container, stations, onSelect) {
     name.append(desktopName, mobileName);
     const detail = document.createElement("span");
     detail.className = "map-stop-detail text-rg-map-muted";
-    detail.textContent = `Plataforma ${station.platform}`;
+    detail.textContent = station.platform ? `Plataforma ${station.platform}` : "";
+    detail.hidden = !station.platform;
     label.append(name, detail);
     button.append(marker, label);
     return { station, button, point, letter, label, desktopName, mobileName };
-  });
-  container.replaceChildren(...controls.map(control => control.button));
+  }
 
   const layer = container.parentElement;
   let view = null;
@@ -65,32 +79,43 @@ export function createStationMap(container, stations, onSelect) {
     const scale = layer.clientWidth / size.width;
     layer.querySelector(`.network-image--${layout}`).style.transform = `scale(${scale})`;
     const route = document.querySelector("#map-route");
-    const pill = document.querySelector("#route-pill");
+    const legend = document.querySelector("#map-key-route");
+    const segments = buildRouteSegments(result?.steps ?? [], layout);
     route.setAttribute("viewBox", `0 0 ${size.width} ${size.height}`);
     route.toggleAttribute("hidden", !result);
-    pill.hidden = !result;
+    route.replaceChildren(...segments.flatMap(segment => ["route-glow", "route-line"].map(className => {
+      const line = route.ownerDocument.createElementNS("http://www.w3.org/2000/svg", "polyline");
+      line.setAttribute("points", segment.points);
+      line.setAttribute("class", `${className} route-segment--${segment.mode}`);
+      line.setAttribute("fill", "none");
+      return line;
+    })));
     document.querySelector("#map-key-station").hidden = Boolean(result);
-    document.querySelector("#map-key-route").hidden = !result;
-    document.querySelector("#map-key-label").textContent = result ? `Linha ${result.routeShortName}` : "Paradas de ônibus";
-    document.querySelector("#map-key-short").textContent = result ? `Linha ${result.routeShortName}` : "Paradas";
+    legend.hidden = !result;
+    legend.replaceChildren(...[...new Set(segments.map(segment => segment.mode))].map(mode => {
+      const item = document.createElement("span");
+      item.className = "map-key-mode";
+      item.dataset.mode = mode;
+      const line = document.createElement("span");
+      line.className = `route-key-line route-segment--${mode}`;
+      line.setAttribute("aria-hidden", "true");
+      const label = document.createElement("span");
+      label.textContent = MODE_LABELS[mode];
+      item.append(line, label);
+      return item;
+    }));
+    document.querySelector("#map-key-label").hidden = Boolean(result);
+    document.querySelector("#map-key-short").hidden = Boolean(result);
+    const routeStationIds = new Set(result
+      ? [result.origin, result.destination, ...result.steps.flatMap(step => [step.origin, step.destination])]
+        .map(station => station.stationId)
+      : []);
     let dense = false;
     if (result) {
-      const positions = result.stops.map(station => projectStation(station, layout));
-      const first = positions[0];
-      const last = positions.at(-1);
+      const first = projectStation(result.origin, layout);
+      const last = projectStation(result.destination, layout);
       // Nearby vertices retain their real coordinates; their labels carry A/B.
       dense = Math.hypot(last.x - first.x, last.y - first.y) * scale < 44;
-      pill.hidden = dense;
-      route.querySelector(".route-direction").toggleAttribute("hidden", dense);
-      const points = positions.map(point => `${point.x},${point.y}`).join(" ");
-      route.querySelectorAll("polyline").forEach(line => line.setAttribute("points", points));
-      const [origin, next] = positions;
-      const x = origin.x + (next.x - origin.x) * 0.48;
-      const y = origin.y + (next.y - origin.y) * 0.48;
-      const angle = Math.atan2(next.y - origin.y, next.x - origin.x) * 180 / Math.PI;
-      route.querySelector(".route-direction").setAttribute("transform", `translate(${x} ${y}) rotate(${angle})`);
-      pill.style.left = `${x * 100 / size.width}%`;
-      pill.style.top = `${y * 100 / size.height}%`;
     }
     container.dataset.dense = String(dense);
     for (const { station, button, point, letter, label, desktopName, mobileName } of controls) {
@@ -106,7 +131,7 @@ export function createStationMap(container, stations, onSelect) {
       if (isOrigin && isDestination) role = "both";
 
       button.dataset.selection = role;
-      button.dataset.onRoute = String(Boolean(result?.stops.some(stop => stop.stationId === station.stationId)));
+      button.dataset.onRoute = String(routeStationIds.has(station.stationId));
       button.disabled = Boolean(result) || activeField === null;
       button.setAttribute("aria-pressed", String(selected));
       button.setAttribute("aria-label", result
@@ -143,6 +168,11 @@ export function createStationMap(container, stations, onSelect) {
 
   new ResizeObserver(render).observe(layer.parentElement);
   return {
+    setStations(stations) {
+      controls = [...new Map(stations.map(station => [station.stationId, station])).values()].map(createControl);
+      container.replaceChildren(...controls.map(control => control.button));
+      render();
+    },
     update(selection, activeField, result = null) {
       view = { selection, activeField, result };
       render();

@@ -168,7 +168,7 @@
       </section>
 
       <section class="map-panel min-w-0 overflow-hidden bg-rg-map" aria-labelledby="map-title" aria-describedby="map-description">
-        <p id="map-description" class="sr-only">Mapa esquemático da rede de ônibus de Belo Horizonte. Selecione as paradas do exemplo da linha 50 para preencher origem e destino. Os marcadores A e B identificam suas escolhas.</p>
+        <p id="map-description" class="sr-only">Mapa esquemático da rede de transporte de Belo Horizonte. Selecione as paradas para preencher origem e destino. Os marcadores A e B identificam suas escolhas.</p>
 
         <div class="network-layer">
           <div class="network-background" aria-hidden="true">
@@ -185,12 +185,7 @@
             <span class="landmark-label landmark-label--liberdade">Praça da Liberdade</span>
             <img class="landmark-dot landmark-dot--liberdade" src="/assets/icons/landmark.svg" alt="" width="6" height="6">
           </div>
-          <svg id="map-route" class="map-route" viewBox="0 0 960 780" width="960" height="780" aria-hidden="true" hidden>
-            <polyline class="route-glow" fill="none"></polyline>
-            <polyline class="route-line" fill="none"></polyline>
-            <g class="route-direction"><path d="M-3 -4 L1 0 L-3 4" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></g>
-          </svg>
-          <span id="route-pill" class="route-pill font-mono" aria-hidden="true" hidden><span class="route-bus-icon icon-slot"><img src="/assets/icons/bus-white.svg" alt=""></span>50</span>
+          <svg id="map-route" class="map-route" viewBox="0 0 960 780" width="960" height="780" aria-hidden="true" hidden></svg>
           <div id="map-stations"></div>
         </div>
 
@@ -210,7 +205,7 @@
         <div class="map-footer absolute flex items-center justify-between">
           <span class="map-key flex items-center border border-rg-map-border bg-rg-map-panel text-rg-map-text">
             <img id="map-key-station" src="/assets/icons/stop-key.svg" alt="" width="7" height="7" aria-hidden="true">
-            <span id="map-key-route" class="route-key-line" aria-hidden="true" hidden></span>
+            <span id="map-key-route" class="map-route-legend" hidden></span>
             <span id="map-key-label">Paradas de ônibus</span>
             <span id="map-key-short">Paradas</span>
           </span>
