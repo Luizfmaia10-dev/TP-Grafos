@@ -16,7 +16,15 @@ async function readJson(response) {
   return response.json();
 }
 
+function isNonEmptyString(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
 function mapStation(station) {
+  if (!isNonEmptyString(station.station_id) || !isNonEmptyString(station.name)
+      || !Number.isFinite(station.latitude) || !Number.isFinite(station.longitude)) {
+    throw new Error("Invalid station response");
+  }
   return {
     stationId: station.station_id,
     name: station.name,
@@ -29,6 +37,11 @@ function mapStation(station) {
 }
 
 function mapStep(step) {
+  if (typeof step.route_id !== "string" || !isNonEmptyString(step.vehicle_type)
+      || !isNonEmptyString(step.departure_time) || !isNonEmptyString(step.arrival_time)
+      || ![step.waiting_seconds, step.travel_seconds, step.distance_km].every(Number.isFinite)) {
+    throw new Error("Invalid route step response");
+  }
   return {
     origin: mapStation(step.origin),
     destination: mapStation(step.destination),
@@ -43,6 +56,9 @@ function mapStep(step) {
 }
 
 function mapRouteResponse(payload, query) {
+  if (!["found", "no-route"].includes(payload.status) || !isNonEmptyString(payload.service_date)) {
+    throw new Error("Invalid route response");
+  }
   const state = {
     status: payload.status,
     serviceDate: payload.service_date,
@@ -52,6 +68,12 @@ function mapRouteResponse(payload, query) {
   };
   if (payload.status === "no-route") return state;
   const route = payload.route;
+  if (!isNonEmptyString(route.arrival_time)
+      || ![route.total_seconds, route.waiting_seconds, route.travel_seconds, route.distance_km].every(Number.isFinite)
+      || !Array.isArray(route.steps) || !Array.isArray(route.instructions)
+      || !route.instructions.every(instruction => typeof instruction === "string")) {
+    throw new Error("Invalid route result response");
+  }
   return {
     ...state,
     arrivalTime: route.arrival_time,

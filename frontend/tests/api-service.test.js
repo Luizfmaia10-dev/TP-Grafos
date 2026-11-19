@@ -158,3 +158,74 @@ test("invalid JSON remains an ordinary error", async () => {
   await assert.rejects(() => api.searchRoute(query),
     error => error instanceof SyntaxError && !(error instanceof ApiError));
 });
+
+const completeStep = {
+  origin: central, destination, route_id: "bus", vehicle_type: "BUS",
+  departure_time: "25:06:00", arrival_time: "25:11:30", waiting_seconds: 60,
+  travel_seconds: 330, distance_km: 1,
+};
+const completeRoute = {
+  arrival_time: "25:11:30", total_seconds: 390, waiting_seconds: 60,
+  travel_seconds: 330, distance_km: 1, steps: [completeStep], instructions: ["Take BUS bus."],
+};
+const completeResponse = {
+  status: "found", service_date: "2026-11-19", origin: central, destination,
+  departure_time: "25:05", route: completeRoute,
+};
+
+for (const [description, route] of [
+  ["missing arrival and totals", { steps: [], instructions: [] }],
+  ["missing arrival time", { ...completeRoute, arrival_time: undefined }],
+  ["missing total seconds", { ...completeRoute, total_seconds: undefined }],
+  ["missing waiting seconds", { ...completeRoute, waiting_seconds: undefined }],
+  ["missing travel seconds", { ...completeRoute, travel_seconds: undefined }],
+  ["missing distance", { ...completeRoute, distance_km: undefined }],
+  ["non-numeric totals", { ...completeRoute, total_seconds: "390" }],
+  ["missing instructions", { ...completeRoute, instructions: undefined }],
+  ["non-array instructions", { ...completeRoute, instructions: "Take BUS bus." }],
+  ["non-text instruction", { ...completeRoute, instructions: [null] }],
+]) {
+  test(`a found response rejects ${description} as an ordinary error`, async () => {
+    const api = createApi(async () => Response.json({ ...completeResponse, route }));
+
+    await assert.rejects(() => api.searchRoute(query),
+      error => error instanceof Error && !(error instanceof ApiError));
+  });
+}
+
+for (const field of ["station_id", "name", "latitude", "longitude"]) {
+  test(`station search rejects a station missing ${field}`, async () => {
+    const api = createApi(async () => Response.json([{ ...central, [field]: undefined }]));
+
+    await assert.rejects(() => api.listStations("Central"),
+      error => error instanceof Error && !(error instanceof ApiError));
+  });
+}
+
+for (const [description, payload] of [
+  ["missing service date", { ...completeResponse, service_date: undefined }],
+  ["unknown status", { ...completeResponse, status: "ready" }],
+  ["endpoint without ID", { ...completeResponse, origin: { ...central, station_id: undefined } }],
+  ["no-route endpoint without name", { ...completeResponse, status: "no-route", route: null,
+    destination: { ...destination, name: undefined } }],
+  ["step station without name", { ...completeResponse, route: { ...completeRoute,
+    steps: [{ ...completeStep, destination: { ...destination, name: undefined } }] } }],
+]) {
+  test(`route search rejects ${description} as an ordinary error`, async () => {
+    const api = createApi(async () => Response.json(payload));
+
+    await assert.rejects(() => api.searchRoute(query),
+      error => error instanceof Error && !(error instanceof ApiError));
+  });
+}
+
+for (const field of ["route_id", "vehicle_type", "departure_time", "arrival_time", "waiting_seconds", "travel_seconds", "distance_km"]) {
+  test(`route search rejects a step missing ${field}`, async () => {
+    const api = createApi(async () => Response.json({ ...completeResponse,
+      route: { ...completeRoute, steps: [{ ...completeStep, [field]: undefined }] },
+    }));
+
+    await assert.rejects(() => api.searchRoute(query),
+      error => error instanceof Error && !(error instanceof ApiError));
+  });
+}
