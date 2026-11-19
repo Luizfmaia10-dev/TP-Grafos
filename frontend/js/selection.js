@@ -1,5 +1,3 @@
-import { DEMO_STATIONS } from "./demo-data.js";
-
 export function createSelection() {
   return {
     originId: null,
@@ -31,10 +29,12 @@ export function normalizeDepartureTime(value) {
 
 export function validateSelection(selection) {
   const errors = {};
-  const origin = DEMO_STATIONS.find(station =>
-    station.stationId === selection.originId && station.label === selection.originText);
-  const destination = DEMO_STATIONS.find(station =>
-    station.stationId === selection.destinationId && station.label === selection.destinationText);
+  const origin = selection.originId != null && selection.originText.trim()
+    ? { stationId: selection.originId }
+    : null;
+  const destination = selection.destinationId != null && selection.destinationText.trim()
+    ? { stationId: selection.destinationId }
+    : null;
   const departureTime = normalizeDepartureTime(selection.departureTime);
 
   if (!origin) errors.origin = "Escolha uma parada da lista ou do mapa.";
@@ -50,16 +50,4 @@ export function validateSelection(selection) {
     ? { originId: origin.stationId, destinationId: destination.stationId, departureTime }
     : null;
   return { errors, query };
-}
-
-function normalizeSearch(value) {
-  return value.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("pt-BR").trim();
-}
-
-export function searchStations(text) {
-  const query = normalizeSearch(text);
-  return DEMO_STATIONS.filter(station => {
-    const searchableText = `${station.name} ${station.label} ${station.shortName}`;
-    return normalizeSearch(searchableText).includes(query);
-  });
 }

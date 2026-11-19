@@ -1,28 +1,36 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { DEMO_STATIONS } from "../js/demo-data.js";
 import {
   createSelection,
   editStation,
   normalizeDepartureTime,
-  searchStations,
   selectStation,
   validateSelection,
 } from "../js/selection.js";
 
-const [pampulha, rio, parana] = DEMO_STATIONS;
+const pampulha = { stationId: "remote-42", label: "Terminal Norte" };
+const rio = { stationId: "remote-43", label: "Terminal Sul" };
+const parana = { stationId: "remote-44", label: "Terminal Leste" };
 
 function readySelection() {
   let state = selectStation(createSelection(), "origin", pampulha);
   return selectStation(state, "destination", parana);
 }
 
-test("a new query requires both selected station IDs", () => {
+test("a query requires confirmed IDs and non-empty labels for both stations", () => {
   const result = validateSelection(createSelection());
   assert.equal(result.query, null);
   assert.ok(result.errors.origin);
   assert.ok(result.errors.destination);
   assert.equal(result.errors.departureTime, undefined);
+
+  for (const field of ["origin", "destination"]) {
+    for (const change of [{ [`${field}Id`]: null }, { [`${field}Text`]: " \t " }]) {
+      const invalid = validateSelection({ ...readySelection(), ...change });
+      assert.equal(invalid.query, null);
+      assert.deepEqual(Object.keys(invalid.errors), [field]);
+    }
+  }
 });
 
 test("choosing a station stores its ID and display label", () => {
@@ -64,16 +72,15 @@ test("matching IDs are rejected for origin and destination", () => {
   const result = validateSelection(state);
   assert.equal(result.query, null);
   assert.ok(result.errors.destination);
+  assert.equal(result.errors.origin, undefined);
 });
 
-test("a stale ID cannot validate a different label", () => {
-  const state = { ...readySelection(), originText: rio.label };
-  assert.ok(validateSelection(state).errors.origin);
-});
-
-test("unknown station IDs are rejected", () => {
-  const state = { ...readySelection(), originId: "not-in-the-sample" };
-  assert.equal(validateSelection(state).query, null);
+test("an API station outside the demonstration catalog validates after selection", () => {
+  let state = selectStation(createSelection(), "origin", pampulha);
+  state = selectStation(state, "destination", rio);
+  assert.deepEqual(validateSelection(state).query, {
+    originId: "remote-42", destinationId: "remote-43", departureTime: "07:45",
+  });
 });
 
 test("a valid query contains selected IDs and a minute-only departure", () => {
@@ -114,25 +121,3 @@ for (const input of [
     assert.equal(normalizeDepartureTime(input), null);
   });
 }
-
-test("a blank station search returns the available sample stops", () => {
-  assert.deepEqual(searchStations(""), DEMO_STATIONS);
-});
-
-test("station searches ignore accents and letter case", () => {
-  assert.deepEqual(searchStations("  ESTACAO PAMPULHA  "), [pampulha]);
-  assert.deepEqual(searchStations("avenida paraná"), [parana]);
-});
-
-test("station searches include platform and abbreviated display names", () => {
-  assert.deepEqual(searchStations("G4"), [pampulha]);
-  assert.deepEqual(searchStations("Av. Parana"), [parana]);
-});
-
-test("a shared station term can return several options", () => {
-  assert.deepEqual(searchStations("Estação"), [pampulha, rio]);
-});
-
-test("a station outside the sample returns no options", () => {
-  assert.deepEqual(searchStations("Estação São Gabriel"), []);
-});
