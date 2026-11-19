@@ -88,6 +88,7 @@ export function createStationMap(container, onSelect) {
       line.setAttribute("points", segment.points);
       line.setAttribute("class", `${className} route-segment--${segment.mode}`);
       line.setAttribute("fill", "none");
+      line.setAttribute("stroke-linecap", segment.mode === "walk" ? "butt" : "round");
       return line;
     })));
     document.querySelector("#map-key-station").hidden = Boolean(result);

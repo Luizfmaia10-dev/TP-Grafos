@@ -144,6 +144,9 @@ test("map creates safe SVG lines per modal and resets route and legend", t => {
   assert.deepEqual(route.children.map(line => line.attributes.points), [
     "0,0 960,0", "0,0 960,0", "960,0 960,780", "960,0 960,780", "960,780 0,780", "960,780 0,780",
   ]);
+  assert.deepEqual(route.children.map(line => line.attributes["stroke-linecap"]), [
+    "round", "round", "round", "round", "butt", "butt",
+  ]);
   assert.ok(route.children.every(line => line.tagName === "polyline"
     && line.namespaceURI === "http://www.w3.org/2000/svg" && line.attributes.fill === "none"));
   assert.deepEqual(find("#map-key-route").children.map(item => item.dataset.mode), ["bus", "subway", "walk"]);
