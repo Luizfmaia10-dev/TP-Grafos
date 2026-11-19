@@ -584,6 +584,15 @@
     border-radius: 11px;
     border: 1px solid var(--color-rg-control);
     background: var(--color-rg-field);
+    transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  }
+
+  @media (hover: hover) {
+    .field-control:where(:not(:has(:disabled))):hover {
+      border-color: color-mix(in srgb, var(--color-rg-purple) 68%, var(--color-rg-control));
+      background: color-mix(in srgb, var(--color-rg-soft-purple) 72%, var(--color-rg-field));
+      box-shadow: 0 5px 16px rgb(117 57 145 / 12%);
+    }
   }
 
   .field-control:focus-within {
@@ -625,10 +634,17 @@
   }
 
   .clock-button {
-    width: 2.75rem;
-    height: 2.75rem;
-    margin-left: -8px;
+    width: auto;
+    min-width: 6.75rem;
+    height: 2.25rem;
+    gap: 7px;
+    padding: 0 10px;
     border-radius: 9px;
+    border: 1px solid color-mix(in srgb, var(--color-rg-purple) 62%, var(--color-rg-control));
+    background: var(--color-rg-soft-purple);
+    color: var(--color-rg-purple);
+    font-size: 0.75rem;
+    font-weight: 700;
     cursor: pointer;
   }
 
@@ -639,7 +655,16 @@
 
   .clock-button:hover,
   .clock-button[aria-expanded="true"] {
-    background: var(--color-rg-soft-purple);
+    border-color: var(--color-rg-purple);
+    background: var(--color-rg-purple);
+    color: white;
+    box-shadow: 0 4px 12px rgb(117 57 145 / 20%);
+  }
+
+  .clock-button:hover img,
+  .clock-button[aria-expanded="true"] img {
+    filter: brightness(0) invert(1);
+    opacity: 1;
   }
 
   .time-picker {
@@ -689,24 +714,11 @@
     align-items: center;
     gap: 8px;
     margin: 14px 0;
+    padding: 8px;
     overflow: hidden;
     border: 1px solid var(--color-rg-line);
     border-radius: 13px;
     background: var(--color-rg-field);
-  }
-
-  .time-wheels::after {
-    position: absolute;
-    z-index: 0;
-    top: 50%;
-    right: 8px;
-    left: 8px;
-    height: 2.25rem;
-    transform: translateY(-50%);
-    border-radius: 9px;
-    background: var(--color-rg-soft-purple);
-    content: "";
-    pointer-events: none;
   }
 
   .time-wheel-group,
@@ -716,23 +728,43 @@
   }
 
   .time-wheel-group {
+    position: relative;
     min-width: 0;
   }
 
-  .time-wheel-label {
+  .time-wheel-group::after {
     position: absolute;
+    z-index: 0;
+    top: 7rem;
+    right: 0;
+    left: 0;
+    height: 2.25rem;
+    transform: translateY(-50%);
+    border-radius: 9px;
+    background: var(--color-rg-soft-purple);
+    content: "";
+    pointer-events: none;
+  }
+
+  .time-wheel-label {
+    position: relative;
     z-index: 2;
-    top: 7px;
-    left: 50%;
-    transform: translateX(-50%);
+    display: block;
+    height: 1.75rem;
+    margin-bottom: 0.75rem;
+    padding-top: 3px;
+    background: var(--color-rg-field);
+    text-align: center;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     pointer-events: none;
   }
 
   .time-wheel {
-    height: 11.25rem;
-    padding-block: 4.5rem;
+    position: relative;
+    z-index: 1;
+    height: 9rem;
+    padding-block: 3.375rem;
     overflow-y: auto;
     scroll-snap-type: y mandatory;
     scrollbar-width: none;
@@ -755,6 +787,13 @@
     transition: color 140ms ease, opacity 140ms ease, transform 140ms ease;
   }
 
+  @media (hover: hover) {
+    .time-wheel-option:hover {
+      color: var(--color-rg-purple);
+      opacity: 1;
+    }
+  }
+
   .time-wheel-option[data-selected="true"] {
     color: var(--color-rg-ink);
     font-weight: 700;
@@ -763,6 +802,7 @@
   }
 
   .time-wheel-separator {
+    margin-top: 2.5rem;
     color: var(--color-rg-purple);
     font-size: 1.25rem;
     font-weight: 700;
@@ -775,6 +815,7 @@
     font-size: 0.8125rem;
     font-weight: 650;
     cursor: pointer;
+    transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
   }
 
   .time-picker-cancel {
@@ -784,6 +825,18 @@
   .time-picker-apply {
     background: var(--color-rg-purple);
     color: white;
+  }
+
+  @media (hover: hover) {
+    .time-picker-cancel:hover {
+      background: var(--color-rg-soft-purple);
+      color: var(--color-rg-purple);
+    }
+
+    .time-picker-apply:hover {
+      background: color-mix(in srgb, var(--color-rg-purple) 86%, black);
+      box-shadow: 0 5px 14px rgb(117 57 145 / 24%);
+    }
   }
 
   @keyframes time-picker-enter {
@@ -832,6 +885,7 @@
     padding: 9px 10px;
     border-radius: 7px;
     cursor: pointer;
+    transition: background-color 160ms ease, box-shadow 160ms ease;
   }
 
   .station-option:hover,
@@ -981,6 +1035,12 @@
     }
 
     .time-wheel-option {
+      transition: none;
+    }
+
+    .field-control,
+    .station-option,
+    .time-picker-actions button {
       transition: none;
     }
   }
