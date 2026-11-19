@@ -20,6 +20,7 @@ coverage.xml
 *.cover
 .playwright-cli/
 .taste-skill/
+.worktrees/
 
 # Data Caches
 data/cache/*
