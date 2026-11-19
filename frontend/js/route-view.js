@@ -5,6 +5,40 @@ export function formatDuration(seconds) {
   return `${minutes} min${remainder ? ` ${remainder} s` : ""}`;
 }
 
+const MODALS = {
+  BUS: { kind: "bus", label: "Ônibus" },
+  SUBWAY: { kind: "subway", label: "Metrô" },
+  WALK: { kind: "walk", label: "Caminhada" },
+};
+
+export function buildTimelineEntries(result) {
+  const entries = [{
+    kind: "origin", time: result.query.departureTime, station: result.origin,
+    title: result.origin.name, description: "Início da viagem",
+  }];
+  let instructionIndex = 0;
+  for (const step of result.steps) {
+    if (step.waitingSeconds > 0) {
+      entries.push({
+        kind: "wait", time: step.departureTime, station: step.origin,
+        title: `Espera · ${formatDuration(step.waitingSeconds)}`,
+        description: result.instructions[instructionIndex++],
+      });
+    }
+    const modal = MODALS[step.vehicleType];
+    entries.push({
+      ...step, ...modal, time: step.departureTime, station: step.origin,
+      title: modal.kind === "walk" ? modal.label : `${modal.label} · ${step.routeId}`,
+      description: result.instructions[instructionIndex++],
+    });
+  }
+  entries.push({
+    kind: "destination", time: result.arrivalTime, station: result.destination,
+    title: result.destination.name, description: "Chegada ao destino",
+  });
+  return entries;
+}
+
 function timelineStep(time, station, title, description, kind) {
   const row = document.createElement("li");
   row.className = `itinerary-step itinerary-step--${kind}`;
@@ -12,7 +46,9 @@ function timelineStep(time, station, title, description, kind) {
   const clock = document.createElement("span");
   clock.className = "step-time font-mono";
   // GTFS service-day hours can exceed 23, unlike an HTML time datetime value.
-  clock.textContent = time;
+  clock.textContent = time.replace(/^(\d+:\d{2}):\d{2}$/, "$1");
+  clock.title = time;
+  clock.setAttribute("aria-label", time);
   const marker = document.createElement("span");
   marker.className = "step-marker font-mono";
   marker.setAttribute("aria-hidden", "true");
@@ -35,27 +71,18 @@ export function renderRoute(result) {
   total.textContent = Math.round(result.totalSeconds / 60);
   document.querySelector("#exact-total").textContent = `Tempo total exato: ${formatDuration(result.totalSeconds)}.`;
   const arrival = document.querySelector("#arrival-time");
-  arrival.textContent = result.arrivalTime.slice(0, -3);
+  arrival.textContent = result.arrivalTime.replace(/^(\d+:\d{2}):\d{2}$/, "$1");
   document.querySelector("#exact-arrival").textContent = result.arrivalTime;
   arrival.title = result.arrivalTime;
   document.querySelector("#waiting-duration").textContent = `${formatDuration(result.waitingSeconds)} de espera`;
-  document.querySelector("#vehicle-duration").textContent = `${formatDuration(result.vehicleSeconds)} no ônibus`;
+  document.querySelector("#vehicle-duration").textContent = `${formatDuration(result.travelSeconds)} em deslocamento`;
   document.querySelector("#waiting-proportion").style.width = `${result.waitingSeconds / result.totalSeconds * 100}%`;
   document.querySelector("#route-distance").textContent = `≈ ${result.distanceKm.toLocaleString("pt-BR", {
     minimumFractionDigits: 1, maximumFractionDigits: 1,
   })} km`;
 
-  const origin = result.stops[0];
-  const destination = result.stops.at(-1);
-  const steps = [
-    timelineStep(result.query.departureTime, origin, origin.mapName,
-      `Chegue à plataforma ${origin.platform}`, "origin"),
-    timelineStep(result.boardingTime, origin, `Embarque na linha ${result.routeShortName}`,
-      "Ônibus · sentido Centro", "boarding"),
-    ...result.stops.slice(1, -1).map(stop => timelineStep(stop.arrivalTime, stop,
-      stop.mapName, `Passagem pela plataforma ${stop.platform}`, "intermediate")),
-    timelineStep(result.arrivalTime, destination, destination.mapName,
-      `Desembarque · ${destination.district}`, "destination"),
-  ];
+  const steps = buildTimelineEntries(result).map(entry => timelineStep(
+    entry.time, entry.station, entry.title, entry.description, entry.kind,
+  ));
   document.querySelector("#itinerary-steps").replaceChildren(...steps);
 }

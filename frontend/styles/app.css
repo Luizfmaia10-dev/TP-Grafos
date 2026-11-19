@@ -457,6 +457,7 @@
   }
 
   .itinerary-step {
+    --step-color: var(--color-rg-bus);
     position: relative;
     display: grid;
     --step-gap: 9px;
@@ -472,13 +473,29 @@
     top: 13px;
     bottom: -13px;
     left: calc(4rem + var(--step-gap) + 0.65625rem - 1px);
-    width: 2px;
-    background: var(--color-rg-bus);
+    border-left: 2px solid var(--step-color);
     content: "";
   }
 
-  .itinerary-step--origin::before {
-    background: var(--color-rg-yellow);
+  .itinerary-step--origin,
+  .itinerary-step--wait {
+    --step-color: var(--color-rg-yellow);
+  }
+
+  .itinerary-step--bus {
+    --step-color: var(--color-rg-bus);
+  }
+
+  .itinerary-step--subway {
+    --step-color: var(--color-rg-metro);
+  }
+
+  .itinerary-step--walk {
+    --step-color: var(--color-rg-walk);
+  }
+
+  .itinerary-step--walk::before {
+    border-left-style: dashed;
   }
 
   .itinerary-step:last-child::before {
@@ -501,7 +518,7 @@
     width: 10px;
     height: 10px;
     margin-top: 6px;
-    border: 2px solid var(--color-rg-bus);
+    border: 2px solid var(--step-color);
     border-radius: 50%;
     background: var(--color-rg-surface);
     font-size: 0.625rem;
