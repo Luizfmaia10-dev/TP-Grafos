@@ -1069,6 +1069,8 @@
   }
 
   .map-panel {
+    --map-backdrop-image: url("/assets/maps/network-desktop.svg");
+
     position: relative;
     grid-area: map;
     width: 100%;
@@ -1076,6 +1078,27 @@
     border-radius: 21px;
     container-type: size;
     container-name: network;
+  }
+
+  .map-panel::before {
+    position: absolute;
+    inset: -24px;
+    background-image:
+      linear-gradient(rgb(25 55 84 / 70%) 2px, transparent 2px),
+      linear-gradient(90deg, rgb(25 55 84 / 70%) 2px, transparent 2px),
+      var(--map-backdrop-image);
+    background-position: center;
+    background-repeat: repeat, repeat, no-repeat;
+    background-size: 36px 36px, 36px 36px, cover;
+    content: "";
+    filter: blur(8px) saturate(0.82);
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(1.06);
+  }
+
+  .map-panel[data-route-result="true"]::before {
+    opacity: 1;
   }
 
   /* Keep the exported SVG and all location labels in the same coordinate plane. */
@@ -1576,11 +1599,15 @@
     }
 
     .map-panel {
+      --map-backdrop-image: url("/assets/maps/network-mobile.svg");
+
       height: auto;
       min-height: 16rem;
       aspect-ratio: 358 / 256;
       border-radius: 16px;
     }
+
+    .map-panel::before { background-size: 24px 24px, 24px 24px, cover; }
 
     .map-heading {
       top: 11px;
