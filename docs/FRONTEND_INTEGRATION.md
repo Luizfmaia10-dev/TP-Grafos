@@ -44,8 +44,16 @@ acessíveis. O dia de serviço aparece no resultado.
 
 O mapa mantém a união das paradas consultadas, selecionadas e presentes no
 trajeto. Cada passo gera um segmento SVG: ônibus vermelho, metrô azul e
-caminhada cinza tracejada. A projeção usa o recorte esquemático de Belo Horizonte;
-não representa a geometria das ruas e pontos fora do recorte podem não aparecer.
+caminhada cinza tracejada. A projeção é esquemática e não representa ruas.
+Rotas contidas no recorte original preservam exatamente o `viewBox` lógico base
+(`0 0 960 780` no desktop e `0 0 358 256` no celular). Quando um ponto fica fora
+dele, o viewport expande com margem e mantém a proporção do layout. Em todo
+resultado, a camada física cabe no painel com espaço para os marcadores
+completos. Uma extensão desfocada e não interativa do mapa preenche o espaço
+externo, evitando faixas livres sem deformar ou recortar a camada principal.
+Fundo, segmentos SVG e marcadores usam a mesma transformação, inclusive após
+redimensionar entre desktop e celular. Editar ou limpar a busca restaura o
+viewport base e o dimensionamento cover da busca sem resultado.
 Selecionar pontos arbitrários ainda depende de uma futura API de encaixe na rede.
 
 ## Estados e cancelamento
@@ -78,3 +86,8 @@ O smoke de aceitação deve cobrir desktop e celular, sugestões e carregamento,
 envio em HH:MM, rota multimodal, edição/cancelamento, ausência de caminho,
 indisponibilidade, teclado, tema e limpeza de campos. Os testes automatizados
 usam dados sintéticos; a rede completa requer os arquivos GTFS reais via Git LFS.
+
+Confira também uma rota dentro do recorte base e uma fora dele, verificando
+visibilidade integral e alinhamento de fundo, marcadores e segmentos após
+redimensionar. No feed de `2026-11-17`, o caso de referência é `15140072` para
+`14788235` às `04:14`. Ao editar, o mapa deve voltar ao recorte original.

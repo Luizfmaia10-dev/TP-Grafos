@@ -1,22 +1,26 @@
 # RotasGraph - frontend
 
-Interface responsiva em HTML/Tailwind e JavaScript nativo, servida pelo FastAPI.
-O modo atual demonstra tres paradas de uma viagem da linha 50. Horarios fixos
-e mapa esquematico; a consulta ainda usa a amostra local.
+Interface responsiva em HTML/Tailwind e JavaScript nativo, servida pelo FastAPI
+na mesma origem dos endpoints `GET /stations` e `POST /routes/search`.
+A busca usa a rede GTFS do dia de serviço configurado e apresenta resumo,
+timeline e segmentos SVG por modal sobre o mapa esquemático de Belo Horizonte.
 
-## Abrir a demonstracao
+## Executar
 
-Na raiz do repositorio, com o ambiente Python do projeto ativo e suas
-dependencias instaladas:
+Na raiz do repositório, com o ambiente Python do projeto ativo, obtenha os
+arquivos GTFS completos via Git LFS conforme [o guia do dataset](../data/gtfs/README.md).
+Configure a pasta e a data de serviço antes de iniciar:
 
 ```powershell
 python -m pip install -r backend/requirements.txt
+$env:GTFS_DIR = "$PWD/data/gtfs"
+$env:GTFS_SERVICE_DATE = "2026-11-17"
 python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000
 ```
 
-Abra http://127.0.0.1:8000/. Use Ctrl+C para encerrar o servidor.
-CSS, fontes e SVGs ja estao versionados; a demonstracao usa recursos locais.
-O frontend nao precisa carregar o GTFS completo para executar esse exemplo.
+Abra http://127.0.0.1:8000/. Use Ctrl+C para encerrar o servidor. Escolha uma
+data atendida pelo feed disponível. Sem `GTFS_SERVICE_DATE`, a interface abre,
+mas as consultas indicam rede indisponível. CSS, fontes e SVGs são locais.
 
 ## Build e testes
 
@@ -31,16 +35,15 @@ npm.cmd run check:server
 ```
 
 Em Linux/macOS, use npm no lugar de npm.cmd. npm ci instala as versoes do
-lockfile. npm test executa 88 testes independentes do servidor. npm run build
+lockfile. npm test executa a suíte independente do servidor. npm run build
 copia as fontes e compila styles/app.css para assets/app.css; edite o arquivo
 de origem. npm run watch:css acompanha mudancas de estilo durante a edicao.
 
 check:server exige o FastAPI aberto no primeiro terminal. Usa o executor de
 testes e o fetch do Node, sem dependencias novas: verifica /health, HTML,
 imports JavaScript, imagens, fontes do CSS, tipos HTTP e arquivos ausentes.
-Os 35 testes incluem 29 URLs distintas de recursos. O script percorre imports
-estaticos e atribuicoes literais de imagens dos modulos atuais; ele complementa
-a verificacao dos fluxos no navegador.
+O script percorre imports estaticos e atribuicoes literais de imagens dos modulos
+atuais; ele complementa a verificacao dos fluxos no navegador.
 
 Para outra porta, no PowerShell:
 
@@ -58,29 +61,29 @@ python -m pytest -c backend/pytest.ini backend/tests
 
 ## Roteiro de conferencia
 
-1. Use Experimente a linha 50 e Calcular trajeto. As 07:45, confira espera
-   de 6 min, onibus de 29 min 16 s, total exato de 35 min 16 s e chegada 08:20:16.
-2. Edite a busca: as paradas e o horario devem permanecer, sem o trajeto antigo.
-3. Digite 0751 para conferir a mascara ou abra o seletor em roda pelo relogio.
-   Compare 07:52 e 25:00, ambos sem partida na amostra. Segundos nao sao aceitos.
-4. Inverta as paradas para conferir o limite do exemplo. Um nome digitado
-   precisa ser confirmado por uma sugestao ou pelo mapa para obter o ID.
-5. Consulte e edite rapidamente uma parada ou o horario durante o carregamento;
-   o resultado cancelado nao deve substituir a selecao nova.
-6. Alterne o tema no cabecalho e recarregue a pagina para conferir a escolha
-   salva. Repita com movimento reduzido ativado no sistema.
+1. Pesquise origem e destino por nome ou ID. Confira carregamento e sugestões
+   de `GET /stations`; confirme cada parada pela sugestão ou pelo mapa.
+2. Informe a partida em `HH:MM`, sem segundos, e calcule. Confira o
+   `POST /routes/search`, o estado de carregamento e o bloqueio de envio duplicado.
+   Horas acima de 24 continuam no mesmo dia de serviço.
+3. Em um resultado encontrado, confira dia de serviço, resumo, esperas e passos
+   da timeline. No mapa, ônibus usa vermelho, metrô azul e caminhada cinza
+   tracejada, conforme os modais retornados pela API.
+4. Confira uma rota dentro do recorte original e outra fora dele. A primeira
+   mantém o `viewBox` lógico base; a segunda expande o viewport com margem e
+   preserva a proporção. Em todo resultado, a camada física cabe no painel com
+   os marcadores completos; uma extensão desfocada do próprio mapa preenche o
+   espaço externo sem deformar a camada principal. Fundo, segmentos e marcadores
+   permanecem alinhados. Para o feed de `2026-11-17`, use também `15140072` para
+   `14788235` às `04:14`; revalide os IDs ao atualizar o dataset.
+5. Edite ou limpe a busca: a rota desaparece e o mapa restaura o viewport base e
+   o dimensionamento cover.
+   Edite também durante o carregamento; uma resposta antiga não deve substituir
+   a seleção nova. Confira ausência de caminho e rede indisponível.
+6. Use teclado, máscara e seletor de horário, limpeza de campos e tema salvo.
+   Repita com movimento reduzido ativado no sistema.
 7. Confira desktop e celular (1440, 390 e 360 px), redimensione com o resultado
-   aberto e amplie o texto. Horarios e nomes devem continuar legiveis.
+   aberto e amplie o texto. Rota, horários e nomes devem continuar legíveis.
 
-## Procedencia e proximos passos
-
-O exemplo usa route_id 561929, trip_id 2662438S307679P075100 e service_id 307679,
-da base inicial do projeto. Nao atribui um dia da semana a esse servico.
-A distancia e uma soma Haversine aproximada entre paradas, sem seguir ruas.
-
-O dataset da main foi atualizado depois da base dessa demonstracao. Os IDs e
-horarios precisam ser revalidados para a data e o feed usados pela API real.
-Fontes, coordenadas, horarios e verificacoes estao no
-[plano do frontend](../docs/FRONTEND_PLAN.md). A passagem para endpoints,
-Itinerary, calendario e multiplos modais esta no
-[guia de integracao da #32](../docs/FRONTEND_INTEGRATION.md).
+O mapa conecta paradas de forma esquemática e não representa ruas. Contratos,
+estados e limites estão no [guia de integração](../docs/FRONTEND_INTEGRATION.md).
