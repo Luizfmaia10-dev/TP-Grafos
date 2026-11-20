@@ -14,6 +14,38 @@ export function projectStation(station, layout) {
   };
 }
 
+export function fitRouteViewport(steps, layout, padding = 24) {
+  const { width, height } = MAP_LAYOUTS[layout];
+  const base = { x: 0, y: 0, width, height };
+  if (steps.length === 0) return base;
+  let left = Infinity;
+  let top = Infinity;
+  let right = -Infinity;
+  let bottom = -Infinity;
+  for (const step of steps) {
+    for (const station of [step.origin, step.destination]) {
+      const point = projectStation(station, layout);
+      left = Math.min(left, point.x);
+      top = Math.min(top, point.y);
+      right = Math.max(right, point.x);
+      bottom = Math.max(bottom, point.y);
+    }
+  }
+  if (left >= 0 && top >= 0 && right <= width && bottom <= height) return base;
+  left = Math.min(0, left - padding);
+  top = Math.min(0, top - padding);
+  right = Math.max(width, right + padding);
+  bottom = Math.max(height, bottom + padding);
+  const fittedWidth = Math.max(right - left, (bottom - top) * width / height);
+  const fittedHeight = fittedWidth * height / width;
+  return {
+    x: left - (fittedWidth - (right - left)) / 2,
+    y: top - (fittedHeight - (bottom - top)) / 2,
+    width: fittedWidth,
+    height: fittedHeight,
+  };
+}
+
 export function buildRouteSegments(steps, layout) {
   return steps.map(step => ({
     mode: step.vehicleType.toLowerCase(),
@@ -87,12 +119,29 @@ export function createStationMap(container, onSelect) {
     const { selection, activeField, result } = view;
     const layout = window.matchMedia("(width < 960px)").matches ? "mobile" : "desktop";
     const size = MAP_LAYOUTS[layout];
-    const scale = layer.clientWidth / size.width;
-    layer.querySelector(`.network-image--${layout}`).style.transform = `scale(${scale})`;
+    const steps = result?.steps ?? [];
+    const viewport = fitRouteViewport(steps, layout);
+    const panelElement = layer.parentElement;
+    panelElement.dataset.routeResult = String(Boolean(result));
+    const panel = panelElement.getBoundingClientRect();
+    const markerSize = result ? controls.reduce((maximum, { button }) => {
+      const marker = button.getBoundingClientRect();
+      return Math.max(maximum, marker.width, marker.height);
+    }, 0) : 0;
+    const layerScale = Math.min((panel.width - markerSize) / size.width, (panel.height - markerSize) / size.height);
+    // Reserve half a marker on every side of the contained coordinate plane.
+    layer.style.width = result ? `${size.width * layerScale}px` : "";
+    layer.style.height = result ? `${size.height * layerScale}px` : "";
+    const scale = layer.clientWidth / viewport.width;
+    const backgroundScale = size.width / viewport.width;
+    const background = layer.querySelector(".network-background");
+    background.style.transformOrigin = "top left";
+    background.style.transform = `matrix(${backgroundScale}, 0, 0, ${backgroundScale}, ${-viewport.x * scale}, ${-viewport.y * scale})`;
+    layer.querySelector(`.network-image--${layout}`).style.transform = `scale(${layer.clientWidth / size.width})`;
     const route = document.querySelector("#map-route");
     const legend = document.querySelector("#map-key-route");
-    const segments = buildRouteSegments(result?.steps ?? [], layout);
-    route.setAttribute("viewBox", `0 0 ${size.width} ${size.height}`);
+    const segments = buildRouteSegments(steps, layout);
+    route.setAttribute("viewBox", `${viewport.x} ${viewport.y} ${viewport.width} ${viewport.height}`);
     route.toggleAttribute("hidden", !result);
     route.replaceChildren(...segments.flatMap(segment => ["route-glow", "route-line"].map(className => {
       const line = route.ownerDocument.createElementNS("http://www.w3.org/2000/svg", "polyline");
@@ -132,8 +181,8 @@ export function createStationMap(container, onSelect) {
     container.dataset.dense = String(dense);
     for (const { station, button, point, letter, label, desktopName, mobileName } of controls) {
       const position = projectStation(station, layout);
-      button.style.left = `${position.x * 100 / size.width}%`;
-      button.style.top = `${position.y * 100 / size.height}%`;
+      button.style.left = `${(position.x - viewport.x) * 100 / viewport.width}%`;
+      button.style.top = `${(position.y - viewport.y) * 100 / viewport.height}%`;
       const isOrigin = station.stationId === selection.originId;
       const isDestination = station.stationId === selection.destinationId;
       const selected = isOrigin || isDestination;
@@ -160,7 +209,6 @@ export function createStationMap(container, onSelect) {
       label.style.transform = "";
     }
     // Keep labels inside the visible crop without moving their geographic vertices.
-    const panel = layer.parentElement.getBoundingClientRect();
     const placed = [];
     for (const { label } of controls) {
       if (label.getClientRects().length === 0) continue;
