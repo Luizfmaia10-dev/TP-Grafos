@@ -339,11 +339,17 @@ for (const event of ["input", "blur"]) {
   });
 }
 
+let pointerDownOutsideOptions = null;
 document.addEventListener("pointerdown", event => {
-  if (openField && shouldCloseStationOptions(fields[openField].wrapper, event.target)) closeOptions();
+  pointerDownOutsideOptions = openField && shouldCloseStationOptions(fields[openField].wrapper, event.target) ? openField : null;
 });
+document.addEventListener("click", () => {
+  if (pointerDownOutsideOptions && openField === pointerDownOutsideOptions) closeOptions();
+  pointerDownOutsideOptions = null;
+});
+document.addEventListener("pointercancel", () => { pointerDownOutsideOptions = null; });
 document.addEventListener("focusin", event => {
-  if (openField && shouldCloseStationOptions(fields[openField].wrapper, event.target)) closeOptions();
+  if (!pointerDownOutsideOptions && openField && shouldCloseStationOptions(fields[openField].wrapper, event.target)) closeOptions();
 });
 
 form.addEventListener("submit", event => {

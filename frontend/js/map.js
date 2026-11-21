@@ -67,6 +67,45 @@ export function currentMapStations(previous, suggestions, selection, result) {
   ].map(station => [station.stationId, station])).values()];
 }
 
+/** Rectangles may include a selection role and the geographic marker's rectangle. */
+export function calculateLabelTranslations(panelRect, labelRects, { padding = 12, gap = 14 } = {}) {
+  const translations = new Array(labelRects.length);
+  const placed = [];
+  const priority = role => role === "origin" || role === "both" ? 0 : role === "destination" ? 1 : 2;
+  const ordered = labelRects.map((rect, index) => ({ rect, index }))
+    .sort((a, b) => priority(a.rect.role) - priority(b.rect.role));
+  for (const { rect, index } of ordered) {
+    const width = rect.right - rect.left;
+    const height = rect.bottom - rect.top;
+    const clampX = left => Math.max(panelRect.left + padding, Math.min(left, panelRect.right - padding - width));
+    const clampY = top => Math.max(panelRect.top + padding, Math.min(top, panelRect.bottom - padding - height));
+    let preferredTop = rect.top;
+    if (rect.markerRect) {
+      if (rect.role === "origin" || rect.role === "both") preferredTop = rect.markerRect.top - gap - height;
+      if (rect.role === "destination") preferredTop = rect.markerRect.bottom + gap;
+    }
+    const preferred = { left: clampX(rect.left), top: clampY(preferredTop) };
+    const xs = new Set([preferred.left]);
+    const ys = new Set([preferred.top]);
+    for (const previous of placed) {
+      xs.add(clampX(previous.left - gap - width));
+      xs.add(clampX(previous.right + gap));
+      ys.add(clampY(previous.top - gap - height));
+      ys.add(clampY(previous.bottom + gap));
+    }
+    const candidates = [...xs].flatMap(left => [...ys].map(top => ({ left, top })))
+      .sort((a, b) => (Math.abs(a.left - preferred.left) + Math.abs(a.top - preferred.top))
+        - (Math.abs(b.left - preferred.left) + Math.abs(b.top - preferred.top)));
+    // Containment wins if the visible labels cannot all fit with the requested gap.
+    const position = candidates.find(candidate => placed.every(previous =>
+      candidate.left + width + gap <= previous.left || candidate.left >= previous.right + gap
+      || candidate.top + height + gap <= previous.top || candidate.top >= previous.bottom + gap)) ?? preferred;
+    translations[index] = { x: position.left - rect.left, y: position.top - rect.top };
+    placed.push({ ...position, right: position.left + width, bottom: position.top + height });
+  }
+  return translations;
+}
+
 export function createStationMap(container, onSelect) {
   const document = container.ownerDocument;
   let controls = [];
@@ -76,7 +115,10 @@ export function createStationMap(container, onSelect) {
     button.type = "button";
     button.className = "map-station";
     button.dataset.stationId = station.stationId;
-    button.addEventListener("click", () => onSelect(station));
+    button.addEventListener("click", () => {
+      if (view?.result || view?.activeField === null) return;
+      onSelect(station);
+    });
 
     const marker = document.createElement("span");
     marker.className = "map-marker";
@@ -108,11 +150,41 @@ export function createStationMap(container, onSelect) {
     detail.hidden = !station.platform;
     label.append(name, detail);
     button.append(marker, label);
-    return { station, button, point, letter, label, desktopName, mobileName };
+    const control = { station, button, point, letter, label, desktopName, mobileName, hovered: false, focused: false };
+    for (const [event, state, value] of [
+      ["mouseenter", "hovered", true], ["mouseleave", "hovered", false],
+      ["focus", "focused", true], ["blur", "focused", false],
+    ]) {
+      button.addEventListener(event, () => {
+        control[state] = value;
+        positionLabels();
+      });
+    }
+    return control;
   }
 
   const layer = container.parentElement;
   let view = null;
+
+  function positionLabels() {
+    const visible = [];
+    for (const control of controls) {
+      const { button, label, hovered, focused } = control;
+      label.hidden = !button.dataset.selection && !hovered && !focused;
+      label.style.transform = "";
+      if (label.hidden || label.getClientRects().length === 0) continue;
+      const rect = label.getBoundingClientRect();
+      visible.push({ label, rect: {
+        left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom,
+        role: button.dataset.selection, markerRect: button.getBoundingClientRect(),
+      } });
+    }
+    const translations = calculateLabelTranslations(layer.parentElement.getBoundingClientRect(), visible.map(item => item.rect));
+    visible.forEach(({ label }, index) => {
+      const { x, y } = translations[index];
+      label.style.transform = `translate(${x}px, ${y}px)`;
+    });
+  }
 
   function render() {
     if (!view) return;
@@ -193,14 +265,15 @@ export function createStationMap(container, onSelect) {
 
       button.dataset.selection = role;
       button.dataset.onRoute = String(routeStationIds.has(station.stationId));
-      button.disabled = Boolean(result) || activeField === null;
+      button.disabled = !result && activeField === null;
+      button.setAttribute("aria-disabled", String(Boolean(result) || activeField === null));
       button.setAttribute("aria-pressed", String(selected));
       button.setAttribute("aria-label", result
         ? `${station.label}${isOrigin ? ", origem" : isDestination ? ", destino" : ""}`
         : activeField === null
           ? `${station.label}. Escolha primeiro o campo de origem ou destino.`
           : `Selecionar ${station.label} como ${activeField === "origin" ? "origem" : "destino"}`);
-      point.hidden = selected || Boolean(result);
+      point.hidden = selected || (Boolean(result) && routeStationIds.has(station.stationId));
       letter.hidden = !selected;
       letter.textContent = MARKER_LETTERS[role] ?? "";
       const prefix = dense && selected ? `${MARKER_LETTERS[role]} · ` : "";
@@ -208,22 +281,7 @@ export function createStationMap(container, onSelect) {
       mobileName.textContent = prefix + station.shortName;
       label.style.transform = "";
     }
-    // Keep labels inside the visible crop without moving their geographic vertices.
-    const placed = [];
-    for (const { label } of controls) {
-      if (label.getClientRects().length === 0) continue;
-      const rect = label.getBoundingClientRect();
-      const x = Math.max(panel.left + 12 - rect.left, Math.min(0, panel.right - 12 - rect.right));
-      let y = 0;
-      for (const previous of placed) {
-        if (rect.left + x < previous.right + 14 && rect.right + x > previous.left - 14
-          && rect.top + y < previous.bottom + 14 && rect.bottom + y > previous.top - 14) {
-          y = previous.bottom + 14 - rect.top;
-        }
-      }
-      label.style.transform = `translate(${x}px, ${y}px)`;
-      placed.push({ left: rect.left + x, right: rect.right + x, top: rect.top + y, bottom: rect.bottom + y });
-    }
+    positionLabels();
   }
 
   new ResizeObserver(render).observe(layer.parentElement);

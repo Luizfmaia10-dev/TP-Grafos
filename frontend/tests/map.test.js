@@ -9,6 +9,142 @@ const stations = [
   { stationId: "003", longitude: -43.94189701, latitude: -19.9176435 },
 ];
 
+const labelPanel = { left: 100, right: 458, top: 50, bottom: 306 };
+
+function translatedRect(rect, translation) {
+  return {
+    left: rect.left + translation.x, right: rect.right + translation.x,
+    top: rect.top + translation.y, bottom: rect.bottom + translation.y,
+  };
+}
+
+function assertContained(rect, panel = labelPanel) {
+  assert.ok(rect.left >= panel.left + 12 && rect.right <= panel.right - 12);
+  assert.ok(rect.top >= panel.top + 12 && rect.bottom <= panel.bottom - 12);
+}
+
+for (const [edge, rect, expected] of [
+  ["top", { left: 150, right: 250, top: 20, bottom: 64 }, { x: 0, y: 42 }],
+  ["bottom", { left: 150, right: 250, top: 280, bottom: 324 }, { x: 0, y: -30 }],
+  ["left", { left: 80, right: 180, top: 100, bottom: 144 }, { x: 32, y: 0 }],
+  ["right", { left: 400, right: 500, top: 100, bottom: 144 }, { x: -54, y: 0 }],
+]) {
+  test(`label translation contains the ${edge} edge with 12px padding`, () => {
+    assert.equal(typeof mapState.calculateLabelTranslations, "function");
+    const translations = mapState.calculateLabelTranslations(labelPanel, [Object.freeze(rect)]);
+    assert.deepEqual(translations, [expected]);
+    assertContained(translatedRect(rect, translations[0]));
+  });
+}
+
+test("nearby A/B labels prefer above/below their markers regardless of input order", () => {
+  assert.equal(typeof mapState.calculateLabelTranslations, "function");
+  const markerRect = Object.freeze({ left: 220, right: 264, top: 150, bottom: 194 });
+  const labels = ["destination", "origin"].map(role => Object.freeze({
+    left: 250, right: 350, top: 160, bottom: 204, role, markerRect,
+  }));
+  const translations = mapState.calculateLabelTranslations(labelPanel, Object.freeze(labels));
+  const [destination, origin] = labels.map((rect, index) => translatedRect(rect, translations[index]));
+  assert.equal(origin.bottom, 136);
+  assert.equal(destination.top, 208);
+  assertContained(origin);
+  assertContained(destination);
+});
+
+test("colliding A/B labels at the lower edge stay separated inside the panel", () => {
+  assert.equal(typeof mapState.calculateLabelTranslations, "function");
+  const labels = ["origin", "destination"].map(role => ({
+    left: 300, right: 420, top: 280, bottom: 324, role,
+    markerRect: { left: 280, right: 324, top: 260, bottom: 304 },
+  }));
+  const translations = mapState.calculateLabelTranslations(labelPanel, labels);
+  const [origin, destination] = labels.map((rect, index) => translatedRect(rect, translations[index]));
+  assertContained(origin);
+  assertContained(destination);
+  assert.ok(origin.bottom + 14 <= destination.top || destination.bottom + 14 <= origin.top
+    || origin.right + 14 <= destination.left || destination.right + 14 <= origin.left);
+});
+
+test("dense label sets use free space without pushing labels outside the panel", () => {
+  assert.equal(typeof mapState.calculateLabelTranslations, "function");
+  const panel = { left: 0, right: 960, top: 0, bottom: 660 };
+  const labels = Array.from({ length: 20 }, () => ({ left: 400, right: 500, top: 300, bottom: 344 }));
+  const translations = mapState.calculateLabelTranslations(panel, labels);
+  assert.equal(translations.length, 20);
+  const placed = labels.map((rect, index) => translatedRect(rect, translations[index]));
+  placed.forEach((rect, index) => {
+    assertContained(rect, panel);
+    for (const previous of placed.slice(0, index)) {
+      assert.ok(rect.right + 14 <= previous.left || previous.right + 14 <= rect.left
+        || rect.bottom + 14 <= previous.top || previous.bottom + 14 <= rect.top);
+    }
+  });
+  assert.deepEqual(mapState.calculateLabelTranslations(panel, []), []);
+});
+
+test("suggestion labels appear only on hover or focus while A/B remain visible", t => {
+  const { container } = createMapFixture(t);
+  const map = createStationMap(container, () => {});
+  const suggestions = Array.from({ length: 20 }, (_, index) => ({
+    ...routeStations[index % 4], stationId: String(index),
+  }));
+  map.setStations(suggestions);
+  map.update({ originId: "0", destinationId: "1" }, "origin");
+  const labels = container.children.map(button => button.children[1]);
+  assert.deepEqual(labels.map(label => label.hidden), [false, false, ...Array(18).fill(true)]);
+  const button = container.children[2];
+  const position = { ...button.style };
+  const accessibleName = button.attributes["aria-label"];
+  button.events.mouseenter();
+  assert.equal(labels[2].hidden, false);
+  button.events.focus();
+  button.events.mouseleave();
+  assert.equal(labels[2].hidden, false);
+  button.events.blur();
+  assert.equal(labels[2].hidden, true);
+  assert.equal(button.children[0].children[0].hidden, false);
+  assert.equal(button.attributes["aria-label"], accessibleName);
+  assert.ok(accessibleName.includes(suggestions[2].label));
+  assert.deepEqual(button.style, position);
+});
+
+test("unselected suggestions retain their markers alongside a route result", t => {
+  const { container } = createMapFixture(t);
+  const map = createStationMap(container, () => {});
+  const suggestion = { ...routeStations[1], stationId: "suggestion" };
+  map.setStations([...routeStations, suggestion]);
+  map.update(selection, null, result);
+  const button = container.children.at(-1);
+  assert.equal(button.children[0].children[0].hidden, false);
+  assert.equal(button.children[1].hidden, true);
+  assert.equal(button.attributes["aria-label"], suggestion.label);
+  assert.equal(container.children[0].children[1].hidden, false);
+  assert.equal(container.children[3].children[1].hidden, false);
+});
+
+test("route stations allow inspection by focus while blocking selection until editing", t => {
+  const { container } = createMapFixture(t);
+  const selected = [];
+  const map = createStationMap(container, station => selected.push(station.stationId));
+  map.setStations(routeStations);
+  map.update(selection, null, result);
+  const button = container.children[1];
+  assert.equal(button.disabled, false);
+  assert.equal(button.attributes["aria-disabled"], "true");
+  button.events.focus();
+  assert.equal(button.children[1].hidden, false);
+  assert.equal(button.attributes["aria-label"], routeStations[1].label);
+  button.events.click();
+  assert.deepEqual(selected, []);
+  map.update(selection, "destination");
+  assert.equal(button.attributes["aria-disabled"], "false");
+  button.events.click();
+  assert.deepEqual(selected, [routeStations[1].stationId]);
+  map.update(selection, null);
+  button.events.click();
+  assert.deepEqual(selected, [routeStations[1].stationId]);
+});
+
 // Reference positions from the two Figma coordinate planes, in native SVG pixels.
 for (const [layout, positions] of Object.entries({
   desktop: [[406.95, 191.33], [557.37, 533.15], [537.93, 541.95]],
@@ -240,7 +376,8 @@ test("map creates safe SVG lines per modal and resets route and legend", t => {
     && line.namespaceURI === "http://www.w3.org/2000/svg" && line.attributes.fill === "none"));
   assert.deepEqual(find("#map-key-route").children.map(item => item.dataset.mode), ["bus", "subway", "walk"]);
   assert.equal(container.children[1].dataset.onRoute, "true");
-  assert.equal(container.children[1].disabled, true);
+  assert.equal(container.children[1].disabled, false);
+  assert.equal(container.children[1].attributes["aria-disabled"], "true");
   map.update(selection, null, { ...result, steps: [result.steps[2], result.steps[2]] });
   assert.equal(route.children.length, 4);
   assert.deepEqual(find("#map-key-route").children.map(item => item.dataset.mode), ["walk"]);
