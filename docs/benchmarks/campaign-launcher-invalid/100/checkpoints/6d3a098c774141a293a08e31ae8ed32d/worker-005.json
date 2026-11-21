@@ -1,0 +1,7 @@
+{
+  "engine": "native_astar",
+  "mode": "memory",
+  "status": "incomplete",
+  "stage": "load",
+  "samples": []
+}

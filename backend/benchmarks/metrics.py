@@ -19,7 +19,7 @@ def memory():
 
 
 def monitor(process, *, timeout, sample_memory, memory_limit_bytes=None):
-    """Return the observed RSS maximum and sample count, never an OS peak."""
+    """Sample aggregate RSS of unique process IDs, including launcher descendants."""
     if not sample_memory and memory_limit_bytes is None:
         process.wait(timeout=timeout)
         return None, 0
@@ -32,19 +32,50 @@ def monitor(process, *, timeout, sample_memory, memory_limit_bytes=None):
         return peak, count
     while process.poll() is None:
         if monotonic() >= deadline:
-            raise subprocess.TimeoutExpired(process.args, timeout)
+            error = subprocess.TimeoutExpired(process.args, timeout)
+            error.sampled_peak_rss_bytes, error.memory_sample_count = peak, count
+            raise error
         try:
-            rss = probe.memory_info().rss
+            targets = {item.pid: item for item in [probe, *probe.children(recursive=True)]}
         except psutil.NoSuchProcess:
+            break
+        rss = None
+        for target in targets.values():
+            try:
+                value = target.memory_info().rss
+            except psutil.NoSuchProcess:
+                continue
+            rss = value if rss is None else rss + value
+        if rss is None:
             break
         peak = rss if peak is None else max(peak, rss)
         count += 1
         if memory_limit_bytes is not None and rss > memory_limit_bytes:
-            raise MemoryLimitExceeded(
+            error = MemoryLimitExceeded(
                 f'Worker sampled RSS {rss} bytes exceeds limit {memory_limit_bytes} bytes')
+            error.sampled_peak_rss_bytes, error.memory_sample_count = peak, count
+            raise error
         sleep(min(SAMPLE_INTERVAL_SECONDS, max(0, deadline - monotonic())))
     process.wait(timeout=max(0, deadline - monotonic()))
     return peak, count
+
+
+def stop_process_tree(process):
+    """Stop descendants first so waiting launchers can reap them before parent cleanup."""
+    try:
+        children = psutil.Process(process.pid).children(recursive=True)
+    except psutil.NoSuchProcess:
+        children = []
+    for child in reversed(children):
+        try:
+            child.kill()
+        except psutil.NoSuchProcess:
+            pass
+    if children:
+        psutil.wait_procs(children, timeout=1)
+    if process.poll() is None:
+        process.kill()
+    process.wait()
 
 
 def execute_process(command, *, input, cwd, timeout, sample_memory,
@@ -63,9 +94,7 @@ def execute_process(command, *, input, cwd, timeout, sample_memory,
             peak, count = monitor(process, timeout=timeout, sample_memory=sample_memory,
                                   memory_limit_bytes=memory_limit_bytes)
         finally:
-            if process.poll() is None:
-                process.kill()
-            process.wait()
+            stop_process_tree(process)
         output.seek(0)
         errors.seek(0)
         completed = subprocess.CompletedProcess(

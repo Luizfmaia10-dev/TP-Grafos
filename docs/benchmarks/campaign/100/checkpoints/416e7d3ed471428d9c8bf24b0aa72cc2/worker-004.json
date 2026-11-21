@@ -1,0 +1,48 @@
+{
+  "engine": "native_astar",
+  "mode": "memory",
+  "status": "complete",
+  "stage": "complete",
+  "samples": [
+    {
+      "case": "medium-14",
+      "repetition": 0,
+      "query_prepare_ns": 0,
+      "search_ns": 52200,
+      "cleanup_ns": 0,
+      "query_total_ns": 52200,
+      "arrival": null,
+      "legs": null,
+      "path": null,
+      "rss_bytes": 68870144
+    }
+  ],
+  "load_ns": 89830600600,
+  "selection_ns": 378161300,
+  "stations": 100,
+  "connections": 0,
+  "active_service_ids": [
+    "307679",
+    "307682"
+  ],
+  "baseline": {
+    "rss_bytes": 26116096
+  },
+  "after_load": {
+    "rss_bytes": 222158848
+  },
+  "after_selection": {
+    "rss_bytes": 119193600
+  },
+  "before_prepare": {
+    "rss_bytes": 68870144
+  },
+  "prepare_ns": 121600,
+  "after_prepare": {
+    "rss_bytes": 68870144
+  },
+  "prepared_memory": {
+    "rss_bytes": 68870144
+  },
+  "rss_bytes": 68870144
+}

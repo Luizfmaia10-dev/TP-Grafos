@@ -1,5 +1,41 @@
 # Plano de implementação: benchmark do motor próprio e NetworkX
 
+> Documento histórico: registra decisões e instruções da época, não tarefas abertas atuais. O progresso vigente está em [docs/PLAN.md](PLAN.md); contratos atuais em [API.md](API.md).
+
+## Atualização da Task 5 — 21/11/2026
+
+As dependências diretas foram fixadas nas versões verificadas no ambiente. A
+metodologia atual e os comandos estão em [BENCHMARK.md](BENCHMARK.md). O manifesto
+[queries.json](benchmarks/queries.json) é gerado do feed real com semente 42,
+seis pares alcançáveis (curta/média/longa às 07:00/14:00) e dois pares sem rota;
+inclui distâncias Haversine, evidência de chegada e hashes. `--check` regenera e
+compara o manifesto sem substituí-lo.
+Antes de iniciar workers, a campanha rejeita diferenças entre a seleção e suas
+entradas de data, semente ou hashes GTFS, preservando essa procedência no relatório.
+
+`benchmarks.campaign` executa os limites 100/1.000/completo com sete repetições,
+dois aquecimentos, 4.096 MiB amostrados e 600 segundos por processo. Os resultados
+ficam em [campaign/](benchmarks/campaign/), com um relatório por tamanho,
+amostras e checkpoints preservados, inclusive antes de timeout ou estouro de RSS.
+Cada tamanho interrompido é registrado e a execução continua no próximo tamanho.
+JSON e CSV identificam preparação, RSS, tempos brutos e, quando válido, mediana/IQR.
+Respostas parciais são comparadas quando disponíveis; a confirmação de equivalência
+exige os dois motores em todos os casos. Um tamanho incompleto não entra no resumo
+comparativo. Subgrafos induzidos podem tornar os seis casos alcançáveis do grafo
+completo inalcançáveis; isso não é divergência se ambos os motores concordarem.
+Uma divergência posterior invalida explicitamente qualquer confirmação de
+equivalência anterior (`failed`).
+
+A matriz final foi concluída em 21/11/2026, com três tamanhos válidos, 54 workers,
+384 amostras e concordância entre os motores nos oito casos de cada tamanho.
+Os subgrafos de 100 e 1.000 estações deixaram todos os casos sem rota; o de 100
+não contém conexões. No grafo completo, seis casos têm rota e dois não têm.
+Tentativas interrompidas anteriores foram preservadas separadamente com causa.
+
+Esses resultados comparam implementações e representações distintas e uma seleção
+pequena; não fundamentam superioridade geral de um algoritmo. O registro histórico
+abaixo permanece como contexto da implementação original.
+
 ## Objetivo e escopo
 
 Entregar um script reproduzível que compare o A* de `RouteSimulator` com Dijkstra do NetworkX, preservando o problema de menor horário de chegada do mesmo dia de serviço GTFS. Medir tempo de execução e RAM, validar a equivalência das respostas e exportar resultados para o relatório da SBC.
@@ -98,10 +134,10 @@ Um limite de memória/tempo atingido deve ser registrado como experimento incomp
 ## 6. Experimentos reais e escalabilidade
 
 - [x] Confirmar que os TXT são dados completos, não ponteiros LFS, e escolher uma data coberta pelos calendários do feed.
-- [ ] Versionar um manifesto de consultas com IDs reais: distâncias curtas, médias e longas por Haversine, horários de pico e fora de pico. Preservar consultas sem rota e identificá-las separadamente.
-- [ ] Executar primeiro uma amostra pequena e depois a base completa, respeitando os recursos da máquina. Registrar os resultados sem prometer antecipadamente que a expansão completa caberá em RAM.
+- [x] Versionar um manifesto de consultas com IDs reais: distâncias curtas, médias e longas por Haversine, horários de pico e fora de pico. Preservar consultas sem rota e identificá-las separadamente.
+- [x] Executar primeiro uma amostra pequena e depois a base completa, respeitando os recursos da máquina. Registrar os resultados sem prometer antecipadamente que a expansão completa caberá em RAM.
 - [x] Para escalabilidade, definir subconjuntos aninhados e determinísticos de estações com semente fixa, mantendo apenas conexões cujos extremos estejam no subconjunto. Aplicar a mesma seleção aos dois motores e registrar as contagens efetivas.
-- [ ] Manter pares comuns quando possível, informar mudanças de alcançabilidade e não interpretar subgrafos induzidos como redes de transporte realistas.
+- [x] Manter pares comuns quando possível, informar mudanças de alcançabilidade e não interpretar subgrafos induzidos como redes de transporte realistas.
 - [ ] Analisar separadamente variação de tamanho e distância geográfica. Distância em linha reta não equivale a dificuldade de busca.
 - [x] Registrar tabelas de tempo, RAM e expansão da representação em `docs/BENCHMARK.md`, com referências aos arquivos brutos.
 

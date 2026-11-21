@@ -1,0 +1,15 @@
+{
+  "status": "incomplete",
+  "sizes": [
+    {
+      "station_limit": 100,
+      "directory": "100",
+      "status": "incomplete",
+      "cause": "invalid_monitor_target"
+    }
+  ],
+  "not_started_sizes": [
+    1000,
+    null
+  ]
+}

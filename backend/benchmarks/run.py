@@ -13,6 +13,7 @@ import subprocess
 import sys
 from datetime import date, datetime, timezone
 from time import perf_counter_ns
+from uuid import uuid4
 
 import psutil
 
@@ -20,9 +21,13 @@ from app.data_loader import DataLoader
 from app.graph import TransportGraph
 from app.route_simulator import RouteSimulator
 from app.time_utils import TimeUtils
-from benchmarks.metrics import SAMPLE_INTERVAL_SECONDS, execute_process, memory
+from benchmarks.metrics import MemoryLimitExceeded, SAMPLE_INTERVAL_SECONDS, execute_process, memory
 
 TOLERANCE_MINUTES = 1e-7
+
+
+class ArrivalMismatchError(ValueError):
+    """Two completed samples disagree on optimal arrival or reachability."""
 
 
 def validate_path(origin, destination, departure, path):
@@ -51,11 +56,39 @@ def compare_results(left, right):
     if (a is None) != (b is None) or (
         a is not None and not math.isclose(a, b, rel_tol=0, abs_tol=TOLERANCE_MINUTES)
     ):
-        raise ValueError(f'Arrival mismatch: {left!r} versus {right!r}')
+        raise ArrivalMismatchError(f'Arrival mismatch: {left!r} versus {right!r}')
+
+
+def verify_equivalence(runs, queries):
+    """Check all available samples; claim equivalence only with both engines per case."""
+    expected, engines = {}, {}
+    for run in runs:
+        for sample in run['samples']:
+            key = sample['case']
+            if key in expected:
+                compare_results(expected[key], sample)
+            else:
+                expected[key] = sample
+            engines.setdefault(key, set()).add(run['engine'])
+    verified = sorted(q['id'] for q in queries
+                      if engines.get(q['id']) == {'native_astar', 'networkx_dijkstra'})
+    return {'status': 'verified' if len(verified) == len(queries) else 'incomplete',
+            'cases': verified}
+
+
+def save_json(path, value):
+    """Replace a checkpoint atomically so termination retains the previous complete write."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + '.tmp')
+    temporary.write_text(json.dumps(value, indent=2, allow_nan=False) + '\n', encoding='utf-8')
+    temporary.replace(path)
 
 
 def load_queries(path):
     queries = json.loads(Path(path).read_text(encoding='utf-8'))
+    if isinstance(queries, dict):
+        queries = queries['queries']
     if not isinstance(queries, list) or not queries:
         raise ValueError('Queries must be a nonempty JSON list')
     ids = set()
@@ -68,6 +101,20 @@ def load_queries(path):
                 raise ValueError(f'{key} must be a station ID string')
         query['departure_minutes'] = TimeUtils.time_to_minutes(query['departure'])
     return queries
+
+
+def validate_manifest(path, campaign_metadata):
+    """Reject provenance mismatches before starting any measured worker."""
+    manifest = json.loads(Path(path).read_text(encoding='utf-8'))
+    if isinstance(manifest, list):
+        return None
+    selection = manifest.get('selection')
+    if not isinstance(selection, dict):
+        raise ValueError('Manifest selection provenance is required')
+    for field in ('service_date', 'seed', 'input_sha256'):
+        if selection.get(field) != campaign_metadata[field]:
+            raise ValueError(f'Manifest selection {field} does not match campaign/dataset')
+    return selection
 
 
 def select_graph(graph, queries, limit, seed):
@@ -95,6 +142,13 @@ def worker(config):
     """Load one independent network; stdout is a machine-readable result only."""
     # Subset selection always uses the entire manifest, including in memory jobs.
     queries = config['queries']
+    result = {'engine': config['engine'], 'mode': config['mode'],
+              'status': 'incomplete', 'stage': 'load', 'samples': []}
+    def checkpoint(stage):
+        result['stage'] = stage
+        if config.get('checkpoint'):
+            save_json(config['checkpoint'], result)
+    checkpoint('load')
     baseline = memory()
     start = perf_counter_ns()
     loader = DataLoader(config['data_dir'], service_date=date.fromisoformat(config['service_date']))
@@ -110,14 +164,14 @@ def worker(config):
     graph = select_graph(graph, config['all_queries'], config['station_limit'], config['seed'])
     selection_ns = perf_counter_ns() - select_start
     stations = {station.station_id: station for station in graph.iter_stations()}
-    result = {
-        'engine': config['engine'], 'mode': config['mode'],
+    result.update({
         'load_ns': loaded - start, 'selection_ns': selection_ns, 'stations': len(stations),
         'connections': sum(len(graph.get_neighbors(s)) for s in graph.iter_stations()),
         'active_service_ids': loader.report.active_service_ids,
         'baseline': baseline, 'after_load': loaded_memory,
         'after_selection': memory(), 'samples': [],
-    }
+    })
+    checkpoint('prepare')
     del loader
     gc.collect()
     result['before_prepare'] = memory()
@@ -135,6 +189,7 @@ def worker(config):
     del graph
     gc.collect()
     result['prepared_memory'] = memory()
+    checkpoint('queries')
     repeats = 1 if config['mode'] == 'memory' else config['repetitions']
     warmups = 0 if config['mode'] == 'memory' else config['warmups']
     for query in queries:
@@ -154,8 +209,11 @@ def worker(config):
                     'case': query['id'], 'repetition': iteration, **timings,
                     **answer, **snapshot,
                 })
+                checkpoint('queries')
             del path
     result.update(memory())
+    result['status'] = 'complete'
+    checkpoint('complete')
     return result
 
 
@@ -187,12 +245,15 @@ def metadata(args):
     return {
         'started_at_utc': datetime.now(timezone.utc).isoformat(),
         'python': sys.version, 'networkx': version('networkx'), 'psutil': version('psutil'),
+        'package_versions': {name: version(name) for name in (
+            'fastapi', 'uvicorn', 'pydantic', 'pytest', 'pytest-cov', 'httpx2', 'networkx', 'psutil')},
         'platform': platform.platform(), 'cpu': platform.processor() or platform.machine(),
         'logical_cpu_count': psutil.cpu_count(),
         'memory_info': dict(psutil.virtual_memory()._asdict()),
         'memory_method': 'psutil_rss_snapshots_and_external_sampling',
         'sample_interval_seconds': SAMPLE_INTERVAL_SECONDS,
         'memory_limit_kind': 'sampled_worker_rss',
+        'sampled_rss_scope': 'sum_rss_of_worker_and_descendants_once_per_pid',
         'commit': git_output('rev-parse', 'HEAD'),
         'dirty': bool(git_output('status', '--porcelain')),
         'input_sha256': {name: digest(data / name) for name in names if (data / name).exists()},
@@ -226,8 +287,12 @@ def summarize(runs):
 
 def export(output, report):
     output.mkdir(parents=True, exist_ok=True)
-    (output / 'results.json').write_text(
-        json.dumps(report, indent=2, allow_nan=False) + '\n', encoding='utf-8')
+    save_json(output / 'results.json', report)
+    with (output / 'summary.csv').open('w', newline='', encoding='utf-8') as stream:
+        writer = csv.DictWriter(stream, fieldnames=[
+            'engine', 'case', 'phase', 'count', 'median_ns', 'min_ns', 'max_ns', 'iqr_ns'])
+        writer.writeheader()
+        writer.writerows(report.get('summary', []))
     with (output / 'measurements.csv').open('w', newline='', encoding='utf-8') as stream:
         fields = ['engine', 'mode', 'case', 'repetition', 'phase', 'duration_ns',
                   'rss_bytes', 'sampled_peak_rss_bytes', 'arrival', 'legs']
@@ -235,11 +300,13 @@ def export(output, report):
         writer.writeheader()
         for run in report['runs']:
             base = {'engine': run['engine'], 'mode': run['mode'],
-                    'sampled_peak_rss_bytes': run['sampled_peak_rss_bytes']}
-            for phase, snapshot in (('load', run['after_load']), ('selection', run['after_selection']),
-                                    ('prepare', run['after_prepare'])):
-                writer.writerow({**base, 'phase': phase, 'duration_ns': run[f'{phase}_ns'], **snapshot})
-            writer.writerow({**base, 'phase': 'prepared', **run['prepared_memory']})
+                    'sampled_peak_rss_bytes': run.get('sampled_peak_rss_bytes')}
+            for phase, key in (('load', 'after_load'), ('selection', 'after_selection'),
+                               ('prepare', 'after_prepare')):
+                if key in run:
+                    writer.writerow({**base, 'phase': phase, 'duration_ns': run[f'{phase}_ns'], **run[key]})
+            if 'prepared_memory' in run:
+                writer.writerow({**base, 'phase': 'prepared', **run['prepared_memory']})
             for sample in run['samples']:
                 for phase in ('query_prepare', 'search', 'cleanup', 'query_total'):
                     writer.writerow({**base, 'case': sample['case'],
@@ -272,19 +339,33 @@ def main(argv=None):
     if args.warmups < 0:
         parser.error('warmups must be nonnegative')
     args.service_date = args.service_date.isoformat()
-    report = {'schema_version': 3, 'status': 'incomplete', 'runs': [], 'errors': [], 'summary': []}
+    report = {'schema_version': 3, 'status': 'incomplete', 'runs': [], 'errors': [], 'summary': [],
+              'execution_id': uuid4().hex,
+              'equivalence': {'status': 'incomplete', 'cases': []},
+              'limitations': [
+                  'Induced subsets may disconnect routes; the complete feed is loaded before selection.',
+                  'RSS is sampled, not a hard cap or exact peak, and includes ingestion and checkpoints.',
+                  'Different representations and a small query sample do not establish general superiority.',
+                  'Checkpoint writes and validation are outside query timers, but can affect process RSS.',
+              ]}
     try:
         queries = load_queries(args.queries)
         report['queries'] = queries
         report['metadata'] = metadata(args)
+        report['selection'] = validate_manifest(args.queries, report['metadata'])
         config = vars(args).copy()
         config['all_queries'] = queries
         config['data_dir'] = str(Path(args.data_dir).resolve())
         jobs = [(engine, mode, cases)
                 for engine in ('native_astar', 'networkx_dijkstra')
                 for mode, cases in [('timing', queries), *[('memory', [q]) for q in queries]]]
-        for engine, mode, cases in jobs:
-            job = {**config, 'engine': engine, 'mode': mode, 'queries': cases}
+        report['planned_jobs'] = len(jobs)
+        export(Path(args.output), report)
+        for job_index, (engine, mode, cases) in enumerate(jobs):
+            checkpoint = (Path(args.output).resolve() / 'checkpoints' / report['execution_id']
+                          / f'worker-{job_index:03d}.json')
+            job = {**config, 'engine': engine, 'mode': mode, 'queries': cases,
+                   'checkpoint': str(checkpoint)}
             try:
                 process, peak, count = execute_process(
                     [sys.executable, '-m', 'benchmarks.run', '--worker'],
@@ -299,22 +380,34 @@ def main(argv=None):
                 result.update(sampled_peak_rss_bytes=peak, memory_sample_count=count)
                 report['runs'].append(result)
             except (subprocess.TimeoutExpired, RuntimeError, json.JSONDecodeError, psutil.Error) as error:
+                peak = getattr(error, 'sampled_peak_rss_bytes', None)
+                count = getattr(error, 'memory_sample_count', 0)
+                if checkpoint.exists():
+                    partial = json.loads(checkpoint.read_text(encoding='utf-8'))
+                    partial.update(status='incomplete', sampled_peak_rss_bytes=peak,
+                                   memory_sample_count=count)
+                    report['runs'].append(partial)
                 report['errors'].append({'engine': engine, 'mode': mode,
-                                         'cases': [q['id'] for q in cases], 'error': str(error)})
+                                         'cases': [q['id'] for q in cases], 'error': str(error),
+                                         'station_limit': args.station_limit,
+                                         'cause': ('timeout' if isinstance(error, subprocess.TimeoutExpired)
+                                                   else 'memory_limit' if isinstance(error, MemoryLimitExceeded)
+                                                   else 'worker_failure'),
+                                         'sampled_peak_rss_bytes': peak, 'memory_sample_count': count})
                 break
+            report['equivalence'] = verify_equivalence(report['runs'], queries)
+            export(Path(args.output), report)
+        report['equivalence'] = verify_equivalence(report['runs'], queries)
         if not report['errors']:
-            expected = {}
-            for run in report['runs']:
-                for sample in run['samples']:
-                    key = sample['case']
-                    if key in expected:
-                        compare_results(expected[key], sample)
-                    else:
-                        expected[key] = sample
-            report['status'] = 'valid'
-            report['summary'] = summarize(report['runs'])
+            if report['equivalence']['status'] == 'verified':
+                report['status'] = 'valid'
+                report['summary'] = summarize(report['runs'])
     except (ValueError, KeyError, OSError) as error:
-        report['errors'].append({'error': str(error)})
+        if isinstance(error, ArrivalMismatchError):
+            report['equivalence'] = {'status': 'failed', 'cases': []}
+        report['errors'].append({'error': str(error),
+                                 'cause': ('arrival_mismatch' if isinstance(error, ArrivalMismatchError)
+                                           else 'invalid_input')})
     export(Path(args.output), report)
     print(f"{report['status']}: {Path(args.output) / 'results.json'}")
     return 0 if report['status'] == 'valid' else 1

@@ -1,8 +1,109 @@
-[
-  {
-    "id": "bh-direct-early",
-    "origin": "15140072",
-    "destination": "14788235",
-    "departure": "04:00:00"
-  }
-]
+{
+  "schema_version": 1,
+  "selection": {
+    "seed": 42,
+    "max_candidates": 10000,
+    "method": "distinct_ordered_pairs_sampled_from_sorted_station_ids",
+    "short_km": "[0, 2)",
+    "medium_km": "[2, 8)",
+    "long_km": "[8, infinity)",
+    "service_date": "2026-11-17",
+    "stations": 9925,
+    "active_service_ids": [
+      "307679",
+      "307682"
+    ],
+    "input_sha256": {
+      "stops.txt": "294f5330e5750b37c824609ee6dbbb531b0248c8e08e40fed864f34b12002127",
+      "routes.txt": "ca0f00d27cf61774ad0d2f191e6e820311ae26be67e33ed612278c24dbdf07ff",
+      "trips.txt": "fb41ac59bce19d52f6274fcb159e2c71d8ccd510fe324fbe948631bbb7847ce5",
+      "stop_times.txt": "ee3db9ff1dce3b5d5db9091a0ea07526796fb7f5f42f6aad326326fe78da6930",
+      "calendar.txt": "a537a8b0f39a671079a9d70ac1380f834759d3b0e48d2e44ccc774552675d57c",
+      "calendar_dates.txt": "4274d1317758dc25c4fa2051105f38c1c8918c5a885ac0abb9114cb5b1105efd"
+    },
+    "reachability_engine": "native_astar_full_graph",
+    "limitation": "Selection is descriptive, not a representative statistical sample; NetworkX equivalence is checked separately by the campaign."
+  },
+  "queries": [
+    {
+      "origin": "14785939",
+      "destination": "14784501",
+      "departure": "07:00:00",
+      "distance_km": 13.809047545440803,
+      "distance_band": "long",
+      "expected_arrival": 478.3833333333333,
+      "candidate_index": 1,
+      "id": "long-07"
+    },
+    {
+      "origin": "14785791",
+      "destination": "14793201",
+      "departure": "14:00:00",
+      "distance_km": 14.970889199450733,
+      "distance_band": "long",
+      "expected_arrival": 940.3833333333333,
+      "candidate_index": 4,
+      "id": "long-14"
+    },
+    {
+      "origin": "14787813",
+      "destination": "14786408",
+      "departure": "07:00:00",
+      "distance_km": 3.9666533456199606,
+      "distance_band": "medium",
+      "expected_arrival": 509.6333333333333,
+      "candidate_index": 3,
+      "id": "medium-07"
+    },
+    {
+      "origin": "14791139",
+      "destination": "14784615",
+      "departure": "14:00:00",
+      "distance_km": 7.141887318239492,
+      "distance_band": "medium",
+      "expected_arrival": 895.1333333333333,
+      "candidate_index": 6,
+      "id": "medium-14"
+    },
+    {
+      "origin": "14785766",
+      "destination": "14790444",
+      "departure": "07:00:00",
+      "distance_km": 1.930097989116157,
+      "distance_band": "short",
+      "expected_arrival": 464.53333333333336,
+      "candidate_index": 31,
+      "id": "short-07"
+    },
+    {
+      "origin": "14786813",
+      "destination": "14791807",
+      "departure": "14:00:00",
+      "distance_km": 1.9814490059672871,
+      "distance_band": "short",
+      "expected_arrival": 879.8,
+      "candidate_index": 38,
+      "id": "short-14"
+    },
+    {
+      "origin": "14788682",
+      "destination": "14788174",
+      "departure": "07:00:00",
+      "distance_km": 3.6792936873908153,
+      "distance_band": "medium",
+      "expected_arrival": null,
+      "candidate_index": 2,
+      "id": "no-route-1"
+    },
+    {
+      "origin": "14786748",
+      "destination": "14791151",
+      "departure": "07:00:00",
+      "distance_km": 11.266282431238468,
+      "distance_band": "long",
+      "expected_arrival": null,
+      "candidate_index": 15,
+      "id": "no-route-2"
+    }
+  ]
+}

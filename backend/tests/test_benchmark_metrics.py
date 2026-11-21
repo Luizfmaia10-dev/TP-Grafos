@@ -20,6 +20,7 @@ def test_monitor_records_sampled_peak(monkeypatch):
     child = Mock(pid=123)
     child.poll.side_effect = [None, None, 0]
     probe = Mock()
+    probe.children.return_value = []
     probe.memory_info.side_effect = [SimpleNamespace(rss=100), SimpleNamespace(rss=300)]
     monkeypatch.setattr(metrics.psutil, 'Process', lambda pid: probe)
     monkeypatch.setattr(metrics, 'sleep', lambda duration: None)
@@ -31,6 +32,7 @@ def test_monitor_allows_process_exit_during_sampling(monkeypatch):
     child = Mock(pid=123)
     child.poll.side_effect = [None, 0]
     probe = Mock()
+    probe.children.return_value = []
     probe.memory_info.side_effect = metrics.psutil.NoSuchProcess(123)
     monkeypatch.setattr(metrics.psutil, 'Process', lambda pid: probe)
     monkeypatch.setattr(metrics, 'sleep', lambda duration: None)
@@ -78,3 +80,44 @@ def test_failed_process_is_killed_and_reaped(tmp_path, monkeypatch, failure):
         )
     assert len(created) == 1
     assert created[0].poll() is not None
+
+
+def test_monitor_counts_each_descendant_once(monkeypatch):
+    child = Mock(pid=123)
+    child.poll.side_effect = [None, 0]
+    launcher = Mock(pid=123)
+    launcher.memory_info.return_value = SimpleNamespace(rss=100)
+    worker = Mock(pid=456)
+    worker.memory_info.return_value = SimpleNamespace(rss=300)
+    launcher.children.return_value = [worker, worker]
+    monkeypatch.setattr(metrics.psutil, 'Process', lambda pid: launcher)
+    monkeypatch.setattr(metrics, 'sleep', lambda duration: None)
+    assert metrics.monitor(child, timeout=10, sample_memory=True) == (400, 1)
+
+
+@pytest.mark.parametrize('failure', ['timeout', 'memory'])
+def test_limits_terminate_the_actual_worker_below_a_launcher(tmp_path, failure):
+    pid_file = tmp_path / 'worker.pid'
+    child_code = ('import os,pathlib,time; '
+                  f'pathlib.Path({str(pid_file)!r}).write_text(str(os.getpid())); '
+                  'payload=bytearray(64*1024*1024); time.sleep(10)')
+    wrapper = ('import subprocess,sys; '
+               f'subprocess.run([sys.executable,"-c",{child_code!r}])')
+    expected = subprocess.TimeoutExpired if failure == 'timeout' else metrics.MemoryLimitExceeded
+    pid = None
+    try:
+        with pytest.raises(expected) as captured:
+            metrics.execute_process(
+                [sys.executable, '-c', wrapper], input='{}', cwd=tmp_path,
+                timeout=1 if failure == 'timeout' else 5, sample_memory=True,
+                memory_limit_bytes=64*1024*1024 if failure == 'memory' else None)
+        assert pid_file.exists(), 'The actual worker must start before the limit is exercised'
+        pid = int(pid_file.read_text())
+        assert not metrics.psutil.pid_exists(pid)
+        assert captured.value.sampled_peak_rss_bytes > 64*1024*1024
+    finally:
+        if pid is None and pid_file.exists():
+            pid = int(pid_file.read_text())
+        if pid is not None and metrics.psutil.pid_exists(pid):
+            metrics.psutil.Process(pid).kill()
+            metrics.psutil.wait_procs([metrics.psutil.Process(pid)], timeout=2)

@@ -1,0 +1,2752 @@
+{
+  "schema_version": 3,
+  "status": "valid",
+  "runs": [
+    {
+      "engine": "native_astar",
+      "mode": "timing",
+      "status": "complete",
+      "stage": "complete",
+      "samples": [
+        {
+          "case": "long-07",
+          "repetition": 0,
+          "query_prepare_ns": 0,
+          "search_ns": 12900,
+          "cleanup_ns": 0,
+          "query_total_ns": 12900,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209833984
+        },
+        {
+          "case": "long-07",
+          "repetition": 1,
+          "query_prepare_ns": 0,
+          "search_ns": 43400,
+          "cleanup_ns": 0,
+          "query_total_ns": 43400,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209838080
+        },
+        {
+          "case": "long-07",
+          "repetition": 2,
+          "query_prepare_ns": 0,
+          "search_ns": 41600,
+          "cleanup_ns": 0,
+          "query_total_ns": 41600,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209838080
+        },
+        {
+          "case": "long-07",
+          "repetition": 3,
+          "query_prepare_ns": 0,
+          "search_ns": 36900,
+          "cleanup_ns": 0,
+          "query_total_ns": 36900,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209838080
+        },
+        {
+          "case": "long-07",
+          "repetition": 4,
+          "query_prepare_ns": 0,
+          "search_ns": 32300,
+          "cleanup_ns": 0,
+          "query_total_ns": 32300,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209838080
+        },
+        {
+          "case": "long-07",
+          "repetition": 5,
+          "query_prepare_ns": 0,
+          "search_ns": 43800,
+          "cleanup_ns": 0,
+          "query_total_ns": 43800,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209838080
+        },
+        {
+          "case": "long-07",
+          "repetition": 6,
+          "query_prepare_ns": 0,
+          "search_ns": 27600,
+          "cleanup_ns": 0,
+          "query_total_ns": 27600,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209838080
+        },
+        {
+          "case": "long-14",
+          "repetition": 0,
+          "query_prepare_ns": 0,
+          "search_ns": 10200,
+          "cleanup_ns": 0,
+          "query_total_ns": 10200,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209842176
+        },
+        {
+          "case": "long-14",
+          "repetition": 1,
+          "query_prepare_ns": 0,
+          "search_ns": 25700,
+          "cleanup_ns": 0,
+          "query_total_ns": 25700,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209842176
+        },
+        {
+          "case": "long-14",
+          "repetition": 2,
+          "query_prepare_ns": 0,
+          "search_ns": 25100,
+          "cleanup_ns": 0,
+          "query_total_ns": 25100,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209842176
+        },
+        {
+          "case": "long-14",
+          "repetition": 3,
+          "query_prepare_ns": 0,
+          "search_ns": 25300,
+          "cleanup_ns": 0,
+          "query_total_ns": 25300,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209846272
+        },
+        {
+          "case": "long-14",
+          "repetition": 4,
+          "query_prepare_ns": 0,
+          "search_ns": 24700,
+          "cleanup_ns": 0,
+          "query_total_ns": 24700,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209846272
+        },
+        {
+          "case": "long-14",
+          "repetition": 5,
+          "query_prepare_ns": 0,
+          "search_ns": 27600,
+          "cleanup_ns": 0,
+          "query_total_ns": 27600,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209846272
+        },
+        {
+          "case": "long-14",
+          "repetition": 6,
+          "query_prepare_ns": 0,
+          "search_ns": 31200,
+          "cleanup_ns": 0,
+          "query_total_ns": 31200,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209846272
+        },
+        {
+          "case": "medium-07",
+          "repetition": 0,
+          "query_prepare_ns": 0,
+          "search_ns": 189200,
+          "cleanup_ns": 0,
+          "query_total_ns": 189200,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209850368
+        },
+        {
+          "case": "medium-07",
+          "repetition": 1,
+          "query_prepare_ns": 0,
+          "search_ns": 266400,
+          "cleanup_ns": 0,
+          "query_total_ns": 266400,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209850368
+        },
+        {
+          "case": "medium-07",
+          "repetition": 2,
+          "query_prepare_ns": 0,
+          "search_ns": 234800,
+          "cleanup_ns": 0,
+          "query_total_ns": 234800,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209854464
+        },
+        {
+          "case": "medium-07",
+          "repetition": 3,
+          "query_prepare_ns": 0,
+          "search_ns": 236000,
+          "cleanup_ns": 0,
+          "query_total_ns": 236000,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209858560
+        },
+        {
+          "case": "medium-07",
+          "repetition": 4,
+          "query_prepare_ns": 0,
+          "search_ns": 172300,
+          "cleanup_ns": 0,
+          "query_total_ns": 172300,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209858560
+        },
+        {
+          "case": "medium-07",
+          "repetition": 5,
+          "query_prepare_ns": 0,
+          "search_ns": 176500,
+          "cleanup_ns": 0,
+          "query_total_ns": 176500,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209858560
+        },
+        {
+          "case": "medium-07",
+          "repetition": 6,
+          "query_prepare_ns": 0,
+          "search_ns": 594500,
+          "cleanup_ns": 0,
+          "query_total_ns": 594500,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209858560
+        },
+        {
+          "case": "medium-14",
+          "repetition": 0,
+          "query_prepare_ns": 0,
+          "search_ns": 7300,
+          "cleanup_ns": 0,
+          "query_total_ns": 7300,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209858560
+        },
+        {
+          "case": "medium-14",
+          "repetition": 1,
+          "query_prepare_ns": 0,
+          "search_ns": 44000,
+          "cleanup_ns": 0,
+          "query_total_ns": 44000,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209866752
+        },
+        {
+          "case": "medium-14",
+          "repetition": 2,
+          "query_prepare_ns": 0,
+          "search_ns": 25800,
+          "cleanup_ns": 0,
+          "query_total_ns": 25800,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209866752
+        },
+        {
+          "case": "medium-14",
+          "repetition": 3,
+          "query_prepare_ns": 0,
+          "search_ns": 28700,
+          "cleanup_ns": 0,
+          "query_total_ns": 28700,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209866752
+        },
+        {
+          "case": "medium-14",
+          "repetition": 4,
+          "query_prepare_ns": 0,
+          "search_ns": 26200,
+          "cleanup_ns": 0,
+          "query_total_ns": 26200,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209866752
+        },
+        {
+          "case": "medium-14",
+          "repetition": 5,
+          "query_prepare_ns": 0,
+          "search_ns": 27600,
+          "cleanup_ns": 0,
+          "query_total_ns": 27600,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209866752
+        },
+        {
+          "case": "medium-14",
+          "repetition": 6,
+          "query_prepare_ns": 0,
+          "search_ns": 27900,
+          "cleanup_ns": 0,
+          "query_total_ns": 27900,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209866752
+        },
+        {
+          "case": "short-07",
+          "repetition": 0,
+          "query_prepare_ns": 0,
+          "search_ns": 403200,
+          "cleanup_ns": 0,
+          "query_total_ns": 403200,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209870848
+        },
+        {
+          "case": "short-07",
+          "repetition": 1,
+          "query_prepare_ns": 0,
+          "search_ns": 426600,
+          "cleanup_ns": 0,
+          "query_total_ns": 426600,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209870848
+        },
+        {
+          "case": "short-07",
+          "repetition": 2,
+          "query_prepare_ns": 0,
+          "search_ns": 415900,
+          "cleanup_ns": 0,
+          "query_total_ns": 415900,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209870848
+        },
+        {
+          "case": "short-07",
+          "repetition": 3,
+          "query_prepare_ns": 0,
+          "search_ns": 506000,
+          "cleanup_ns": 0,
+          "query_total_ns": 506000,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209874944
+        },
+        {
+          "case": "short-07",
+          "repetition": 4,
+          "query_prepare_ns": 0,
+          "search_ns": 443800,
+          "cleanup_ns": 0,
+          "query_total_ns": 443800,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209874944
+        },
+        {
+          "case": "short-07",
+          "repetition": 5,
+          "query_prepare_ns": 0,
+          "search_ns": 483700,
+          "cleanup_ns": 0,
+          "query_total_ns": 483700,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209874944
+        },
+        {
+          "case": "short-07",
+          "repetition": 6,
+          "query_prepare_ns": 0,
+          "search_ns": 579300,
+          "cleanup_ns": 0,
+          "query_total_ns": 579300,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209874944
+        },
+        {
+          "case": "short-14",
+          "repetition": 0,
+          "query_prepare_ns": 0,
+          "search_ns": 19500,
+          "cleanup_ns": 0,
+          "query_total_ns": 19500,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209874944
+        },
+        {
+          "case": "short-14",
+          "repetition": 1,
+          "query_prepare_ns": 0,
+          "search_ns": 38000,
+          "cleanup_ns": 0,
+          "query_total_ns": 38000,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209874944
+        },
+        {
+          "case": "short-14",
+          "repetition": 2,
+          "query_prepare_ns": 0,
+          "search_ns": 34000,
+          "cleanup_ns": 0,
+          "query_total_ns": 34000,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209874944
+        },
+        {
+          "case": "short-14",
+          "repetition": 3,
+          "query_prepare_ns": 0,
+          "search_ns": 33200,
+          "cleanup_ns": 0,
+          "query_total_ns": 33200,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209887232
+        },
+        {
+          "case": "short-14",
+          "repetition": 4,
+          "query_prepare_ns": 0,
+          "search_ns": 28200,
+          "cleanup_ns": 0,
+          "query_total_ns": 28200,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209887232
+        },
+        {
+          "case": "short-14",
+          "repetition": 5,
+          "query_prepare_ns": 0,
+          "search_ns": 31800,
+          "cleanup_ns": 0,
+          "query_total_ns": 31800,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209887232
+        },
+        {
+          "case": "short-14",
+          "repetition": 6,
+          "query_prepare_ns": 0,
+          "search_ns": 31400,
+          "cleanup_ns": 0,
+          "query_total_ns": 31400,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209887232
+        },
+        {
+          "case": "no-route-1",
+          "repetition": 0,
+          "query_prepare_ns": 0,
+          "search_ns": 200700,
+          "cleanup_ns": 0,
+          "query_total_ns": 200700,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209887232
+        },
+        {
+          "case": "no-route-1",
+          "repetition": 1,
+          "query_prepare_ns": 0,
+          "search_ns": 297500,
+          "cleanup_ns": 0,
+          "query_total_ns": 297500,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209887232
+        },
+        {
+          "case": "no-route-1",
+          "repetition": 2,
+          "query_prepare_ns": 0,
+          "search_ns": 269800,
+          "cleanup_ns": 0,
+          "query_total_ns": 269800,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209887232
+        },
+        {
+          "case": "no-route-1",
+          "repetition": 3,
+          "query_prepare_ns": 0,
+          "search_ns": 284200,
+          "cleanup_ns": 0,
+          "query_total_ns": 284200,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209899520
+        },
+        {
+          "case": "no-route-1",
+          "repetition": 4,
+          "query_prepare_ns": 0,
+          "search_ns": 257300,
+          "cleanup_ns": 0,
+          "query_total_ns": 257300,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209903616
+        },
+        {
+          "case": "no-route-1",
+          "repetition": 5,
+          "query_prepare_ns": 0,
+          "search_ns": 297400,
+          "cleanup_ns": 0,
+          "query_total_ns": 297400,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209920000
+        },
+        {
+          "case": "no-route-1",
+          "repetition": 6,
+          "query_prepare_ns": 0,
+          "search_ns": 234500,
+          "cleanup_ns": 0,
+          "query_total_ns": 234500,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209920000
+        },
+        {
+          "case": "no-route-2",
+          "repetition": 0,
+          "query_prepare_ns": 0,
+          "search_ns": 4800,
+          "cleanup_ns": 0,
+          "query_total_ns": 4800,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209920000
+        },
+        {
+          "case": "no-route-2",
+          "repetition": 1,
+          "query_prepare_ns": 0,
+          "search_ns": 247600,
+          "cleanup_ns": 0,
+          "query_total_ns": 247600,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209920000
+        },
+        {
+          "case": "no-route-2",
+          "repetition": 2,
+          "query_prepare_ns": 0,
+          "search_ns": 39800,
+          "cleanup_ns": 0,
+          "query_total_ns": 39800,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209920000
+        },
+        {
+          "case": "no-route-2",
+          "repetition": 3,
+          "query_prepare_ns": 0,
+          "search_ns": 35500,
+          "cleanup_ns": 0,
+          "query_total_ns": 35500,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209920000
+        },
+        {
+          "case": "no-route-2",
+          "repetition": 4,
+          "query_prepare_ns": 0,
+          "search_ns": 35600,
+          "cleanup_ns": 0,
+          "query_total_ns": 35600,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209920000
+        },
+        {
+          "case": "no-route-2",
+          "repetition": 5,
+          "query_prepare_ns": 0,
+          "search_ns": 36200,
+          "cleanup_ns": 0,
+          "query_total_ns": 36200,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209920000
+        },
+        {
+          "case": "no-route-2",
+          "repetition": 6,
+          "query_prepare_ns": 0,
+          "search_ns": 38700,
+          "cleanup_ns": 0,
+          "query_total_ns": 38700,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209920000
+        }
+      ],
+      "load_ns": 127021156300,
+      "selection_ns": 475129100,
+      "stations": 1000,
+      "connections": 15722,
+      "active_service_ids": [
+        "307679",
+        "307682"
+      ],
+      "baseline": {
+        "rss_bytes": 26214400
+      },
+      "after_load": {
+        "rss_bytes": 222007296
+      },
+      "after_selection": {
+        "rss_bytes": 209829888
+      },
+      "before_prepare": {
+        "rss_bytes": 209833984
+      },
+      "prepare_ns": 5447700,
+      "after_prepare": {
+        "rss_bytes": 209833984
+      },
+      "prepared_memory": {
+        "rss_bytes": 209833984
+      },
+      "rss_bytes": 209920000,
+      "sampled_peak_rss_bytes": 239112192,
+      "memory_sample_count": 3185
+    },
+    {
+      "engine": "native_astar",
+      "mode": "memory",
+      "status": "complete",
+      "stage": "complete",
+      "samples": [
+        {
+          "case": "long-07",
+          "repetition": 0,
+          "query_prepare_ns": 0,
+          "search_ns": 66000,
+          "cleanup_ns": 0,
+          "query_total_ns": 66000,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209117184
+        }
+      ],
+      "load_ns": 109444725300,
+      "selection_ns": 612335900,
+      "stations": 1000,
+      "connections": 15722,
+      "active_service_ids": [
+        "307679",
+        "307682"
+      ],
+      "baseline": {
+        "rss_bytes": 26181632
+      },
+      "after_load": {
+        "rss_bytes": 222105600
+      },
+      "after_selection": {
+        "rss_bytes": 209104896
+      },
+      "before_prepare": {
+        "rss_bytes": 209104896
+      },
+      "prepare_ns": 15765800,
+      "after_prepare": {
+        "rss_bytes": 209104896
+      },
+      "prepared_memory": {
+        "rss_bytes": 209104896
+      },
+      "rss_bytes": 209117184,
+      "sampled_peak_rss_bytes": 238149632,
+      "memory_sample_count": 2886
+    },
+    {
+      "engine": "native_astar",
+      "mode": "memory",
+      "status": "complete",
+      "stage": "complete",
+      "samples": [
+        {
+          "case": "long-14",
+          "repetition": 0,
+          "query_prepare_ns": 0,
+          "search_ns": 68000,
+          "cleanup_ns": 0,
+          "query_total_ns": 68000,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 208551936
+        }
+      ],
+      "load_ns": 83923423900,
+      "selection_ns": 518103800,
+      "stations": 1000,
+      "connections": 15722,
+      "active_service_ids": [
+        "307679",
+        "307682"
+      ],
+      "baseline": {
+        "rss_bytes": 26079232
+      },
+      "after_load": {
+        "rss_bytes": 222052352
+      },
+      "after_selection": {
+        "rss_bytes": 208551936
+      },
+      "before_prepare": {
+        "rss_bytes": 208551936
+      },
+      "prepare_ns": 3529500,
+      "after_prepare": {
+        "rss_bytes": 208551936
+      },
+      "prepared_memory": {
+        "rss_bytes": 208551936
+      },
+      "rss_bytes": 208556032,
+      "sampled_peak_rss_bytes": 239124480,
+      "memory_sample_count": 2492
+    },
+    {
+      "engine": "native_astar",
+      "mode": "memory",
+      "status": "complete",
+      "stage": "complete",
+      "samples": [
+        {
+          "case": "medium-07",
+          "repetition": 0,
+          "query_prepare_ns": 0,
+          "search_ns": 310000,
+          "cleanup_ns": 0,
+          "query_total_ns": 310000,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 208838656
+        }
+      ],
+      "load_ns": 69070354500,
+      "selection_ns": 519585400,
+      "stations": 1000,
+      "connections": 15722,
+      "active_service_ids": [
+        "307679",
+        "307682"
+      ],
+      "baseline": {
+        "rss_bytes": 26025984
+      },
+      "after_load": {
+        "rss_bytes": 221876224
+      },
+      "after_selection": {
+        "rss_bytes": 208838656
+      },
+      "before_prepare": {
+        "rss_bytes": 208838656
+      },
+      "prepare_ns": 4100500,
+      "after_prepare": {
+        "rss_bytes": 208838656
+      },
+      "prepared_memory": {
+        "rss_bytes": 208838656
+      },
+      "rss_bytes": 208838656,
+      "sampled_peak_rss_bytes": 238145536,
+      "memory_sample_count": 2328
+    },
+    {
+      "engine": "native_astar",
+      "mode": "memory",
+      "status": "complete",
+      "stage": "complete",
+      "samples": [
+        {
+          "case": "medium-14",
+          "repetition": 0,
+          "query_prepare_ns": 0,
+          "search_ns": 74700,
+          "cleanup_ns": 0,
+          "query_total_ns": 74700,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 209211392
+        }
+      ],
+      "load_ns": 69332285000,
+      "selection_ns": 445036300,
+      "stations": 1000,
+      "connections": 15722,
+      "active_service_ids": [
+        "307679",
+        "307682"
+      ],
+      "baseline": {
+        "rss_bytes": 26054656
+      },
+      "after_load": {
+        "rss_bytes": 222158848
+      },
+      "after_selection": {
+        "rss_bytes": 209211392
+      },
+      "before_prepare": {
+        "rss_bytes": 209211392
+      },
+      "prepare_ns": 3993200,
+      "after_prepare": {
+        "rss_bytes": 209211392
+      },
+      "prepared_memory": {
+        "rss_bytes": 209211392
+      },
+      "rss_bytes": 209211392,
+      "sampled_peak_rss_bytes": 239288320,
+      "memory_sample_count": 2300
+    },
+    {
+      "engine": "native_astar",
+      "mode": "memory",
+      "status": "complete",
+      "stage": "complete",
+      "samples": [
+        {
+          "case": "short-07",
+          "repetition": 0,
+          "query_prepare_ns": 0,
+          "search_ns": 430400,
+          "cleanup_ns": 0,
+          "query_total_ns": 430400,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 208969728
+        }
+      ],
+      "load_ns": 70196762400,
+      "selection_ns": 407110400,
+      "stations": 1000,
+      "connections": 15722,
+      "active_service_ids": [
+        "307679",
+        "307682"
+      ],
+      "baseline": {
+        "rss_bytes": 26222592
+      },
+      "after_load": {
+        "rss_bytes": 222154752
+      },
+      "after_selection": {
+        "rss_bytes": 208969728
+      },
+      "before_prepare": {
+        "rss_bytes": 208969728
+      },
+      "prepare_ns": 5530400,
+      "after_prepare": {
+        "rss_bytes": 208969728
+      },
+      "prepared_memory": {
+        "rss_bytes": 208969728
+      },
+      "rss_bytes": 208969728,
+      "sampled_peak_rss_bytes": 239226880,
+      "memory_sample_count": 2364
+    },
+    {
+      "engine": "native_astar",
+      "mode": "memory",
+      "status": "complete",
+      "stage": "complete",
+      "samples": [
+        {
+          "case": "short-14",
+          "repetition": 0,
+          "query_prepare_ns": 0,
+          "search_ns": 78000,
+          "cleanup_ns": 0,
+          "query_total_ns": 78000,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 208977920
+        }
+      ],
+      "load_ns": 68795719800,
+      "selection_ns": 410414600,
+      "stations": 1000,
+      "connections": 15722,
+      "active_service_ids": [
+        "307679",
+        "307682"
+      ],
+      "baseline": {
+        "rss_bytes": 26202112
+      },
+      "after_load": {
+        "rss_bytes": 221949952
+      },
+      "after_selection": {
+        "rss_bytes": 208977920
+      },
+      "before_prepare": {
+        "rss_bytes": 208977920
+      },
+      "prepare_ns": 6931900,
+      "after_prepare": {
+        "rss_bytes": 208977920
+      },
+      "prepared_memory": {
+        "rss_bytes": 208977920
+      },
+      "rss_bytes": 208977920,
+      "sampled_peak_rss_bytes": 238149632,
+      "memory_sample_count": 2360
+    },
+    {
+      "engine": "native_astar",
+      "mode": "memory",
+      "status": "complete",
+      "stage": "complete",
+      "samples": [
+        {
+          "case": "no-route-1",
+          "repetition": 0,
+          "query_prepare_ns": 0,
+          "search_ns": 466100,
+          "cleanup_ns": 0,
+          "query_total_ns": 466100,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 208949248
+        }
+      ],
+      "load_ns": 65386190900,
+      "selection_ns": 420082600,
+      "stations": 1000,
+      "connections": 15722,
+      "active_service_ids": [
+        "307679",
+        "307682"
+      ],
+      "baseline": {
+        "rss_bytes": 26112000
+      },
+      "after_load": {
+        "rss_bytes": 221863936
+      },
+      "after_selection": {
+        "rss_bytes": 208949248
+      },
+      "before_prepare": {
+        "rss_bytes": 208949248
+      },
+      "prepare_ns": 5047700,
+      "after_prepare": {
+        "rss_bytes": 208949248
+      },
+      "prepared_memory": {
+        "rss_bytes": 208949248
+      },
+      "rss_bytes": 208949248,
+      "sampled_peak_rss_bytes": 239001600,
+      "memory_sample_count": 2290
+    },
+    {
+      "engine": "native_astar",
+      "mode": "memory",
+      "status": "complete",
+      "stage": "complete",
+      "samples": [
+        {
+          "case": "no-route-2",
+          "repetition": 0,
+          "query_prepare_ns": 0,
+          "search_ns": 84500,
+          "cleanup_ns": 0,
+          "query_total_ns": 84500,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 208936960
+        }
+      ],
+      "load_ns": 65052553300,
+      "selection_ns": 419186000,
+      "stations": 1000,
+      "connections": 15722,
+      "active_service_ids": [
+        "307679",
+        "307682"
+      ],
+      "baseline": {
+        "rss_bytes": 26103808
+      },
+      "after_load": {
+        "rss_bytes": 222208000
+      },
+      "after_selection": {
+        "rss_bytes": 208936960
+      },
+      "before_prepare": {
+        "rss_bytes": 208936960
+      },
+      "prepare_ns": 5084000,
+      "after_prepare": {
+        "rss_bytes": 208936960
+      },
+      "prepared_memory": {
+        "rss_bytes": 208936960
+      },
+      "rss_bytes": 208936960,
+      "sampled_peak_rss_bytes": 238264320,
+      "memory_sample_count": 2270
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "mode": "timing",
+      "status": "complete",
+      "stage": "complete",
+      "samples": [
+        {
+          "case": "long-07",
+          "repetition": 0,
+          "query_prepare_ns": 93800,
+          "search_ns": 70000,
+          "cleanup_ns": 9300,
+          "query_total_ns": 173100,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220381184
+        },
+        {
+          "case": "long-07",
+          "repetition": 1,
+          "query_prepare_ns": 32100,
+          "search_ns": 76700,
+          "cleanup_ns": 9600,
+          "query_total_ns": 118400,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220381184
+        },
+        {
+          "case": "long-07",
+          "repetition": 2,
+          "query_prepare_ns": 29300,
+          "search_ns": 73000,
+          "cleanup_ns": 9300,
+          "query_total_ns": 111600,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220381184
+        },
+        {
+          "case": "long-07",
+          "repetition": 3,
+          "query_prepare_ns": 29600,
+          "search_ns": 66200,
+          "cleanup_ns": 10100,
+          "query_total_ns": 105900,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220381184
+        },
+        {
+          "case": "long-07",
+          "repetition": 4,
+          "query_prepare_ns": 25900,
+          "search_ns": 61600,
+          "cleanup_ns": 7500,
+          "query_total_ns": 95000,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220381184
+        },
+        {
+          "case": "long-07",
+          "repetition": 5,
+          "query_prepare_ns": 32800,
+          "search_ns": 91200,
+          "cleanup_ns": 8000,
+          "query_total_ns": 132000,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220381184
+        },
+        {
+          "case": "long-07",
+          "repetition": 6,
+          "query_prepare_ns": 33100,
+          "search_ns": 731200,
+          "cleanup_ns": 6400,
+          "query_total_ns": 770700,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220381184
+        },
+        {
+          "case": "long-14",
+          "repetition": 0,
+          "query_prepare_ns": 5900,
+          "search_ns": 21100,
+          "cleanup_ns": 3500,
+          "query_total_ns": 30500,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220381184
+        },
+        {
+          "case": "long-14",
+          "repetition": 1,
+          "query_prepare_ns": 25500,
+          "search_ns": 61500,
+          "cleanup_ns": 6900,
+          "query_total_ns": 93900,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220381184
+        },
+        {
+          "case": "long-14",
+          "repetition": 2,
+          "query_prepare_ns": 28600,
+          "search_ns": 56900,
+          "cleanup_ns": 8500,
+          "query_total_ns": 94000,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220381184
+        },
+        {
+          "case": "long-14",
+          "repetition": 3,
+          "query_prepare_ns": 27100,
+          "search_ns": 61800,
+          "cleanup_ns": 7900,
+          "query_total_ns": 96800,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220381184
+        },
+        {
+          "case": "long-14",
+          "repetition": 4,
+          "query_prepare_ns": 27600,
+          "search_ns": 62600,
+          "cleanup_ns": 8100,
+          "query_total_ns": 98300,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220381184
+        },
+        {
+          "case": "long-14",
+          "repetition": 5,
+          "query_prepare_ns": 29700,
+          "search_ns": 67200,
+          "cleanup_ns": 8400,
+          "query_total_ns": 105300,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220381184
+        },
+        {
+          "case": "long-14",
+          "repetition": 6,
+          "query_prepare_ns": 27500,
+          "search_ns": 62500,
+          "cleanup_ns": 7000,
+          "query_total_ns": 97000,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220381184
+        },
+        {
+          "case": "medium-07",
+          "repetition": 0,
+          "query_prepare_ns": 66300,
+          "search_ns": 411400,
+          "cleanup_ns": 12800,
+          "query_total_ns": 490500,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220426240
+        },
+        {
+          "case": "medium-07",
+          "repetition": 1,
+          "query_prepare_ns": 144600,
+          "search_ns": 872400,
+          "cleanup_ns": 33000,
+          "query_total_ns": 1050000,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220426240
+        },
+        {
+          "case": "medium-07",
+          "repetition": 2,
+          "query_prepare_ns": 138400,
+          "search_ns": 503800,
+          "cleanup_ns": 16900,
+          "query_total_ns": 659100,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220426240
+        },
+        {
+          "case": "medium-07",
+          "repetition": 3,
+          "query_prepare_ns": 132600,
+          "search_ns": 470300,
+          "cleanup_ns": 17000,
+          "query_total_ns": 619900,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220426240
+        },
+        {
+          "case": "medium-07",
+          "repetition": 4,
+          "query_prepare_ns": 125700,
+          "search_ns": 990200,
+          "cleanup_ns": 100800,
+          "query_total_ns": 1216700,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220426240
+        },
+        {
+          "case": "medium-07",
+          "repetition": 5,
+          "query_prepare_ns": 127700,
+          "search_ns": 434800,
+          "cleanup_ns": 16400,
+          "query_total_ns": 578900,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220426240
+        },
+        {
+          "case": "medium-07",
+          "repetition": 6,
+          "query_prepare_ns": 85300,
+          "search_ns": 425100,
+          "cleanup_ns": 14800,
+          "query_total_ns": 525200,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220426240
+        },
+        {
+          "case": "medium-14",
+          "repetition": 0,
+          "query_prepare_ns": 447200,
+          "search_ns": 22900,
+          "cleanup_ns": 67100,
+          "query_total_ns": 537200,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220426240
+        },
+        {
+          "case": "medium-14",
+          "repetition": 1,
+          "query_prepare_ns": 595100,
+          "search_ns": 56400,
+          "cleanup_ns": 104600,
+          "query_total_ns": 756100,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220426240
+        },
+        {
+          "case": "medium-14",
+          "repetition": 2,
+          "query_prepare_ns": 546500,
+          "search_ns": 51600,
+          "cleanup_ns": 59200,
+          "query_total_ns": 657300,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220426240
+        },
+        {
+          "case": "medium-14",
+          "repetition": 3,
+          "query_prepare_ns": 531200,
+          "search_ns": 53600,
+          "cleanup_ns": 59600,
+          "query_total_ns": 644400,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220426240
+        },
+        {
+          "case": "medium-14",
+          "repetition": 4,
+          "query_prepare_ns": 653000,
+          "search_ns": 56700,
+          "cleanup_ns": 90900,
+          "query_total_ns": 800600,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220426240
+        },
+        {
+          "case": "medium-14",
+          "repetition": 5,
+          "query_prepare_ns": 455100,
+          "search_ns": 43800,
+          "cleanup_ns": 54900,
+          "query_total_ns": 553800,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220426240
+        },
+        {
+          "case": "medium-14",
+          "repetition": 6,
+          "query_prepare_ns": 626900,
+          "search_ns": 59300,
+          "cleanup_ns": 86900,
+          "query_total_ns": 773100,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220430336
+        },
+        {
+          "case": "short-07",
+          "repetition": 0,
+          "query_prepare_ns": 8400,
+          "search_ns": 655700,
+          "cleanup_ns": 4700,
+          "query_total_ns": 668800,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "short-07",
+          "repetition": 1,
+          "query_prepare_ns": 27700,
+          "search_ns": 1513000,
+          "cleanup_ns": 10400,
+          "query_total_ns": 1551100,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "short-07",
+          "repetition": 2,
+          "query_prepare_ns": 37100,
+          "search_ns": 1265300,
+          "cleanup_ns": 9000,
+          "query_total_ns": 1311400,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "short-07",
+          "repetition": 3,
+          "query_prepare_ns": 39200,
+          "search_ns": 950400,
+          "cleanup_ns": 11000,
+          "query_total_ns": 1000600,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "short-07",
+          "repetition": 4,
+          "query_prepare_ns": 34300,
+          "search_ns": 1261500,
+          "cleanup_ns": 10700,
+          "query_total_ns": 1306500,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "short-07",
+          "repetition": 5,
+          "query_prepare_ns": 32700,
+          "search_ns": 978100,
+          "cleanup_ns": 8200,
+          "query_total_ns": 1019000,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "short-07",
+          "repetition": 6,
+          "query_prepare_ns": 34400,
+          "search_ns": 1320400,
+          "cleanup_ns": 13800,
+          "query_total_ns": 1368600,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "short-14",
+          "repetition": 0,
+          "query_prepare_ns": 265000,
+          "search_ns": 21100,
+          "cleanup_ns": 36800,
+          "query_total_ns": 322900,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "short-14",
+          "repetition": 1,
+          "query_prepare_ns": 321300,
+          "search_ns": 51200,
+          "cleanup_ns": 43600,
+          "query_total_ns": 416100,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "short-14",
+          "repetition": 2,
+          "query_prepare_ns": 342500,
+          "search_ns": 48000,
+          "cleanup_ns": 51700,
+          "query_total_ns": 442200,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "short-14",
+          "repetition": 3,
+          "query_prepare_ns": 279200,
+          "search_ns": 44600,
+          "cleanup_ns": 40100,
+          "query_total_ns": 363900,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "short-14",
+          "repetition": 4,
+          "query_prepare_ns": 264400,
+          "search_ns": 45700,
+          "cleanup_ns": 38400,
+          "query_total_ns": 348500,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "short-14",
+          "repetition": 5,
+          "query_prepare_ns": 277900,
+          "search_ns": 47900,
+          "cleanup_ns": 40800,
+          "query_total_ns": 366600,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "short-14",
+          "repetition": 6,
+          "query_prepare_ns": 205500,
+          "search_ns": 50800,
+          "cleanup_ns": 23900,
+          "query_total_ns": 280200,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "no-route-1",
+          "repetition": 0,
+          "query_prepare_ns": 13800,
+          "search_ns": 727200,
+          "cleanup_ns": 5800,
+          "query_total_ns": 746800,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "no-route-1",
+          "repetition": 1,
+          "query_prepare_ns": 28200,
+          "search_ns": 557800,
+          "cleanup_ns": 9000,
+          "query_total_ns": 595000,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "no-route-1",
+          "repetition": 2,
+          "query_prepare_ns": 25300,
+          "search_ns": 639100,
+          "cleanup_ns": 7200,
+          "query_total_ns": 671600,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "no-route-1",
+          "repetition": 3,
+          "query_prepare_ns": 26400,
+          "search_ns": 660000,
+          "cleanup_ns": 7200,
+          "query_total_ns": 693600,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "no-route-1",
+          "repetition": 4,
+          "query_prepare_ns": 29000,
+          "search_ns": 645600,
+          "cleanup_ns": 8500,
+          "query_total_ns": 683100,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "no-route-1",
+          "repetition": 5,
+          "query_prepare_ns": 24200,
+          "search_ns": 722100,
+          "cleanup_ns": 7600,
+          "query_total_ns": 753900,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "no-route-1",
+          "repetition": 6,
+          "query_prepare_ns": 39000,
+          "search_ns": 727000,
+          "cleanup_ns": 10600,
+          "query_total_ns": 776600,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "no-route-2",
+          "repetition": 0,
+          "query_prepare_ns": 9000,
+          "search_ns": 34800,
+          "cleanup_ns": 3700,
+          "query_total_ns": 47500,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "no-route-2",
+          "repetition": 1,
+          "query_prepare_ns": 31800,
+          "search_ns": 75900,
+          "cleanup_ns": 8000,
+          "query_total_ns": 115700,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "no-route-2",
+          "repetition": 2,
+          "query_prepare_ns": 27500,
+          "search_ns": 71700,
+          "cleanup_ns": 7100,
+          "query_total_ns": 106300,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "no-route-2",
+          "repetition": 3,
+          "query_prepare_ns": 26500,
+          "search_ns": 69300,
+          "cleanup_ns": 7000,
+          "query_total_ns": 102800,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "no-route-2",
+          "repetition": 4,
+          "query_prepare_ns": 27200,
+          "search_ns": 70000,
+          "cleanup_ns": 6700,
+          "query_total_ns": 103900,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "no-route-2",
+          "repetition": 5,
+          "query_prepare_ns": 22600,
+          "search_ns": 54100,
+          "cleanup_ns": 4800,
+          "query_total_ns": 81500,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        },
+        {
+          "case": "no-route-2",
+          "repetition": 6,
+          "query_prepare_ns": 23600,
+          "search_ns": 53400,
+          "cleanup_ns": 4600,
+          "query_total_ns": 81600,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 220450816
+        }
+      ],
+      "load_ns": 64636084900,
+      "selection_ns": 408680100,
+      "stations": 1000,
+      "connections": 15722,
+      "active_service_ids": [
+        "307679",
+        "307682"
+      ],
+      "baseline": {
+        "rss_bytes": 26021888
+      },
+      "after_load": {
+        "rss_bytes": 221851648
+      },
+      "after_selection": {
+        "rss_bytes": 209858560
+      },
+      "before_prepare": {
+        "rss_bytes": 209858560
+      },
+      "expanded_nodes": 29842,
+      "expanded_edges": 45287,
+      "prepare_ns": 766393500,
+      "after_prepare": {
+        "rss_bytes": 220360704
+      },
+      "prepared_memory": {
+        "rss_bytes": 220360704
+      },
+      "rss_bytes": 220450816,
+      "sampled_peak_rss_bytes": 237875200,
+      "memory_sample_count": 2313
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "mode": "memory",
+      "status": "complete",
+      "stage": "complete",
+      "samples": [
+        {
+          "case": "long-07",
+          "repetition": 0,
+          "query_prepare_ns": 41000,
+          "search_ns": 1094600,
+          "cleanup_ns": 10600,
+          "query_total_ns": 1146200,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 219262976
+        }
+      ],
+      "load_ns": 94364698700,
+      "selection_ns": 572581700,
+      "stations": 1000,
+      "connections": 15722,
+      "active_service_ids": [
+        "307679",
+        "307682"
+      ],
+      "baseline": {
+        "rss_bytes": 25956352
+      },
+      "after_load": {
+        "rss_bytes": 221904896
+      },
+      "after_selection": {
+        "rss_bytes": 208461824
+      },
+      "before_prepare": {
+        "rss_bytes": 208461824
+      },
+      "expanded_nodes": 29842,
+      "expanded_edges": 45287,
+      "prepare_ns": 1017458800,
+      "after_prepare": {
+        "rss_bytes": 219258880
+      },
+      "prepared_memory": {
+        "rss_bytes": 219258880
+      },
+      "rss_bytes": 219262976,
+      "sampled_peak_rss_bytes": 237707264,
+      "memory_sample_count": 2771
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "mode": "memory",
+      "status": "complete",
+      "stage": "complete",
+      "samples": [
+        {
+          "case": "long-14",
+          "repetition": 0,
+          "query_prepare_ns": 40100,
+          "search_ns": 1170800,
+          "cleanup_ns": 14500,
+          "query_total_ns": 1225400,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 219602944
+        }
+      ],
+      "load_ns": 81271131100,
+      "selection_ns": 401575200,
+      "stations": 1000,
+      "connections": 15722,
+      "active_service_ids": [
+        "307679",
+        "307682"
+      ],
+      "baseline": {
+        "rss_bytes": 26034176
+      },
+      "after_load": {
+        "rss_bytes": 222089216
+      },
+      "after_selection": {
+        "rss_bytes": 209121280
+      },
+      "before_prepare": {
+        "rss_bytes": 209121280
+      },
+      "expanded_nodes": 29842,
+      "expanded_edges": 45287,
+      "prepare_ns": 613818300,
+      "after_prepare": {
+        "rss_bytes": 219598848
+      },
+      "prepared_memory": {
+        "rss_bytes": 219598848
+      },
+      "rss_bytes": 219602944,
+      "sampled_peak_rss_bytes": 239210496,
+      "memory_sample_count": 2498
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "mode": "memory",
+      "status": "complete",
+      "stage": "complete",
+      "samples": [
+        {
+          "case": "medium-07",
+          "repetition": 0,
+          "query_prepare_ns": 145700,
+          "search_ns": 1912000,
+          "cleanup_ns": 46500,
+          "query_total_ns": 2104200,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 219377664
+        }
+      ],
+      "load_ns": 80400058100,
+      "selection_ns": 342281200,
+      "stations": 1000,
+      "connections": 15722,
+      "active_service_ids": [
+        "307679",
+        "307682"
+      ],
+      "baseline": {
+        "rss_bytes": 26132480
+      },
+      "after_load": {
+        "rss_bytes": 222093312
+      },
+      "after_selection": {
+        "rss_bytes": 208891904
+      },
+      "before_prepare": {
+        "rss_bytes": 208891904
+      },
+      "expanded_nodes": 29842,
+      "expanded_edges": 45287,
+      "prepare_ns": 684929800,
+      "after_prepare": {
+        "rss_bytes": 220381184
+      },
+      "prepared_memory": {
+        "rss_bytes": 219365376
+      },
+      "rss_bytes": 219377664,
+      "sampled_peak_rss_bytes": 239235072,
+      "memory_sample_count": 2325
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "mode": "memory",
+      "status": "complete",
+      "stage": "complete",
+      "samples": [
+        {
+          "case": "medium-14",
+          "repetition": 0,
+          "query_prepare_ns": 829400,
+          "search_ns": 2261700,
+          "cleanup_ns": 85800,
+          "query_total_ns": 3176900,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 219467776
+        }
+      ],
+      "load_ns": 55258167700,
+      "selection_ns": 751897900,
+      "stations": 1000,
+      "connections": 15722,
+      "active_service_ids": [
+        "307679",
+        "307682"
+      ],
+      "baseline": {
+        "rss_bytes": 26234880
+      },
+      "after_load": {
+        "rss_bytes": 222212096
+      },
+      "after_selection": {
+        "rss_bytes": 209170432
+      },
+      "before_prepare": {
+        "rss_bytes": 209170432
+      },
+      "expanded_nodes": 29842,
+      "expanded_edges": 45287,
+      "prepare_ns": 1038203900,
+      "after_prepare": {
+        "rss_bytes": 219459584
+      },
+      "prepared_memory": {
+        "rss_bytes": 219459584
+      },
+      "rss_bytes": 219467776,
+      "sampled_peak_rss_bytes": 238276608,
+      "memory_sample_count": 1811
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "mode": "memory",
+      "status": "complete",
+      "stage": "complete",
+      "samples": [
+        {
+          "case": "short-07",
+          "repetition": 0,
+          "query_prepare_ns": 110600,
+          "search_ns": 6140200,
+          "cleanup_ns": 33700,
+          "query_total_ns": 6284500,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 219324416
+        }
+      ],
+      "load_ns": 96475646600,
+      "selection_ns": 746964100,
+      "stations": 1000,
+      "connections": 15722,
+      "active_service_ids": [
+        "307679",
+        "307682"
+      ],
+      "baseline": {
+        "rss_bytes": 26165248
+      },
+      "after_load": {
+        "rss_bytes": 222097408
+      },
+      "after_selection": {
+        "rss_bytes": 208482304
+      },
+      "before_prepare": {
+        "rss_bytes": 208482304
+      },
+      "expanded_nodes": 29842,
+      "expanded_edges": 45287,
+      "prepare_ns": 1154320400,
+      "after_prepare": {
+        "rss_bytes": 219258880
+      },
+      "prepared_memory": {
+        "rss_bytes": 219258880
+      },
+      "rss_bytes": 219324416,
+      "sampled_peak_rss_bytes": 239185920,
+      "memory_sample_count": 2399
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "mode": "memory",
+      "status": "complete",
+      "stage": "complete",
+      "samples": [
+        {
+          "case": "short-14",
+          "repetition": 0,
+          "query_prepare_ns": 948200,
+          "search_ns": 3742000,
+          "cleanup_ns": 220500,
+          "query_total_ns": 4910700,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 219271168
+        }
+      ],
+      "load_ns": 99582269700,
+      "selection_ns": 863900800,
+      "stations": 1000,
+      "connections": 15722,
+      "active_service_ids": [
+        "307679",
+        "307682"
+      ],
+      "baseline": {
+        "rss_bytes": 26099712
+      },
+      "after_load": {
+        "rss_bytes": 222248960
+      },
+      "after_selection": {
+        "rss_bytes": 208539648
+      },
+      "before_prepare": {
+        "rss_bytes": 208543744
+      },
+      "expanded_nodes": 29842,
+      "expanded_edges": 45287,
+      "prepare_ns": 1122555400,
+      "after_prepare": {
+        "rss_bytes": 219246592
+      },
+      "prepared_memory": {
+        "rss_bytes": 219246592
+      },
+      "rss_bytes": 219271168,
+      "sampled_peak_rss_bytes": 238276608,
+      "memory_sample_count": 2492
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "mode": "memory",
+      "status": "complete",
+      "stage": "complete",
+      "samples": [
+        {
+          "case": "no-route-1",
+          "repetition": 0,
+          "query_prepare_ns": 125200,
+          "search_ns": 5627000,
+          "cleanup_ns": 45800,
+          "query_total_ns": 5798000,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 219193344
+        }
+      ],
+      "load_ns": 102027349100,
+      "selection_ns": 934938600,
+      "stations": 1000,
+      "connections": 15722,
+      "active_service_ids": [
+        "307679",
+        "307682"
+      ],
+      "baseline": {
+        "rss_bytes": 26210304
+      },
+      "after_load": {
+        "rss_bytes": 221757440
+      },
+      "after_selection": {
+        "rss_bytes": 208445440
+      },
+      "before_prepare": {
+        "rss_bytes": 208445440
+      },
+      "expanded_nodes": 29842,
+      "expanded_edges": 45287,
+      "prepare_ns": 1111275400,
+      "after_prepare": {
+        "rss_bytes": 219185152
+      },
+      "prepared_memory": {
+        "rss_bytes": 219185152
+      },
+      "rss_bytes": 219193344,
+      "sampled_peak_rss_bytes": 237985792,
+      "memory_sample_count": 2479
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "mode": "memory",
+      "status": "complete",
+      "stage": "complete",
+      "samples": [
+        {
+          "case": "no-route-2",
+          "repetition": 0,
+          "query_prepare_ns": 83000,
+          "search_ns": 3137800,
+          "cleanup_ns": 27100,
+          "query_total_ns": 3247900,
+          "arrival": null,
+          "legs": null,
+          "path": null,
+          "rss_bytes": 219955200
+        }
+      ],
+      "load_ns": 88307564400,
+      "selection_ns": 680977100,
+      "stations": 1000,
+      "connections": 15722,
+      "active_service_ids": [
+        "307679",
+        "307682"
+      ],
+      "baseline": {
+        "rss_bytes": 26193920
+      },
+      "after_load": {
+        "rss_bytes": 222089216
+      },
+      "after_selection": {
+        "rss_bytes": 209219584
+      },
+      "before_prepare": {
+        "rss_bytes": 209219584
+      },
+      "expanded_nodes": 29842,
+      "expanded_edges": 45287,
+      "prepare_ns": 1310784100,
+      "after_prepare": {
+        "rss_bytes": 219930624
+      },
+      "prepared_memory": {
+        "rss_bytes": 219930624
+      },
+      "rss_bytes": 219955200,
+      "sampled_peak_rss_bytes": 238125056,
+      "memory_sample_count": 2297
+    }
+  ],
+  "errors": [],
+  "summary": [
+    {
+      "engine": "native_astar",
+      "case": "long-07",
+      "phase": "query_total",
+      "count": 7,
+      "median_ns": 36900,
+      "min_ns": 12900,
+      "max_ns": 43800,
+      "iqr_ns": 12550.0
+    },
+    {
+      "engine": "native_astar",
+      "case": "long-07",
+      "phase": "search",
+      "count": 7,
+      "median_ns": 36900,
+      "min_ns": 12900,
+      "max_ns": 43800,
+      "iqr_ns": 12550.0
+    },
+    {
+      "engine": "native_astar",
+      "case": "long-14",
+      "phase": "query_total",
+      "count": 7,
+      "median_ns": 25300,
+      "min_ns": 10200,
+      "max_ns": 31200,
+      "iqr_ns": 1750.0
+    },
+    {
+      "engine": "native_astar",
+      "case": "long-14",
+      "phase": "search",
+      "count": 7,
+      "median_ns": 25300,
+      "min_ns": 10200,
+      "max_ns": 31200,
+      "iqr_ns": 1750.0
+    },
+    {
+      "engine": "native_astar",
+      "case": "medium-07",
+      "phase": "query_total",
+      "count": 7,
+      "median_ns": 234800,
+      "min_ns": 172300,
+      "max_ns": 594500,
+      "iqr_ns": 68350.0
+    },
+    {
+      "engine": "native_astar",
+      "case": "medium-07",
+      "phase": "search",
+      "count": 7,
+      "median_ns": 234800,
+      "min_ns": 172300,
+      "max_ns": 594500,
+      "iqr_ns": 68350.0
+    },
+    {
+      "engine": "native_astar",
+      "case": "medium-14",
+      "phase": "query_total",
+      "count": 7,
+      "median_ns": 27600,
+      "min_ns": 7300,
+      "max_ns": 44000,
+      "iqr_ns": 2300.0
+    },
+    {
+      "engine": "native_astar",
+      "case": "medium-14",
+      "phase": "search",
+      "count": 7,
+      "median_ns": 27600,
+      "min_ns": 7300,
+      "max_ns": 44000,
+      "iqr_ns": 2300.0
+    },
+    {
+      "engine": "native_astar",
+      "case": "short-07",
+      "phase": "query_total",
+      "count": 7,
+      "median_ns": 443800,
+      "min_ns": 403200,
+      "max_ns": 579300,
+      "iqr_ns": 73600.0
+    },
+    {
+      "engine": "native_astar",
+      "case": "short-07",
+      "phase": "search",
+      "count": 7,
+      "median_ns": 443800,
+      "min_ns": 403200,
+      "max_ns": 579300,
+      "iqr_ns": 73600.0
+    },
+    {
+      "engine": "native_astar",
+      "case": "short-14",
+      "phase": "query_total",
+      "count": 7,
+      "median_ns": 31800,
+      "min_ns": 19500,
+      "max_ns": 38000,
+      "iqr_ns": 3800.0
+    },
+    {
+      "engine": "native_astar",
+      "case": "short-14",
+      "phase": "search",
+      "count": 7,
+      "median_ns": 31800,
+      "min_ns": 19500,
+      "max_ns": 38000,
+      "iqr_ns": 3800.0
+    },
+    {
+      "engine": "native_astar",
+      "case": "no-route-1",
+      "phase": "query_total",
+      "count": 7,
+      "median_ns": 269800,
+      "min_ns": 200700,
+      "max_ns": 297500,
+      "iqr_ns": 44900.0
+    },
+    {
+      "engine": "native_astar",
+      "case": "no-route-1",
+      "phase": "search",
+      "count": 7,
+      "median_ns": 269800,
+      "min_ns": 200700,
+      "max_ns": 297500,
+      "iqr_ns": 44900.0
+    },
+    {
+      "engine": "native_astar",
+      "case": "no-route-2",
+      "phase": "query_total",
+      "count": 7,
+      "median_ns": 36200,
+      "min_ns": 4800,
+      "max_ns": 247600,
+      "iqr_ns": 3700.0
+    },
+    {
+      "engine": "native_astar",
+      "case": "no-route-2",
+      "phase": "search",
+      "count": 7,
+      "median_ns": 36200,
+      "min_ns": 4800,
+      "max_ns": 247600,
+      "iqr_ns": 3700.0
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "case": "long-07",
+      "phase": "query_total",
+      "count": 7,
+      "median_ns": 118400,
+      "min_ns": 95000,
+      "max_ns": 770700,
+      "iqr_ns": 43800.0
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "case": "long-07",
+      "phase": "search",
+      "count": 7,
+      "median_ns": 73000,
+      "min_ns": 61600,
+      "max_ns": 731200,
+      "iqr_ns": 15850.0
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "case": "long-14",
+      "phase": "query_total",
+      "count": 7,
+      "median_ns": 96800,
+      "min_ns": 30500,
+      "max_ns": 105300,
+      "iqr_ns": 3700.0
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "case": "long-14",
+      "phase": "search",
+      "count": 7,
+      "median_ns": 61800,
+      "min_ns": 21100,
+      "max_ns": 67200,
+      "iqr_ns": 3350.0
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "case": "medium-07",
+      "phase": "query_total",
+      "count": 7,
+      "median_ns": 619900,
+      "min_ns": 490500,
+      "max_ns": 1216700,
+      "iqr_ns": 302500.0
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "case": "medium-07",
+      "phase": "search",
+      "count": 7,
+      "median_ns": 470300,
+      "min_ns": 411400,
+      "max_ns": 990200,
+      "iqr_ns": 258150.0
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "case": "medium-14",
+      "phase": "query_total",
+      "count": 7,
+      "median_ns": 657300,
+      "min_ns": 537200,
+      "max_ns": 800600,
+      "iqr_ns": 165500.0
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "case": "medium-14",
+      "phase": "search",
+      "count": 7,
+      "median_ns": 53600,
+      "min_ns": 22900,
+      "max_ns": 59300,
+      "iqr_ns": 8850.0
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "case": "short-07",
+      "phase": "query_total",
+      "count": 7,
+      "median_ns": 1306500,
+      "min_ns": 668800,
+      "max_ns": 1551100,
+      "iqr_ns": 330200.0
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "case": "short-07",
+      "phase": "search",
+      "count": 7,
+      "median_ns": 1261500,
+      "min_ns": 655700,
+      "max_ns": 1513000,
+      "iqr_ns": 328600.0
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "case": "short-14",
+      "phase": "query_total",
+      "count": 7,
+      "median_ns": 363900,
+      "min_ns": 280200,
+      "max_ns": 442200,
+      "iqr_ns": 55650.0
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "case": "short-14",
+      "phase": "search",
+      "count": 7,
+      "median_ns": 47900,
+      "min_ns": 21100,
+      "max_ns": 51200,
+      "iqr_ns": 4250.0
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "case": "no-route-1",
+      "phase": "query_total",
+      "count": 7,
+      "median_ns": 693600,
+      "min_ns": 595000,
+      "max_ns": 776600,
+      "iqr_ns": 73000.0
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "case": "no-route-1",
+      "phase": "search",
+      "count": 7,
+      "median_ns": 660000,
+      "min_ns": 557800,
+      "max_ns": 727200,
+      "iqr_ns": 82200.0
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "case": "no-route-2",
+      "phase": "query_total",
+      "count": 7,
+      "median_ns": 102800,
+      "min_ns": 47500,
+      "max_ns": 115700,
+      "iqr_ns": 23550.0
+    },
+    {
+      "engine": "networkx_dijkstra",
+      "case": "no-route-2",
+      "phase": "search",
+      "count": 7,
+      "median_ns": 69300,
+      "min_ns": 34800,
+      "max_ns": 75900,
+      "iqr_ns": 17100.0
+    }
+  ],
+  "execution_id": "940e93ec776342d583641b02f5916368",
+  "equivalence": {
+    "status": "verified",
+    "cases": [
+      "long-07",
+      "long-14",
+      "medium-07",
+      "medium-14",
+      "no-route-1",
+      "no-route-2",
+      "short-07",
+      "short-14"
+    ]
+  },
+  "limitations": [
+    "Induced subsets may disconnect routes; the complete feed is loaded before selection.",
+    "RSS is sampled, not a hard cap or exact peak, and includes ingestion and checkpoints.",
+    "Different representations and a small query sample do not establish general superiority.",
+    "Checkpoint writes and validation are outside query timers, but can affect process RSS."
+  ],
+  "queries": [
+    {
+      "origin": "14785939",
+      "destination": "14784501",
+      "departure": "07:00:00",
+      "distance_km": 13.809047545440803,
+      "distance_band": "long",
+      "expected_arrival": 478.3833333333333,
+      "candidate_index": 1,
+      "id": "long-07",
+      "departure_minutes": 420.0
+    },
+    {
+      "origin": "14785791",
+      "destination": "14793201",
+      "departure": "14:00:00",
+      "distance_km": 14.970889199450733,
+      "distance_band": "long",
+      "expected_arrival": 940.3833333333333,
+      "candidate_index": 4,
+      "id": "long-14",
+      "departure_minutes": 840.0
+    },
+    {
+      "origin": "14787813",
+      "destination": "14786408",
+      "departure": "07:00:00",
+      "distance_km": 3.9666533456199606,
+      "distance_band": "medium",
+      "expected_arrival": 509.6333333333333,
+      "candidate_index": 3,
+      "id": "medium-07",
+      "departure_minutes": 420.0
+    },
+    {
+      "origin": "14791139",
+      "destination": "14784615",
+      "departure": "14:00:00",
+      "distance_km": 7.141887318239492,
+      "distance_band": "medium",
+      "expected_arrival": 895.1333333333333,
+      "candidate_index": 6,
+      "id": "medium-14",
+      "departure_minutes": 840.0
+    },
+    {
+      "origin": "14785766",
+      "destination": "14790444",
+      "departure": "07:00:00",
+      "distance_km": 1.930097989116157,
+      "distance_band": "short",
+      "expected_arrival": 464.53333333333336,
+      "candidate_index": 31,
+      "id": "short-07",
+      "departure_minutes": 420.0
+    },
+    {
+      "origin": "14786813",
+      "destination": "14791807",
+      "departure": "14:00:00",
+      "distance_km": 1.9814490059672871,
+      "distance_band": "short",
+      "expected_arrival": 879.8,
+      "candidate_index": 38,
+      "id": "short-14",
+      "departure_minutes": 840.0
+    },
+    {
+      "origin": "14788682",
+      "destination": "14788174",
+      "departure": "07:00:00",
+      "distance_km": 3.6792936873908153,
+      "distance_band": "medium",
+      "expected_arrival": null,
+      "candidate_index": 2,
+      "id": "no-route-1",
+      "departure_minutes": 420.0
+    },
+    {
+      "origin": "14786748",
+      "destination": "14791151",
+      "departure": "07:00:00",
+      "distance_km": 11.266282431238468,
+      "distance_band": "long",
+      "expected_arrival": null,
+      "candidate_index": 15,
+      "id": "no-route-2",
+      "departure_minutes": 420.0
+    }
+  ],
+  "metadata": {
+    "started_at_utc": "2026-11-21T14:09:43.375511+00:00",
+    "python": "3.14.7 (tags/v3.14.7:823f032, Aug  5 2026, 10:51:32) [MSC v.1944 64 bit (AMD64)]",
+    "networkx": "3.7",
+    "psutil": "7.2.2",
+    "package_versions": {
+      "fastapi": "0.162.0",
+      "uvicorn": "0.54.0",
+      "pydantic": "2.14.3",
+      "pytest": "9.2.0",
+      "pytest-cov": "7.1.0",
+      "httpx2": "2.16.2",
+      "networkx": "3.7",
+      "psutil": "7.2.2"
+    },
+    "platform": "Windows-11-10.0.26200-SP0",
+    "cpu": "Intel64 Family 6 Model 186 Stepping 3, GenuineIntel",
+    "logical_cpu_count": 12,
+    "memory_info": {
+      "total": 14710988800,
+      "available": 2133643264,
+      "percent": 85.5,
+      "used": 12577345536,
+      "free": 2133643264
+    },
+    "memory_method": "psutil_rss_snapshots_and_external_sampling",
+    "sample_interval_seconds": 0.01,
+    "memory_limit_kind": "sampled_worker_rss",
+    "sampled_rss_scope": "sum_rss_of_worker_and_descendants_once_per_pid",
+    "commit": "b4359d62b6e1fc7cebe231243bcb48be4df9ed25",
+    "dirty": true,
+    "input_sha256": {
+      "stops.txt": "294f5330e5750b37c824609ee6dbbb531b0248c8e08e40fed864f34b12002127",
+      "routes.txt": "ca0f00d27cf61774ad0d2f191e6e820311ae26be67e33ed612278c24dbdf07ff",
+      "trips.txt": "fb41ac59bce19d52f6274fcb159e2c71d8ccd510fe324fbe948631bbb7847ce5",
+      "stop_times.txt": "ee3db9ff1dce3b5d5db9091a0ea07526796fb7f5f42f6aad326326fe78da6930",
+      "calendar.txt": "a537a8b0f39a671079a9d70ac1380f834759d3b0e48d2e44ccc774552675d57c",
+      "calendar_dates.txt": "4274d1317758dc25c4fa2051105f38c1c8918c5a885ac0abb9114cb5b1105efd"
+    },
+    "queries_sha256": "63142998e52068c456d4c7c0274ada7a49955a0626780cdde38261d2bb09c1b3",
+    "service_date": "2026-11-17",
+    "data_dir": "C:\\Users\\ferna\\TP-Grafos\\data\\gtfs",
+    "repetitions": 7,
+    "warmups": 2,
+    "timeout_seconds": 600,
+    "memory_limit_mib": 4096,
+    "station_limit": 1000,
+    "seed": 42,
+    "tolerance_minutes": 1e-07
+  },
+  "selection": {
+    "seed": 42,
+    "max_candidates": 10000,
+    "method": "distinct_ordered_pairs_sampled_from_sorted_station_ids",
+    "short_km": "[0, 2)",
+    "medium_km": "[2, 8)",
+    "long_km": "[8, infinity)",
+    "service_date": "2026-11-17",
+    "stations": 9925,
+    "active_service_ids": [
+      "307679",
+      "307682"
+    ],
+    "input_sha256": {
+      "stops.txt": "294f5330e5750b37c824609ee6dbbb531b0248c8e08e40fed864f34b12002127",
+      "routes.txt": "ca0f00d27cf61774ad0d2f191e6e820311ae26be67e33ed612278c24dbdf07ff",
+      "trips.txt": "fb41ac59bce19d52f6274fcb159e2c71d8ccd510fe324fbe948631bbb7847ce5",
+      "stop_times.txt": "ee3db9ff1dce3b5d5db9091a0ea07526796fb7f5f42f6aad326326fe78da6930",
+      "calendar.txt": "a537a8b0f39a671079a9d70ac1380f834759d3b0e48d2e44ccc774552675d57c",
+      "calendar_dates.txt": "4274d1317758dc25c4fa2051105f38c1c8918c5a885ac0abb9114cb5b1105efd"
+    },
+    "reachability_engine": "native_astar_full_graph",
+    "limitation": "Selection is descriptive, not a representative statistical sample; NetworkX equivalence is checked separately by the campaign."
+  },
+  "planned_jobs": 18
+}

@@ -1,0 +1,20 @@
+{
+  "status": "valid",
+  "sizes": [
+    {
+      "station_limit": 100,
+      "directory": "100",
+      "status": "valid"
+    },
+    {
+      "station_limit": 1000,
+      "directory": "1000",
+      "status": "valid"
+    },
+    {
+      "station_limit": null,
+      "directory": "full",
+      "status": "valid"
+    }
+  ]
+}

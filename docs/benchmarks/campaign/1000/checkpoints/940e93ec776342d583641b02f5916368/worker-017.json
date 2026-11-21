@@ -1,0 +1,50 @@
+{
+  "engine": "networkx_dijkstra",
+  "mode": "memory",
+  "status": "complete",
+  "stage": "complete",
+  "samples": [
+    {
+      "case": "no-route-2",
+      "repetition": 0,
+      "query_prepare_ns": 83000,
+      "search_ns": 3137800,
+      "cleanup_ns": 27100,
+      "query_total_ns": 3247900,
+      "arrival": null,
+      "legs": null,
+      "path": null,
+      "rss_bytes": 219955200
+    }
+  ],
+  "load_ns": 88307564400,
+  "selection_ns": 680977100,
+  "stations": 1000,
+  "connections": 15722,
+  "active_service_ids": [
+    "307679",
+    "307682"
+  ],
+  "baseline": {
+    "rss_bytes": 26193920
+  },
+  "after_load": {
+    "rss_bytes": 222089216
+  },
+  "after_selection": {
+    "rss_bytes": 209219584
+  },
+  "before_prepare": {
+    "rss_bytes": 209219584
+  },
+  "expanded_nodes": 29842,
+  "expanded_edges": 45287,
+  "prepare_ns": 1310784100,
+  "after_prepare": {
+    "rss_bytes": 219930624
+  },
+  "prepared_memory": {
+    "rss_bytes": 219930624
+  },
+  "rss_bytes": 219955200
+}
