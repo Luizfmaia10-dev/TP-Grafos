@@ -76,16 +76,16 @@ Data Limite: 22/11/2026 23:59
 
 ## Parte 9: Avaliacao de Desempenho e Complexidade
 - [x] Desenvolver scripts de benchmark comparando tempo de execucao e consumo de memoria do motor proprio de A* com o algoritmo de Dijkstra/A* do NetworkX (uso exclusivo para analise comparativa).
-- [ ] Avaliar a escalabilidade variando o tamanho da base de dados e a distancia entre os pares de teste.
-- [ ] Documentar analise formal da complexidade temporal e espacial na notacao Big-O para todas as estruturas centrais.
-- [ ] Implementar a classe `GraphAnalyzer` no backend com métodos para identificar Pontos de Articulação (DFS + `lowpt`) e Componentes Fortemente Conexos (Kosaraju ou Tarjan).
-- [ ] Gerar relatório analítico das Top N estações críticas (hubs/gargalos cuja interrupção isolaria regiões da cidade).
-- [ ] Identificar limitacoes computacionais e oportunidades de otimizacao.
+- [x] Avaliar a escalabilidade variando o tamanho da base de dados e a distancia entre os pares de teste.
+- [x] Documentar analise formal da complexidade temporal e espacial na notacao Big-O para todas as estruturas centrais.
+- [x] Implementar a classe `GraphAnalyzer` no backend com métodos para identificar Pontos de Articulação (DFS + `lowpt`) e Componentes Fortemente Conexos (Kosaraju ou Tarjan).
+- [x] Gerar relatório analítico das Top N estações críticas (hubs/gargalos cuja interrupção isolaria regiões da cidade).
+- [x] Identificar limitacoes computacionais e oportunidades de otimizacao.
 
 ## Parte 10: Artefatos Finais e Entrega
-- [ ] Redigir o relatorio tecnico em LaTeX aderindo estritamente ao template oficial da SBC (12 a 15 paginas).
-- [ ] Detalhar formalmente no relatorio a modelagem do grafo, analise de corretude, complexidade e secao de responsabilidades com o trabalho individual dos 6 integrantes.
-- [ ] Elaborar os slides para a apresentacao oral presencial (duracao exata de 10 minutos).
+- [x] Redigir o relatorio tecnico em LaTeX aderindo estritamente ao template oficial da SBC (12 a 15 paginas).
+- [x] Detalhar formalmente no relatorio a modelagem do grafo, analise de corretude, complexidade e secao de responsabilidades com o trabalho individual dos 6 integrantes.
+- [x] Elaborar os slides para a apresentacao oral presencial (duracao exata de 10 minutos).
 - [ ] Gravar e editar o video demonstrativo (12 a 18 minutos) com a participacao e explicacao de features por todos os 6 membros da equipe.
-- [ ] Auditar o historico de commits no repositorio Git para garantir a presenca dos commits individuais de cada integrante.
-- [ ] Gerar pacote final `.zip` contendo o codigo-fonte completo, o arquivo `.tex` fonte e o PDF compilado para submissao no Canvas ate 22/11/2026.
+- [x] Auditar o historico de commits no repositorio Git para garantir a presenca dos commits individuais de cada integrante.
+- [x] Gerar pacote final `.zip` contendo o codigo-fonte completo, o arquivo `.tex` fonte e o PDF compilado para submissao no Canvas ate 22/11/2026.
