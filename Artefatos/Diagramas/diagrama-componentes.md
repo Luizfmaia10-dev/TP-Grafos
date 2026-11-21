@@ -1,86 +1,79 @@
-# System Component Architecture Diagram
+# Diagrama de Componentes - MVP RotasGraph
 
-This document describes the high-level architecture and layered decoupling of the Public Transit Route Optimization system, satisfying academic domain isolation and modularity requirements.
+Componentes disponíveis e dependências.
 
 ```mermaid
-graph TD
-    subgraph PresentationLayer["Presentation Layer (Frontend)"]
-        UI["Web UI (HTML / Tailwind CSS)"]
-        SVGMap["SVG Map & Graph Renderer"]
-        Timeline["Itinerary & Steps Timeline"]
-        ControllerJS["Client Controller (Vanilla JS)"]
-        
-        UI --> ControllerJS
-        ControllerJS --> SVGMap
-        ControllerJS --> Timeline
+flowchart TB
+    subgraph UI[Apresentação]
+        Front[HTML, Tailwind local e JavaScript nativo]
+        Map[Mapa SVG e timeline]
+        Front --> Map
     end
-
-    subgraph APILayer["API & Controller Layer (FastAPI)"]
-        FastAPIServer["FastAPI Application"]
-        StationsEndpoint["GET /stations"]
-        RouteSearchEndpoint["POST /routes/search"]
-        SchemaValidator["Pydantic Schemas & DTOs"]
-
-        FastAPIServer --> StationsEndpoint
-        FastAPIServer --> RouteSearchEndpoint
-        RouteSearchEndpoint --> SchemaValidator
+    subgraph API[FastAPI]
+        App[app.main: ciclo de vida e GET /health]
+        Network[RouteNetwork: grafo e índice compartilhados]
+        Stations[GET /stations]
+        Routes[POST /routes/search]
+        App --> Network
+        App --> Stations
+        App --> Routes
+        Stations --> Network
+        Routes --> Network
     end
-
-    subgraph CoreEngineLayer["Core Domain & Graph Engine (In-Memory)"]
-        RouteSimulator["RouteSimulator (Time-Dependent A* + bisect)"]
-        TransportGraph["TransportGraph (Adjacency List: dict)"]
-        GraphAnalyzer["GraphAnalyzer (Articulation Points & SCCs)"]
-        TemporaryVertexHandler["TemporaryVertex & Snapping"]
-        PriorityQueue["Priority Queue (heapq)"]
-        ItineraryModel["Itinerary Model & Serializer (__slots__)"]
-
-        RouteSimulator --> TransportGraph
-        RouteSimulator --> PriorityQueue
-        RouteSimulator --> TemporaryVertexHandler
-        RouteSimulator --> ItineraryModel
-        GraphAnalyzer --> TransportGraph
-        TemporaryVertexHandler --> TransportGraph
+    subgraph Core[Domínio em memória]
+        Simulator[RouteSimulator: A* temporal, bisect e heapq]
+        Graph[TransportGraph: listas de adjacência]
+        Itinerary[Itinerary: totais, passos e instruções]
+        Snap[snap_to_network: capacidade interna]
+        Analyzer[GraphAnalyzer: DFS e Tarjan iterativos]
+        Time[TimeUtils]
+        Simulator --> Graph
+        Simulator --> Snap
+        Snap --> Graph
+        Analyzer --> Graph
+        Itinerary --> Time
     end
-
-    subgraph IngestionLayer["Data Ingestion Layer"]
-        DataLoader["DataLoader (GTFS / CSV Parser)"]
-        Sanitizer["Data Sanitizer & Filter"]
-        TimeUtils["TimeUtils (HH:MM Conversion)"]
-
-        DataLoader --> Sanitizer
-        DataLoader --> TimeUtils
+    subgraph Data[Ingestão]
+        Loader[DataLoader: leitura e higienização]
+        Calendar[get_active_service_ids]
+        Files[Seis TXT GTFS locais via Git LFS]
+        Loader --> Files
+        Loader --> Calendar
+        Calendar --> Files
+        Loader --> Time
+        Loader --> Graph
     end
-
-    subgraph StorageLayer["Data Storage (File System)"]
-        GTFSFiles["GTFS Raw Datasets (BHTRANS / Kaggle)\n- stops.txt\n- stop_times.txt\n- routes.txt\n- trips.txt"]
+    subgraph CLI[Ferramentas por linha de comando]
+        Topology[app.analyze_topology]
+        Validation[app.validate_gtfs]
+        Benchmark[benchmarks.run e referência NetworkX]
+        Report[Relatórios JSON e CSV]
+        Topology --> Loader
+        Topology --> Analyzer
+        Topology --> Report
+        Validation --> Loader
+        Validation --> Report
+        Benchmark --> Loader
+        Benchmark --> Simulator
+        Benchmark --> Report
     end
-
-    %% Cross-layer interactions
-    ControllerJS -- "HTTP / JSON" --> FastAPIServer
-    RouteSearchEndpoint --> RouteSimulator
-    StationsEndpoint --> TransportGraph
-    DataLoader -- "Populates (O(1) insertions)" --> TransportGraph
-    DataLoader -- "Reads CSV" --> GTFSFiles
-
-    %% Styling
-    classDef presentation fill:#f1f5f9,stroke:#032147,stroke-width:2px;
-    classDef api fill:#e0f2fe,stroke:#209dd7,stroke-width:2px;
-    classDef core fill:#ede9fe,stroke:#753991,stroke-width:2px;
-    classDef ingestion fill:#fef3c7,stroke:#ecad0a,stroke-width:2px;
-    classDef storage fill:#fecdd3,stroke:#e11d48,stroke-width:2px;
-
-    class UI,SVGMap,Timeline,ControllerJS presentation;
-    class FastAPIServer,StationsEndpoint,RouteSearchEndpoint,SchemaValidator api;
-    class RouteSimulator,TransportGraph,GraphAnalyzer,TemporaryVertexHandler,PriorityQueue,ItineraryModel core;
-    class DataLoader,Sanitizer,TimeUtils ingestion;
-    class GTFSFiles storage;
+    Front -->|Fetch HTTP e JSON| Stations
+    Front -->|origin_id, destination_id, departure_time| Routes
+    Network -->|carga na inicialização| Loader
+    Network --> Graph
+    Routes --> Simulator
+    Routes -->|cria após receber o caminho| Itinerary
 ```
 
-## Architectural Justification & Decoupling
+O domínio não importa FastAPI, frontend ou NetworkX. A API reutiliza um grafo
+por data de serviço; o roteador retorna um caminho e a API cria `Itinerary`.
+O encaixe de coordenadas é interno e não participa do contrato REST.
 
-1. **Zero UI Coupling in Graph Core**: The mathematical engine (`TransportGraph`, `RouteSimulator`, `GraphAnalyzer`) has no dependencies on HTTP frameworks, presentation logic, or external graphing libraries like NetworkX.
-2. **In-Memory Performance & `__slots__`**: `TransportGraph` relies strictly on native Python dictionary-based adjacency lists, ensuring $O(1)$ vertex lookup and neighbor retrieval, while high-cardinality domain entities (`Station`, `Connection`, `Itinerary`) enforce `__slots__` to eliminate per-instance `__dict__` overhead.
-3. **Logarithmic Temporal Lookup**: Connections per station are sorted by departure time, enabling `RouteSimulator` to locate the next available trip in $O(\log K)$ using Python's native `bisect` module.
-4. **Network Resilience & Topology Analysis**: `GraphAnalyzer` computes Articulation Points (DFS with `lowpt`) and Strongly Connected Components (Kosaraju/Tarjan) to identify critical transit hubs and structural vulnerabilities for the SBC report.
-5. **Pluggable Ingestion**: `DataLoader` isolates file format specifics (GTFS CSVs from BHTRANS or any city). Swapping the data source does not require changing the routing engine.
-6. **Admissible Heuristics**: `RouteSimulator` implements Time-Dependent A* with Haversine distance normalized by maximum network velocity ($h(u, v) = \text{haversine}(u, v) / V_{\max}$), ensuring optimality and fast pruning.
+A [CLI topológica](../../docs/GRAPH_ANALYZER.md) usa `GraphAnalyzer` sem
+endpoint analítico. Articulações usam projeção não direcionada simples; CFCs
+usam Tarjan iterativo. A análise ignora horários e vértices temporários.
+NetworkX fica somente no benchmark.
+
+Recuperar vizinhos custa `O(1)` médio; inserir uma conexão ordenada custa
+`O(K)` no pior caso. O `bisect` localiza a primeira partida em `O(log K)`,
+seguido da varredura do sufixo relevante. O grafo permanece na RAM.

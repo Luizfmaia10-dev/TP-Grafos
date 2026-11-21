@@ -1,5 +1,7 @@
 # Integração Visual e Revisão da API - Especificação
 
+> Documento histórico: registra decisões e instruções da época, não tarefas abertas atuais. O progresso vigente está em [docs/PLAN.md](../../PLAN.md); contratos atuais em [API.md](../../API.md).
+
 Data: 18/11/2026.
 
 ## Objetivo

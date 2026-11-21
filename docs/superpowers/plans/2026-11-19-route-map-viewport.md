@@ -1,5 +1,7 @@
 # Route Map Viewport Implementation Plan
 
+> Documento histórico: registra decisões e instruções da época, não tarefas abertas atuais. O progresso vigente está em [docs/PLAN.md](../../PLAN.md); contratos atuais em [API.md](../../API.md).
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Manter todos os segmentos e marcadores da rota visíveis no mapa SVG sem alterar o recorte de rotas que já cabem no mapa.

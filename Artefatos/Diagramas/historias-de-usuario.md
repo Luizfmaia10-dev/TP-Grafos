@@ -1,112 +1,82 @@
 # Histórias de Usuário - MVP RotasGraph
 
-Estas histórias representam o MVP final planejado. Elas usam o formato
-papel-capacidade-benefício e critérios observáveis em Given-When-Then.
+Histórias das funcionalidades disponíveis. O acompanhamento oficial fica em
+[PLAN.md](../../docs/PLAN.md).
 
-## US-01 - Selecionar os pontos da viagem
+## US-01 - Selecionar estações
 
-**Como** passageiro, **quero** escolher origem e destino por estação ou clique
-no mapa **para** planejar uma viagem mesmo quando meu ponto exato não coincide
-com uma parada.
+Como passageiro, quero escolher origem e destino por nome, ID ou marcador de
+parada no mapa para preparar minha consulta.
 
-**Critérios de aceitação**
+- Ao pesquisar um texto, recebo sugestões com nome e ID.
+- Ao editar uma estação confirmada, seu ID é invalidado.
+- Com paradas iguais ou horário inválido, o envio fica bloqueado.
 
-- **Dado** que as estações foram carregadas, **quando** pesquiso pelo nome de
-  uma parada, **então** recebo opções compatíveis para origem ou destino.
-- **Dado** um clique a até 800 metros de uma estação real, **quando** seleciono
-  o ponto, **então** o sistema o conecta temporariamente à estação por caminhada.
-- **Dado** um clique sem estação no raio permitido, **quando** tento usá-lo,
-  **então** sou informado de que o ponto está fora da rede.
+O REST não aceita coordenadas arbitrárias; `snap_to_network` é interno,
+com limite de 800 m.
 
-## US-02 - Encontrar a rota de menor tempo
+## US-02 - Encontrar a menor chegada
 
-**Como** passageiro, **quero** buscar a rota mais rápida para um horário de
-partida **para** reduzir meu tempo total de deslocamento e espera.
+Como passageiro, quero consultar a rota para um horário de partida para reduzir
+o tempo total de espera e deslocamento.
 
-**Critérios de aceitação**
-
-- **Dado** origem, destino e horário válidos, **quando** solicito a busca,
-  **então** o sistema considera viagens ativas, partidas, esperas e durações.
-- **Dado** mais de um caminho viável, **quando** a busca termina, **então** o
-  itinerário retornado possui o menor tempo encontrado pelo A* temporal.
-- **Dado** um trecho de caminhada, **quando** ele é avaliado, **então** fica
-  disponível imediatamente e usa velocidade média de 5 km/h.
+- Com estações distintas e `HH:MM`, a busca usa conexões do dia de serviço
+  carregado e respeita partidas, esperas e durações.
+- Com caminho viável, `calculate_route` retorna trechos e a API cria
+  `Itinerary` com custos e instruções.
+- Sem caminho, recebo `no-route` e posso ajustar os dados.
 
 ## US-03 - Compreender o itinerário
 
-**Como** passageiro, **quero** visualizar o trajeto e as instruções por etapa
-**para** conseguir executar a viagem sem interpretar o grafo diretamente.
+Como passageiro, quero ver trajeto e etapas para interpretar a viagem.
 
-**Critérios de aceitação**
+- Com rota encontrada, vejo chegada, total, espera, deslocamento, distância
+  aproximada e instruções em português.
+- Mapa e timeline identificam os modais dos passos: ônibus vermelho, metrô azul
+  e caminhada cinza. O mapa é esquemático.
+- Ao editar a busca, o resultado é removido e os campos são preservados.
 
-- **Dado** que uma rota foi encontrada, **quando** a resposta é exibida,
-  **então** vejo tempo total, distância total e instruções passo a passo.
-- **Dado** um itinerário com caminhada, ônibus e metrô, **quando** observo o
-  mapa e a timeline, **então** cada trecho é identificado pelo modal correto.
+## US-04 - Recuperar-se de falhas
 
-## US-04 - Recuperar-se de uma consulta sem resultado
+Como passageiro, quero mensagens e cancelamento para corrigir minha consulta.
 
-**Como** passageiro, **quero** receber mensagens claras quando a consulta não
-puder ser atendida **para** corrigir os dados e tentar novamente.
+- Editar dados durante a busca cancela a requisição e descarta respostas antigas.
+- Erros HTTP, indisponibilidade, falha de conexão e ausência de rota permitem
+  tentar novamente; dados inválidos são sinalizados nos campos.
 
-**Critérios de aceitação**
+## US-05 - Preparar e validar a rede
 
-- **Dado** origem e destino desconectados, **quando** a busca termina,
-  **então** sou informado de que não existe rota viável.
-- **Dado** um dado inválido ou uma falha tratável, **quando** a resposta chega,
-  **então** a interface preserva os campos e permite uma nova tentativa.
-- **Dado** qualquer término após criar pontos temporários, **quando** a consulta
-  encerra, **então** nenhum vértice ou conexão temporária permanece no grafo.
+Como operador, quero carregar GTFS por data para disponibilizar viagens ativas.
 
-## US-05 - Preparar a rede de transporte
+- A carga aplica calendários e exceções, higieniza registros e registra
+  rejeições ou quarentenas em `loader.report`.
+- `app.validate_gtfs` verifica invariantes e exporta contagens, hashes,
+  tempo e pico de memória do processo.
+- A API reutiliza a rede da inicialização; trocar a data exige reinício.
 
-**Como** operador de dados, **quero** carregar e validar uma versão coerente da
-base GTFS **para** disponibilizar uma rede temporal confiável ao roteador.
+## US-06 - Examinar a topologia
 
-**Critérios de aceitação**
+Como analista, quero executar a CLI topológica para identificar cortes
+estruturais e componentes da malha.
 
-- **Dado** um pacote GTFS válido, **quando** informo a data de serviço,
-  **então** somente viagens ativas nessa data entram no grafo.
-- **Dado** um registro inválido, **quando** a carga é executada, **então** ele é
-  rejeitado ou colocado em quarentena com motivo registrado.
-- **Dado** o fim da carga, **quando** consulto o relatório, **então** vejo
-  contagens, rejeições, alertas, tempo e pico de memória.
+- `app.analyze_topology` recebe diretório GTFS e `--date` e exporta JSON com
+  articulações, tamanhos de CFCs e até vinte estações com criticidade positiva.
+- Articulações usam projeção não direcionada simples; CFCs usam Tarjan iterativo.
+  Horários e vértices temporários são ignorados.
+- O ranking usa criticidade decrescente, grau simples decrescente e ID crescente.
+  Não mede demanda ou viabilidade temporal e não tem endpoint REST.
 
-## US-06 - Avaliar a resiliência da rede
+## US-07 - Comparar implementações de roteamento
 
-**Como** analista da rede, **quero** identificar articulações e componentes
-fortemente conexos **para** reconhecer hubs e regiões vulneráveis.
+Como analista, quero executar o benchmark para comparar chegada ótima, custos
+de preparação, consulta e memória com a referência NetworkX.
 
-**Critérios de aceitação**
+- Entradas e ambiente ficam em JSON/CSV; falhas são preservadas como incompletas.
+- Subgrafos com semente permitem experimentos de tamanho. A campanha completa
+  e suas conclusões de escalabilidade permanecem pendentes no plano.
 
-- **Dado** o grafo carregado, **quando** executo a análise, **então** recebo os
-  pontos de articulação e os componentes fortemente conexos.
-- **Dado** o resultado analítico, **quando** solicito as estações mais críticas,
-  **então** recebo uma lista ordenada para uso no relatório acadêmico.
-
-## US-07 - Medir desempenho e complexidade
-
-**Como** analista da rede, **quero** comparar o motor próprio com uma referência
-**para** demonstrar sua correção, consumo de memória e escalabilidade.
-
-**Critérios de aceitação**
-
-- **Dado** um conjunto reproduzível de pares de rota, **quando** executo o
-  benchmark, **então** obtenho tempos e memória do motor próprio e da referência.
-- **Dado** tamanhos diferentes da rede, **quando** comparo os resultados,
-  **então** consigo relacioná-los às complexidades temporal e espacial descritas.
-
-## Rastreabilidade
-
-| História | Casos de uso relacionados | Plano |
-|---|---|---|
-| US-01 | Consultar estações; Selecionar origem e destino; Conectar ponto temporário | Partes 6 e 7 |
-| US-02 | Buscar rota otimizada; Calcular menor tempo | Parte 5 |
-| US-03 | Gerar itinerário; Visualizar trajeto e resumo | Partes 6 e 8 |
-| US-04 | Validar consulta; Buscar rota otimizada | Partes 7 e 8 |
-| US-05 | Carregar GTFS; Higienizar; Construir e validar grafo | Parte 3 |
-| US-06 | Analisar resiliência; Identificar estações críticas | Parte 9 |
-| US-07 | Comparar desempenho dos algoritmos | Parte 9 |
+Consulte [API.md](../../docs/API.md), [GRAPH_ANALYZER.md](../../docs/GRAPH_ANALYZER.md)
+e [BENCHMARK.md](../../docs/BENCHMARK.md).
 
 ## Referências do padrão
 

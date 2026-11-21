@@ -1,73 +1,59 @@
 # Diagrama de Casos de Uso - MVP RotasGraph
 
-Este diagrama representa a arquitetura-alvo do MVP completo. Ele inclui
-funcionalidades implementadas e planejadas no `docs/PLAN.md`.
-
-O limite do sistema e os casos de uso seguem a notação UML. O código usa
-`flowchart`, em vez do `usecase-beta` introduzido no Mermaid 12, para manter a
-renderização compatível com visualizadores Mermaid anteriores.
+Capacidades disponíveis, representadas com `flowchart`.
 
 ```mermaid
 flowchart LR
     Passenger[Passageiro]
-    DataOperator[Operador de dados]
-    NetworkAnalyst[Analista da rede]
-    GTFS[Base GTFS de Belo Horizonte]
-
-    subgraph System[RotasGraph - Otimizador de Rotas]
-        ListStations([Consultar estações])
-        SelectPoints([Selecionar origem e destino])
-        SelectMapPoint([Selecionar ponto no mapa])
-        SearchRoute([Buscar rota otimizada])
-        ValidateRequest([Validar dados da consulta])
-        SnapToNetwork([Conectar ponto temporário à rede])
-        CalculateRoute([Calcular menor tempo com A* temporal])
-        BuildItinerary([Gerar itinerário passo a passo])
-        ViewRoute([Visualizar trajeto e resumo])
-
-        LoadGTFS([Carregar dados GTFS])
-        FilterCalendar([Filtrar calendário de serviço])
-        SanitizeData([Higienizar dados de transporte])
-        BuildGraph([Construir grafo em memória])
-        ValidateGraph([Validar carga e topologia])
-
-        AnalyzeNetwork([Analisar resiliência da rede])
-        FindCriticalStations([Identificar estações críticas])
-        BenchmarkRouting([Comparar desempenho dos algoritmos])
+    Operator[Operador de dados]
+    Analyst[Analista da rede]
+    GTFS[Arquivos GTFS de Belo Horizonte]
+    subgraph Public[Interface e REST]
+        Stations([Consultar estações])
+        Selection([Selecionar paradas por nome ou marcador])
+        Search([Buscar rota para HH:MM])
+        Validate([Validar IDs distintos e horário])
+        Calculate([Calcular menor chegada com A* temporal])
+        Itinerary([Montar itinerário na API])
+        View([Visualizar resumo, timeline e mapa])
+        Edit([Editar ou cancelar consulta])
     end
-
-    Passenger --> ListStations
-    Passenger --> SelectPoints
-    Passenger --> SearchRoute
-    Passenger --> ViewRoute
-
-    SelectMapPoint -.->|«extend»| SelectPoints
-    SearchRoute -.->|«include»| ValidateRequest
-    SearchRoute -.->|«include»| CalculateRoute
-    SnapToNetwork -.->|«extend»| CalculateRoute
-    BuildItinerary -.->|«extend»| SearchRoute
-    ViewRoute -.->|«extend»| SearchRoute
-
-    DataOperator --> LoadGTFS
-    DataOperator --> ValidateGraph
-    GTFS --> LoadGTFS
-    LoadGTFS -.->|«include»| FilterCalendar
-    LoadGTFS -.->|«include»| SanitizeData
-    LoadGTFS -.->|«include»| BuildGraph
-
-    NetworkAnalyst --> AnalyzeNetwork
-    NetworkAnalyst --> BenchmarkRouting
-    AnalyzeNetwork -.->|«include»| FindCriticalStations
+    subgraph CLI[Ferramentas por linha de comando]
+        Load([Carregar e higienizar GTFS por data])
+        Check([Validar grafo e carga])
+        Analyze([Analisar topologia com GraphAnalyzer])
+        Critical([Listar articulações, CFCs e Top 20])
+        Benchmark([Comparar roteamento com NetworkX])
+    end
+    Passenger --> Stations
+    Passenger --> Selection
+    Passenger --> Search
+    Passenger --> View
+    Passenger --> Edit
+    Search -.->|inclui| Validate
+    Search -.->|inclui| Calculate
+    Search -.->|se houver caminho| Itinerary
+    Operator --> Load
+    Operator --> Check
+    GTFS --> Load
+    Check -.->|inclui| Load
+    Analyst --> Analyze
+    Analyst --> Benchmark
+    Analyze -.->|inclui| Load
+    Analyze -.->|gera| Critical
 ```
 
-## Atores
+O REST expõe `GET /stations`, `POST /routes/search` e `GET /health`, além dos
+recursos estáticos e documentação FastAPI. A busca recebe apenas `origin_id`,
+`destination_id` e `departure_time`; marcadores escolhem estações cadastradas.
 
-| Ator | Responsabilidade |
-|---|---|
-| Passageiro | Informa o deslocamento e consulta a melhor rota disponível. |
-| Operador de dados | Prepara, carrega e valida a base GTFS usada pelo sistema. |
-| Analista da rede | Avalia vulnerabilidades e desempenho do modelo de grafos. |
-| Base GTFS | Sistema externo que fornece paradas, linhas, viagens e calendários. |
+`snap_to_network` é interno, sem caso de uso público de coordenadas arbitrárias.
+A análise usa `python -m app.analyze_topology`, sem endpoint analítico.
+Seu ranking mede impacto estrutural, sem inferir demanda. O benchmark existente
+não comprova a escalabilidade da campanha ainda pendente.
+
+Consulte [a API](../../docs/API.md), [a CLI](../../docs/GRAPH_ANALYZER.md) e
+[o benchmark](../../docs/BENCHMARK.md).
 
 ## Referências do padrão
 

@@ -1,5 +1,7 @@
 # Tarefa: Motor de Busca A* Dependente do Tempo (`RouteSimulator.calculate_route`)
 
+> Documento histórico: registra decisões e instruções da época, não tarefas abertas atuais. O progresso vigente está em [docs/PLAN.md](PLAN.md); contratos atuais em [API.md](API.md).
+
 Documento de handoff para o agente implementador. Leia por inteiro antes de escrever codigo.
 Avance checkpoint por checkpoint; cada um termina com testes verdes e um commit.
 

@@ -1,0 +1,97 @@
+classDiagram
+    class Station {
+        +str station_id
+        +str name
+        +float latitude
+        +float longitude
+        +__hash__() int
+        +__eq__(other) bool
+    }
+    class TemporaryVertex {
+        +str marker_type
+    }
+    class VehicleType {
+        <<enumeration>>
+        BUS
+        SUBWAY
+        WALK
+    }
+    class Connection {
+        +str route_id
+        +Station destination
+        +VehicleType vehicle_type
+        +float travel_time
+        +float distance
+        +float departure_time
+    }
+    class TransportGraph {
+        -dict _adjacency_list
+        +add_station(station) None
+        +add_connection(origin, connection) None
+        +get_neighbors(station) list~Connection~
+        +iter_stations() Iterator~Station~
+        +remove_temporary_vertex(vertex) None
+    }
+    class DataLoader {
+        +Path data_directory
+        +LoadReport report
+        +build_graph() TransportGraph
+    }
+    class Itinerary {
+        +Station origin
+        +Station destination
+        +str departure_time
+        +str arrival_time
+        +int total_seconds
+        +int waiting_seconds
+        +int travel_seconds
+        +float distance_km
+        +tuple steps
+        +tuple instructions
+        +__init__(origin, departure_time, path)
+        +to_dict() dict
+        +to_json() str
+    }
+    class ItineraryStep {
+        +Station origin
+        +Station destination
+        +str route_id
+        +VehicleType vehicle_type
+        +str departure_time
+        +str arrival_time
+        +int waiting_seconds
+        +int travel_seconds
+        +float distance_km
+    }
+    class TimeUtils {
+        +time_to_minutes(time_str)$ float
+        +minutes_to_time(minutes)$ str
+    }
+    class RouteSimulator {
+        +TransportGraph graph
+        +float max_speed
+        +int last_expanded_count
+        +calculate_route(...) list | None
+        +max_speed_of(graph)$ float
+        +heuristic(current, target) float
+        +snap_to_network(...) contextmanager
+    }
+    class GraphAnalyzer {
+        -TransportGraph _graph
+        +find_articulation_points() set~Station~
+        +find_strongly_connected_components() list
+        +criticality_scores() dict
+        +get_critical_stations(top_n) list~Station~
+    }
+    Station <|-- TemporaryVertex
+    Connection --> Station : destino
+    Connection --> VehicleType : modal
+    TransportGraph o-- Station : vértices
+    TransportGraph o-- Connection : conexões ordenadas
+    DataLoader ..> TransportGraph : constrói
+    DataLoader ..> TimeUtils : converte horários
+    RouteSimulator --> TransportGraph : consulta
+    RouteSimulator ..> TemporaryVertex : uso interno
+    GraphAnalyzer --> TransportGraph : analisa
+    Itinerary o-- ItineraryStep : passos
+    Itinerary ..> TimeUtils : formata horários

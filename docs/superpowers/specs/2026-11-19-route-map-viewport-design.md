@@ -1,5 +1,7 @@
 # Enquadramento completo da rota no mapa
 
+> Documento histórico: registra decisões e instruções da época, não tarefas abertas atuais. O progresso vigente está em [docs/PLAN.md](../../PLAN.md); contratos atuais em [API.md](../../API.md).
+
 ## Objetivo
 
 Garantir que toda rota retornada por `POST /routes/search` permaneça visível no

@@ -1,18 +1,10 @@
-# Route System Architecture - Class Diagram
+# Diagrama de Classes - MVP RotasGraph
 
-Class diagram for the core in-memory graph routing engine:
+Classes implementadas no domínio; as estruturas de dados usam `__slots__`.
 
 ```mermaid
 classDiagram
-    class VehicleType {
-        <<enumeration>>
-        BUS
-        SUBWAY
-        WALK
-    }
-
     class Station {
-        +tuple __slots__
         +str station_id
         +str name
         +float latitude
@@ -20,80 +12,108 @@ classDiagram
         +__hash__() int
         +__eq__(other) bool
     }
-
     class TemporaryVertex {
-        +tuple __slots__
         +str marker_type
     }
-
+    class VehicleType {
+        <<enumeration>>
+        BUS
+        SUBWAY
+        WALK
+    }
     class Connection {
-        +tuple __slots__
         +str route_id
         +Station destination
         +VehicleType vehicle_type
         +float travel_time
         +float distance
         +float departure_time
-        +get_weight(current_time) float
     }
-
     class TransportGraph {
-        -dict adjacency_list
+        -dict _adjacency_list
         +add_station(station) None
         +add_connection(origin, connection) None
-        +get_neighbors(station) List~Connection~
+        +get_neighbors(station) list~Connection~
+        +iter_stations() Iterator~Station~
         +remove_temporary_vertex(vertex) None
     }
-
     class DataLoader {
-        +str data_directory
+        +Path data_directory
+        +LoadReport report
         +build_graph() TransportGraph
-        -_read_stops() List~Station~
-        -_read_stop_times() List~Connection~
-        -_sanitize_row(row) dict
     }
-
     class Itinerary {
-        +tuple __slots__
-        +float total_time
-        +float total_distance
-        +List~str~ step_by_step_instructions
-        +add_step(instruction) None
+        +Station origin
+        +Station destination
+        +str departure_time
+        +str arrival_time
+        +int total_seconds
+        +int waiting_seconds
+        +int travel_seconds
+        +float distance_km
+        +tuple steps
+        +tuple instructions
+        +__init__(origin, departure_time, path)
         +to_dict() dict
         +to_json() str
     }
-
+    class ItineraryStep {
+        +Station origin
+        +Station destination
+        +str route_id
+        +VehicleType vehicle_type
+        +str departure_time
+        +str arrival_time
+        +int waiting_seconds
+        +int travel_seconds
+        +float distance_km
+    }
     class TimeUtils {
-        <<utility>>
         +time_to_minutes(time_str)$ float
         +minutes_to_time(minutes)$ str
     }
-
     class RouteSimulator {
-        -TransportGraph graph
-        -float max_speed
-        +calculate_route(origin, destination, departure_time) List
+        +TransportGraph graph
+        +float max_speed
+        +int last_expanded_count
+        +calculate_route(...) list | None
         +max_speed_of(graph)$ float
-        +heuristic(current, destination) float
-        +snap_to_network(latitude, longitude, marker_type) ContextManager
+        +heuristic(current, target) float
+        +snap_to_network(...) contextmanager
     }
-
     class GraphAnalyzer {
-        -TransportGraph graph
-        +find_articulation_points() Set~Station~
-        +find_strongly_connected_components() List~Set~Station~~
-        +get_critical_stations(top_n) List~Station~
+        -TransportGraph _graph
+        +find_articulation_points() set~Station~
+        +find_strongly_connected_components() list
+        +criticality_scores() dict
+        +get_critical_stations(top_n) list~Station~
     }
-
-    %% Relationships
-    Station <|-- TemporaryVertex : inheritance
-    Connection --> Station : destination
-    Connection --> VehicleType : mode
-    TransportGraph "1" o-- "many" Station : contains vertices
-    TransportGraph "1" *-- "many" Connection : contains sorted edges
-    RouteSimulator --> TransportGraph : queries (bisect)
-    RouteSimulator ..> Itinerary : produces
-    GraphAnalyzer --> TransportGraph : analyzes topology
-    DataLoader ..> TransportGraph : populates
-    Connection ..> TimeUtils : converts time
+    Station <|-- TemporaryVertex
+    Connection --> Station : destino
+    Connection --> VehicleType : modal
+    TransportGraph o-- Station : vértices
+    TransportGraph o-- Connection : conexões ordenadas
+    DataLoader ..> TransportGraph : constrói
+    DataLoader ..> TimeUtils : converte horários
+    RouteSimulator --> TransportGraph : consulta
+    RouteSimulator ..> TemporaryVertex : uso interno
+    GraphAnalyzer --> TransportGraph : analisa
+    Itinerary o-- ItineraryStep : passos
+    Itinerary ..> TimeUtils : formata horários
 ```
+
+`calculate_route(origin, destination, departure_time)` retorna
+`list[tuple[Station, Connection]] | None`, nunca
+`Itinerary`. A API cria `Itinerary(origin, departure_time, path)` em
+`build_route_result` após receber um caminho não vazio. `steps` contém
+`ItineraryStep` e `instructions` contém strings em português.
+
+`DataLoader(data_directory, active_service_ids=None, *, service_date=None)`
+expõe `build_graph()`; o diagnóstico fica em `loader.report` (`LoadReport`).
+
+`snap_to_network(latitude, longitude, marker_type)` é um context manager
+interno, sem contrato REST. Conecta à
+estação real mais próxima em até 800 m e limpa a topologia ao sair do contexto.
+O REST usa somente `origin_id`, `destination_id` e `departure_time`.
+`GraphAnalyzer` é usado pela [CLI topológica](../../docs/GRAPH_ANALYZER.md),
+sem endpoint analítico.

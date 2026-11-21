@@ -1,0 +1,36 @@
+sequenceDiagram
+    actor Passenger as Passageiro
+    participant UI as Frontend
+    participant API as Controladores REST
+    participant Network as RouteNetwork
+    participant Simulator as RouteSimulator
+    participant Graph as TransportGraph
+    participant Itinerary as Itinerary
+    Passenger->>UI: Pesquisar nome ou ID
+    UI->>API: GET /stations?query=texto&limit=20
+    API->>Network: Filtrar network.stations
+    Network-->>API: Estações correspondentes
+    API-->>UI: Lista JSON
+    Passenger->>UI: Selecionar estações e HH:MM
+    UI->>API: POST /routes/search (origin_id, destination_id, departure_time)
+    API->>API: Validar RouteSearchRequest e IDs
+    Note over API: 422 entrada inválida / 404 ID desconhecido / 503 sem rede
+    API->>Simulator: RouteSimulator(network.graph, network.max_speed)
+    API->>Simulator: calculate_route(origin, destination, departure_time)
+    loop Estações expandidas no A* temporal
+        Simulator->>Graph: get_neighbors(station)
+        Graph-->>Simulator: Conexões ordenadas
+        Simulator->>Simulator: bisect, varredura e relaxamentos com heapq
+    end
+    Simulator-->>API: path ou None
+    alt path é None
+        API-->>UI: 200, status=no-route, route=null
+        UI-->>Passenger: Orientar ajuste da busca
+    else Caminho não vazio
+        API->>API: build_route_result(path, departure_time)
+        API->>Itinerary: Itinerary(path[0][0], departure_time, path)
+        Itinerary-->>API: Passos, totais e instruções
+        API-->>UI: 200, status=found, route preenchida
+        UI-->>Passenger: Resumo, timeline e segmentos SVG
+    end
+    Note over UI,Graph: snap_to_network é interno e não participa do REST

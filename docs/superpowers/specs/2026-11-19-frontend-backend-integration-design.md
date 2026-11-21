@@ -1,5 +1,7 @@
 # Frontend-Backend Integration Design
 
+> Documento histórico: registra decisões e instruções da época, não tarefas abertas atuais. O progresso vigente está em [docs/PLAN.md](../../PLAN.md); contratos atuais em [API.md](../../API.md).
+
 ## Scope
 
 Connect the existing Vanilla JavaScript interface to the existing FastAPI contracts. The frontend must request stations for autocomplete, submit a route search, render the returned itinerary in the sidebar, draw every route step on the SVG map according to its vehicle type, and expose loading and failure states. The graph engine, API payloads, time picker, theme switch, and removed map animation remain unchanged.

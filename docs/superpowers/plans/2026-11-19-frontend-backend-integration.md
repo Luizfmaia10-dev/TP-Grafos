@@ -1,5 +1,7 @@
 # Frontend-Backend Integration Implementation Plan
 
+> Documento histórico: registra decisões e instruções da época, não tarefas abertas atuais. O progresso vigente está em [docs/PLAN.md](../../PLAN.md); contratos atuais em [API.md](../../API.md).
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Connect the existing route planner to the FastAPI station and route endpoints, render the returned multimodal itinerary, and draw its steps on the SVG map with observable loading and failure states.

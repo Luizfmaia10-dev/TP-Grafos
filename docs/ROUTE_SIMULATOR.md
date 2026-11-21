@@ -4,7 +4,7 @@
 
 ---
 
-## 1. Contrato da API
+## 1. Contrato interno do motor
 
 ### `calculate_route(origin: Station, destination: Station, departure_time: float) -> list[tuple[Station, Connection]] | None`
 
@@ -13,6 +13,10 @@ Calcula o caminho de menor horário de chegada (*earliest arrival*) partindo de 
 - **Retorno de sucesso:** Lista de tuplas `(estacao_embarque, conexao)` em ordem cronológica de percurso. A estação de desembarque de cada trecho é dada por `conexao.destination`.
 - **Origem idêntica ao destino:** Retorna lista vazia `[]`.
 - **Destino inalcançável:** Retorna `None`.
+
+A API REST recebe `origin_id`, `destination_id` e `departure_time`; após receber
+o caminho, `build_route_result` cria o `Itinerary`. O roteador não o constrói.
+`snap_to_network` é uma capacidade interna, sem contrato REST para coordenadas.
 
 ### `max_speed_of(graph: TransportGraph) -> float` *(staticmethod)*
 
@@ -56,12 +60,27 @@ $$h(u, v) = \frac{\text{haversine}(u, v)}{V_{\max}}$$
 ## 4. Complexidade Assintótica
 
 - **Tempo:**
-  - Operações de fila de prioridade: $O((|V| + |E|) \log |V|)$ com inserções e remoções via `heapq`.
-  - Conexões de caminhada (`WALK`): $O(W)$ por estação expandida, onde $W$ é o número de conexões com horário zero ($0.0$). Como as conexões são mantidas ordenadas por `departure_time` e arestas de caminhada são sob demanda com `departure_time == 0.0`, a varredura percorre apenas o prefixo e interrompe no primeiro elemento com `departure_time > 0.0`, sem custo $O(K)$ sobre toda a lista de partidas.
-  - Busca binária de partidas agendadas: $O(\log K)$ em cada estação expandida para localizar a primeira partida $\ge t$ via `bisect_left`, onde $K$ é o número de partidas da estação.
+  - Operações de fila de prioridade: $O(|E|\log(|E|+1)+1)$. O `heapq` não possui `decrease-key`: cada melhora de rótulo insere uma nova entrada e mantém as obsoletas até sua remoção, permitindo $O(|E|+1)$ entradas no heap, inclusive a entrada inicial quando não há arestas.
+  - Conexões de caminhada (`WALK`): $O(W+1)$ por estação expandida, onde $W$ é o número de conexões com horário zero ($0.0$). Como as conexões são mantidas ordenadas por `departure_time` e arestas de caminhada são sob demanda com `departure_time == 0.0`, a varredura percorre apenas o prefixo e interrompe no primeiro elemento com `departure_time > 0.0`, sem custo $O(K)$ sobre toda a lista de partidas. O termo constante inclui a verificação do laço vazio.
+  - Busca binária de partidas agendadas: $O(\log(K+1)+1)$ em cada estação expandida para localizar a primeira partida $\ge t$ via `bisect_left`, onde $K$ é o número de partidas da estação. O termo constante cobre listas vazias e as verificações da expansão.
   - Varredura de partidas agendadas: $O(K_{\text{relevante}})$ por expansão a partir do índice `start`, iterada diretamente sem alocação de listas intermediárias e interrompida pela poda de parada assim que $c.\text{departure\_time} \ge g[\text{destination}]$.
 - **Espaço:**
-  - $O(|V|)$ para a tabela de rótulos de chegada `g`, mapa de predecessores `predecessor`, conjunto de nós fechados `closed` e elementos na fila de prioridade `heap`.
+  - `g`, `predecessor` e `closed` ocupam $O(|V|)$; o heap ocupa $O(|E|+1)$ e o caminho retornado $O(L)$, para $L$ trechos. O espaço auxiliar total é $O(|V|+|E|+1)$, equivalente a $O(|V|+|E|)$ para uma rede não vazia.
+
+Como cada estação é expandida no máximo uma vez, o número de conexões
+inspecionadas é $O(|E|)$. Se $X$ é o conjunto de estações expandidas, $H$ o
+número de inserções no heap e $K_v$ o tamanho da lista de saída de $v$, o limite
+refinado é $O(|E|+\sum_{v\in X}\log(K_v+1)+H\log(H+1)+L+|X|+1)$.
+Com $K_{\max}$ conexões na maior lista de saída (zero em rede sem conexões),
+o pior caso geral é
+$O(|E|\log(|E|+1)+|V|\log(K_{\max}+1)+L+|V|+1)$.
+Os termos $|X|+1$ e $|V|+1$ explicitam a inicialização e o custo constante por
+expansão omitidos na forma anterior aprovada. Mesmo com $|E|=K_{\max}=L=0$,
+uma consulta entre estações isoladas inicializa e remove a entrada da origem;
+o trabalho não é zero. Em instâncias onde o heap domina, a forma anterior
+continua sendo uma simplificação assintótica.
+As operações em tabelas hash são consideradas de tempo médio amortizado.
+Esse limite corresponde à análise em [ANALISE_COMPLEXIDADE.tex](ANALISE_COMPLEXIDADE.tex).
 
 ---
 

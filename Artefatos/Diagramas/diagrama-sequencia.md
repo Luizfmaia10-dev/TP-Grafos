@@ -1,96 +1,80 @@
 # Diagramas de Sequência - MVP RotasGraph
 
-As sequências abaixo descrevem a arquitetura-alvo completa. A primeira prepara
-o grafo em memória; a segunda executa a consulta principal do passageiro.
-
-## 1. Inicialização e carga do grafo
+## 1. Inicialização para uma data de serviço
 
 ```mermaid
 sequenceDiagram
-    autonumber
-    actor Operator as Operador de dados
-    participant API as FastAPI
+    actor Operator as Operador
+    participant API as FastAPI lifespan
+    participant Network as RouteNetwork
     participant Loader as DataLoader
     participant GTFS as Arquivos GTFS
-    participant Graph as TransportGraph
-
-    Operator->>API: Inicializar sistema para uma data de serviço
-    API->>Loader: build_graph(data_servico)
-    Loader->>GTFS: Ler calendário, paradas, linhas e viagens
-    GTFS-->>Loader: Registros GTFS
-
-    loop Cada registro e bloco de viagem
-        Loader->>Loader: Validar, higienizar e filtrar serviço ativo
-        Loader->>Graph: add_station / add_connection
-    end
-
-    Loader->>Loader: Consolidar diagnóstico da carga
-    Graph-->>Loader: Grafo construído em memória
-    Loader-->>API: TransportGraph e relatório da carga
-    API-->>Operator: Sistema pronto ou diagnóstico da falha
+    participant Simulator as RouteSimulator
+    Operator->>API: Configurar GTFS_SERVICE_DATE e iniciar
+    API->>Network: load(data_directory, service_date)
+    Network->>Loader: DataLoader(data_directory, service_date=service_date)
+    Network->>Loader: build_graph()
+    Loader->>GTFS: Ler calendários e quatro TXT principais
+    GTFS-->>Loader: Registros
+    Loader->>Loader: Higienizar e filtrar serviços ativos
+    Loader-->>Network: TransportGraph
+    Note over Loader: Diagnóstico em loader.report
+    Network->>Simulator: max_speed_of(graph)
+    Simulator-->>Network: max_speed
+    Network-->>API: RouteNetwork com grafo, índice, velocidade e data
+    API->>API: Armazenar em app.state.network
+    API-->>Operator: Aplicação pronta
+    Note over API: Sem data, rede não configurada. Erro de carga interrompe startup
 ```
 
-## 2. Busca de rota otimizada
+## 2. Busca por estações
 
 ```mermaid
 sequenceDiagram
-    autonumber
     actor Passenger as Passageiro
     participant UI as Frontend
-    participant API as FastAPI
+    participant API as Controladores REST
+    participant Network as RouteNetwork
     participant Simulator as RouteSimulator
     participant Graph as TransportGraph
     participant Itinerary as Itinerary
-
-    Passenger->>UI: Informar origem, destino e horário
-    opt Autocomplete por estação
-        UI->>API: GET /stations?query=texto
-        API->>Graph: Consultar estações
-        Graph-->>API: Estações correspondentes
-        API-->>UI: Lista de estações
+    Passenger->>UI: Pesquisar nome ou ID
+    UI->>API: GET /stations?query=texto&limit=20
+    API->>Network: Filtrar network.stations
+    Network-->>API: Estações correspondentes
+    API-->>UI: Lista JSON
+    Passenger->>UI: Selecionar estações e HH:MM
+    UI->>API: POST /routes/search (origin_id, destination_id, departure_time)
+    API->>API: Validar RouteSearchRequest e IDs
+    Note over API: 422 entrada inválida / 404 ID desconhecido / 503 sem rede
+    API->>Simulator: RouteSimulator(network.graph, network.max_speed)
+    API->>Simulator: calculate_route(origin, destination, departure_time)
+    loop Estações expandidas no A* temporal
+        Simulator->>Graph: get_neighbors(station)
+        Graph-->>Simulator: Conexões ordenadas
+        Simulator->>Simulator: bisect, varredura e relaxamentos com heapq
     end
-
-    Passenger->>UI: Solicitar rota otimizada
-    UI->>API: POST /routes/search
-    API->>API: Validar DTO da consulta
-    API->>Simulator: find_route(origem, destino, horário)
-
-    opt Origem ou destino é um ponto do mapa
-        Simulator->>Graph: Localizar estação real mais próxima
-        Graph-->>Simulator: Estação em até 800 m
-        Simulator->>Graph: Adicionar TemporaryVertex e aresta WALK
+    Simulator-->>API: path ou None
+    alt path é None
+        API-->>UI: 200, status=no-route, route=null
+        UI-->>Passenger: Orientar ajuste da busca
+    else Caminho não vazio
+        API->>API: build_route_result(path, departure_time)
+        API->>Itinerary: Itinerary(path[0][0], departure_time, path)
+        Itinerary-->>API: Passos, totais e instruções
+        API-->>UI: 200, status=found, route preenchida
+        UI-->>Passenger: Resumo, timeline e segmentos SVG
     end
-
-    loop A* temporal até concluir a busca
-        Simulator->>Graph: get_neighbors(estação)
-        Graph-->>Simulator: Conexões ordenadas por partida
-        alt Conexão WALK
-            Simulator->>Simulator: Usar conexão imediatamente disponível
-        else Conexão BUS ou SUBWAY
-            Simulator->>Simulator: Selecionar próxima partida com bisect
-        end
-        Simulator->>Simulator: Atualizar prioridade com heurística Haversine
-    end
-
-    alt Caminho encontrado
-        Simulator->>Itinerary: Construir passos, tempos e distâncias
-        Itinerary-->>Simulator: Itinerário estruturado
-        Simulator->>Graph: Remover vértices temporários
-        Simulator-->>API: Itinerary
-        API-->>UI: 200 + itinerário JSON
-        UI-->>Passenger: Exibir resumo, passos e trajeto no mapa
-    else Não existe caminho viável
-        Simulator->>Graph: Remover vértices temporários
-        Simulator-->>API: Rota inexistente
-        API-->>UI: Resposta sem rota viável
-        UI-->>Passenger: Orientar ajuste da consulta
-    else Falha durante a consulta
-        Simulator->>Graph: Remover vértices temporários
-        Simulator-->>API: Erro de domínio
-        API-->>UI: Erro tratável
-        UI-->>Passenger: Exibir mensagem e permitir nova tentativa
-    end
+    Note over UI,Graph: snap_to_network é interno e não participa do REST
 ```
+
+O roteador retorna `list[tuple[Station, Connection]] | None`. No domínio,
+origem igual ao destino retorna `[]`; o REST exige IDs distintos. Editar
+cancela a requisição no frontend e descarta respostas antigas.
+
+A CLI `app.analyze_topology` chama `DataLoader.build_graph` e `GraphAnalyzer`
+e exporta JSON separadamente, sem endpoint analítico. Veja
+[a API](../../docs/API.md) e [a CLI](../../docs/GRAPH_ANALYZER.md).
 
 ## Referência do padrão
 

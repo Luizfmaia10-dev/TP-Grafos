@@ -1,0 +1,20 @@
+stateDiagram-v2
+    [*] --> Editing
+    state "Seleção incompleta ou inválida" as Editing
+    state "Consulta pronta" as Ready
+    state "Carregando (loading)" as Loading
+    state "Rota encontrada (found)" as Found
+    state "Sem rota (no-route)" as NoRoute
+    state "Falha da consulta (error)" as Error
+    Editing --> Ready: dados válidos
+    Ready --> Editing: editar
+    Ready --> Loading: enviar
+    Loading --> Found: caminho
+    Loading --> NoRoute: sem caminho
+    Loading --> Error: falha
+    Loading --> Editing: editar e cancelar
+    Found --> Ready: editar busca
+    NoRoute --> Loading: repetir
+    NoRoute --> Editing: ajustar
+    Error --> Loading: repetir
+    Error --> Editing: corrigir

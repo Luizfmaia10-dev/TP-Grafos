@@ -1,0 +1,22 @@
+sequenceDiagram
+    actor Operator as Operador
+    participant API as FastAPI lifespan
+    participant Network as RouteNetwork
+    participant Loader as DataLoader
+    participant GTFS as Arquivos GTFS
+    participant Simulator as RouteSimulator
+    Operator->>API: Configurar GTFS_SERVICE_DATE e iniciar
+    API->>Network: load(data_directory, service_date)
+    Network->>Loader: DataLoader(data_directory, service_date=service_date)
+    Network->>Loader: build_graph()
+    Loader->>GTFS: Ler calendários e quatro TXT principais
+    GTFS-->>Loader: Registros
+    Loader->>Loader: Higienizar e filtrar serviços ativos
+    Loader-->>Network: TransportGraph
+    Note over Loader: Diagnóstico em loader.report
+    Network->>Simulator: max_speed_of(graph)
+    Simulator-->>Network: max_speed
+    Network-->>API: RouteNetwork com grafo, índice, velocidade e data
+    API->>API: Armazenar em app.state.network
+    API-->>Operator: Aplicação pronta
+    Note over API: Sem data, rede não configurada. Erro de carga interrompe startup

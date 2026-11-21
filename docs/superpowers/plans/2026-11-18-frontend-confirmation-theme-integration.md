@@ -1,5 +1,7 @@
 # Frontend Confirmation, Theme and Route Contract Implementation Plan
 
+> Documento histórico: registra decisões e instruções da época, não tarefas abertas atuais. O progresso vigente está em [docs/PLAN.md](../../PLAN.md); contratos atuais em [API.md](../../API.md).
+
 > **For Codex:** REQUIRED SUB-SKILL: Use executing-plans to implement this plan task-by-task.
 
 **Goal:** Add strict `HH:MM` departure input, origin-confirmation map motion, a project-native theme switch, a correct clear-field flow, and expose itinerary instructions through the existing route endpoint.

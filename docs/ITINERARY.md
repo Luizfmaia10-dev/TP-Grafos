@@ -16,7 +16,7 @@ para segundos antes das subtrações, garantindo que a soma das durações corre
 ao tempo total. Caminhos desconectados, partidas anteriores à chegada e tempos de
 deslocamento negativos geram `ValueError`.
 
-As instruções são strings em inglês para cada conexão, com instruções separadas
+As instruções são strings em português para cada conexão, com instruções separadas
 para a espera. Elas identificam modal, linha, estações e horários, sem pressupor
 que conexões consecutivas da mesma linha pertencem ao mesmo veículo.
 

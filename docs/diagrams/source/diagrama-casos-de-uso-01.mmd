@@ -1,0 +1,38 @@
+flowchart LR
+    Passenger[Passageiro]
+    Operator[Operador de dados]
+    Analyst[Analista da rede]
+    GTFS[Arquivos GTFS de Belo Horizonte]
+    subgraph Public[Interface e REST]
+        Stations([Consultar estações])
+        Selection([Selecionar paradas por nome ou marcador])
+        Search([Buscar rota para HH:MM])
+        Validate([Validar IDs distintos e horário])
+        Calculate([Calcular menor chegada com A* temporal])
+        Itinerary([Montar itinerário na API])
+        View([Visualizar resumo, timeline e mapa])
+        Edit([Editar ou cancelar consulta])
+    end
+    subgraph CLI[Ferramentas por linha de comando]
+        Load([Carregar e higienizar GTFS por data])
+        Check([Validar grafo e carga])
+        Analyze([Analisar topologia com GraphAnalyzer])
+        Critical([Listar articulações, CFCs e Top 20])
+        Benchmark([Comparar roteamento com NetworkX])
+    end
+    Passenger --> Stations
+    Passenger --> Selection
+    Passenger --> Search
+    Passenger --> View
+    Passenger --> Edit
+    Search -.->|inclui| Validate
+    Search -.->|inclui| Calculate
+    Search -.->|se houver caminho| Itinerary
+    Operator --> Load
+    Operator --> Check
+    GTFS --> Load
+    Check -.->|inclui| Load
+    Analyst --> Analyze
+    Analyst --> Benchmark
+    Analyze -.->|inclui| Load
+    Analyze -.->|gera| Critical

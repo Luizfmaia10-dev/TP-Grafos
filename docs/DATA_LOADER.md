@@ -206,9 +206,10 @@ convencional anterior produziu 1.336.540 conexões, levou 123,999 segundos e reg
 
 ## Evidências visuais da carga
 
-O `DataLoader` é chamado pelo comando `app.validate_gtfs` e pelos testes. Ainda
-não é chamado pela aplicação FastAPI em `app/main.py` nem pelo frontend. O comando
-cria o grafo na RAM e o libera ao terminar.
+O `DataLoader` é chamado pelas CLIs `app.validate_gtfs` e `app.analyze_topology`,
+pelos testes e por `RouteNetwork.load` na inicialização do FastAPI quando há
+data de serviço configurada. O frontend consulta essa rede via REST. As CLIs
+criam o grafo na RAM e o liberam ao terminar.
 
 Antes da seleção obrigatória de serviço, foram geradas imagens de uma carga histórica:
 9.659 paradas e 13.765 segmentos direcionados, agregando 6.110.036 conexões horárias.
