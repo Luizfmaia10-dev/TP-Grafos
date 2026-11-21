@@ -1,7 +1,7 @@
 # Especificação das Correções da Auditoria Final
 
-**Data:** 20/11/2026  
-**Status:** aprovado  
+**Data:** 20/11/2026<br>
+**Status:** aprovado<br>
 **Escopo:** correções obrigatórias e recomendadas identificadas na auditoria integral do RotasGraph
 
 ## Objetivo
