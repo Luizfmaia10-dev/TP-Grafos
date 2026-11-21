@@ -58,6 +58,8 @@ git lfs install
 Para inicializar somente um repositório existente, use `git lfs install --local`
 na raiz dele. Em outros sistemas, siga a [instalação oficial](https://git-lfs.com/).
 
+### Em um clone Git
+
 Com o LFS instalado antes do clone, o Git normalmente baixa os arquivos completos
 automaticamente. Para um clone existente, após atualizar a branch, execute na raiz:
 
@@ -78,6 +80,28 @@ git lfs pull
 Os objetos LFS precisam estar publicados pelo responsável pela branch para que
 outros clones possam baixá-los. A migração local, sozinha, não os disponibiliza
 no servidor. Neste trabalho, não é necessário migrar novamente a cada clone.
+
+### A partir do pacote ZIP de entrega
+
+O ZIP final não contém `.git` nem os seis TXT do GTFS. Portanto, `git lfs pull`
+não funciona diretamente dentro da pasta extraída. Obtenha os dados em um clone
+separado e copie somente os seis TXT completos para o pacote:
+
+```sh
+git lfs install
+git clone https://github.com/Luizfmaia10-dev/TP-Grafos.git RotasGraph-dados
+cd RotasGraph-dados
+git lfs pull
+git lfs fsck
+```
+
+Depois, copie `stops.txt`, `routes.txt`, `trips.txt`, `stop_times.txt`,
+`calendar.txt` e `calendar_dates.txt` de `RotasGraph-dados/data/gtfs/` para
+`data/gtfs/` na pasta extraída do ZIP. Também é possível copiar esses arquivos
+de outro clone existente que já tenha concluído o download pelo LFS.
+
+Antes de executar a ingestão, confirme que os arquivos copiados são CSVs completos,
+e não ponteiros LFS, e compare seus SHA-256 com os hashes da seção "Versão atual".
 
 ## Se o TXT contiver apenas uma referência
 
