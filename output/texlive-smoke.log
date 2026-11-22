@@ -1,0 +1,125 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.11.21)  21 NOV 2026 14:07
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**C:/Users/ferna/TP-Grafos/output/texlive-smoke.tex
+(c:/Users/ferna/TP-Grafos/output/texlive-smoke.tex
+LaTeX2e <2026-11-01>
+L3 programming layer <2026-09-09>
+
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/latex
+/base/article.cls
+Document Class: article 2026-06-04 v1.4n Standard LaTeX document class
+
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/latex
+/base/size10.clo
+File: size10.clo 2026-06-04 v1.4n Standard LaTeX file (size option)
+)
+\c@part=\count276
+\c@section=\count277
+\c@subsection=\count278
+\c@subsubsection=\count279
+\c@paragraph=\count280
+\c@subparagraph=\count281
+\c@figure=\count282
+\c@table=\count283
+\abovecaptionskip=\skip49
+\belowcaptionskip=\skip50
+\bibindent=\dimen150
+)
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/gener
+ic/babel/babel.sty
+Package: babel 2026/11/10 v26.16 The multilingual framework for LuaLaTeX, pdfLa
+TeX and XeLaTeX
+\babel@savecnt=\count284
+LaTeX Encoding Info:    Redeclaring text command \ij (encoding OT1) on input li
+ne 2100.
+LaTeX Encoding Info:    Redeclaring text command \IJ (encoding OT1) on input li
+ne 2102.
+LaTeX Encoding Info:    Redeclaring text command \ij (encoding T1) on input lin
+e 2104.
+LaTeX Encoding Info:    Redeclaring text command \IJ (encoding T1) on input lin
+e 2105.
+LaTeX Encoding Info:    Ignoring declaration for text command \ij (encoding ?) 
+on input line 2106.
+LaTeX Encoding Info:    Ignoring declaration for text command \IJ (encoding ?) 
+on input line 2108.
+LaTeX Encoding Info:    Ignoring declaration for text command \SS (encoding ?) 
+on input line 2133.
+\U@D=\dimen151
+\l@unhyphenated=\language23
+
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/gener
+ic/babel/txtbabel.def)
+\bbl@readstream=\read2
+\bbl@dirlevel=\count285
+
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/gener
+ic/babel/locale/invalid/babel-brazil.tex)
+
+Package babel Warning: Name 'brazil' is deprecated.
+(babel)                Use 'brazilian' instead.
+(babel)                Reported on input line 4485.
+
+Package babel Info: Importing font and identification data for 'brazil'
+(babel)             from babel-pt-BR.ini. Reported on input line 4485.
+
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/gener
+ic/babel-portuges/brazilian.ldf
+Language: portuges 2026/01/24 v1.2u Portuguese support from the babel system
+Package babel Info: Hyphen rules for 'brazil' set to \l@portuguese
+(babel)             (\language20). Reported on input line 100.
+Package babel Info: Making " an active character on input line 132.
+))
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/latex
+/l3kernel/l3backend-pdftex.def
+File: l3backend-pdftex.def 2026-09-09 L3 backend support: PDF output (pdfTeX)
+\l__color_backend_stack_int=\count286
+)
+No file texlive-smoke.aux.
+\openout1 = `texlive-smoke.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 3.
+LaTeX Font Info:    ... okay on input line 3.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 3.
+LaTeX Font Info:    ... okay on input line 3.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 3.
+LaTeX Font Info:    ... okay on input line 3.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 3.
+LaTeX Font Info:    ... okay on input line 3.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 3.
+LaTeX Font Info:    ... okay on input line 3.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 3.
+LaTeX Font Info:    ... okay on input line 3.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 3.
+LaTeX Font Info:    ... okay on input line 3.
+Package babel Info: 'brazil' activates 'portuges' shorthands.
+(babel)             Reported on input line 3.
+Package babel Info: Main language set to 'brazil'.
+[1
+
+{c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-var/fonts/map/
+pdftex/updmap/pdftex.map}] (C:\Users\ferna\TP-Grafos\output/texlive-smoke.aux)
+ ***********
+LaTeX2e <2026-11-01>
+L3 programming layer <2026-09-09>
+ ***********
+ ) 
+Here is how much of TeX's memory you used:
+ 1736 strings out of 468449
+ 35763 string characters out of 5433165
+ 449467 words of memory out of 5000000
+ 31051 multiletter control sequences out of 15000+600000
+ 628489 words of font info for 40 fonts, out of 8000000 for 9000
+ 319 hyphenation exceptions out of 8191
+ 38i,5n,44p,197b,128s stack positions out of 10000i,1000n,20000p,200000b,200000s
+<c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/fonts/t
+ype1/public/amsfonts/cm/cmr10.pfb>
+Output written on C:\Users\ferna\TP-Grafos\output/texlive-smoke.pdf (1 page, 14
+403 bytes).
+PDF statistics:
+ 13 PDF objects out of 1000 (max. 8388607)
+ 7 compressed objects within 1 object stream
+ 0 named destinations out of 1000 (max. 500000)
+ 1 words of extra memory for PDF output out of 10000 (max. 10000000)
+

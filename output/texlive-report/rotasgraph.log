@@ -1,0 +1,111 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.11.21)  21 NOV 2026 14:05
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**C:/Users/ferna/TP-Grafos/docs/report/rotasgraph.tex
+(c:/Users/ferna/TP-Grafos/docs/report/rotasgraph.tex
+LaTeX2e <2026-11-01>
+L3 programming layer <2026-09-09>
+
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/latex
+/base/article.cls
+Document Class: article 2026-06-04 v1.4n Standard LaTeX document class
+
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/latex
+/base/size12.clo
+File: size12.clo 2026-06-04 v1.4n Standard LaTeX file (size option)
+)
+\c@part=\count276
+\c@section=\count277
+\c@subsection=\count278
+\c@subsubsection=\count279
+\c@paragraph=\count280
+\c@subparagraph=\count281
+\c@figure=\count282
+\c@table=\count283
+\abovecaptionskip=\skip49
+\belowcaptionskip=\skip50
+\bibindent=\dimen150
+) (./sbc-template.sty
+Package: sbc-template 2001/06/09
+
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/latex
+/geometry/geometry.sty
+Package: geometry 2026/11/15 v6.2 Page Geometry
+
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/latex
+/graphics/keyval.sty
+Package: keyval 2026-06-01 v1.15 key=value parser (DPC)
+\KV@toks@=\toks17
+)
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/gener
+ic/iftex/ifvtex.sty
+Package: ifvtex 2026/10/27 v1.7 ifvtex compatibility package
+
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/gener
+ic/iftex/iftex.sty
+Package: iftex 2026/11/17 v1.0h TeX engine tests
+))
+\Gm@cnth=\count284
+\Gm@cntv=\count285
+\c@Gm@tempcnt=\count286
+\Gm@bindingoffset=\dimen151
+\Gm@wd@mp=\dimen152
+\Gm@odd@mp=\dimen153
+\Gm@even@mp=\dimen154
+\Gm@layoutwidth=\dimen155
+\Gm@layoutheight=\dimen156
+\Gm@layouthoffset=\dimen157
+\Gm@layoutvoffset=\dimen158
+\Gm@dimlist=\toks18
+)
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/latex
+/caption/caption.sty
+Package: caption 2023/08/05 v3.6o Customizing captions (AR)
+
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/latex
+/caption/caption3.sty
+Package: caption3 2023/07/31 v2.4d caption3 kernel (AR)
+\caption@tempdima=\dimen159
+\captionmargin=\dimen160
+\caption@leftmargin=\dimen161
+\caption@rightmargin=\dimen162
+\caption@width=\dimen163
+\caption@indent=\dimen164
+\caption@parindent=\dimen165
+\caption@hangindent=\dimen166
+Package caption Info: Standard document class detected.
+)
+\c@caption@flags=\count287
+\c@continuedfloat=\count288
+)
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/latex
+/psnfss/times.sty
+Package: times 2020/03/25 PSNFSS-v9.3 (SPQR) 
+)
+\c@instn=\count289
+
+
+! LaTeX Error: File `titlesec.sty' not found.
+
+Type X to quit or <RETURN> to proceed,
+or enter new name. (Default extension: sty)
+
+Enter file name: 
+! Emergency stop.
+<read *> 
+         
+l.120 \titlelabel
+                 {\thetitle.\hspace{1ex}}^^M
+*** (cannot \read from terminal in nonstop modes)
+
+ 
+Here is how much of TeX's memory you used:
+ 2293 strings out of 468449
+ 40773 string characters out of 5433165
+ 460479 words of memory out of 5000000
+ 31603 multiletter control sequences out of 15000+600000
+ 628787 words of font info for 41 fonts, out of 8000000 for 9000
+ 319 hyphenation exceptions out of 8191
+ 72i,0n,79p,319b,43s stack positions out of 10000i,1000n,20000p,200000b,200000s
+!  ==> Fatal error occurred, no output PDF file produced!

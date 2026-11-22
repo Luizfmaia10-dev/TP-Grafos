@@ -340,16 +340,29 @@ for (const event of ["input", "blur"]) {
 }
 
 let pointerDownOutsideOptions = null;
+let pointerDownKeepsOptionsOpen = false;
 document.addEventListener("pointerdown", event => {
-  pointerDownOutsideOptions = openField && shouldCloseStationOptions(fields[openField].wrapper, event.target) ? openField : null;
+  const closesOptions = openField
+    && shouldCloseStationOptions(fields[openField].wrapper, event.target);
+  pointerDownOutsideOptions = closesOptions ? openField : null;
+  pointerDownKeepsOptionsOpen = Boolean(openField && !closesOptions);
 });
 document.addEventListener("click", () => {
   if (pointerDownOutsideOptions && openField === pointerDownOutsideOptions) closeOptions();
   pointerDownOutsideOptions = null;
 });
-document.addEventListener("pointercancel", () => { pointerDownOutsideOptions = null; });
+document.addEventListener("pointerup", () => { pointerDownKeepsOptionsOpen = false; });
+document.addEventListener("pointercancel", () => {
+  pointerDownOutsideOptions = null;
+  pointerDownKeepsOptionsOpen = false;
+});
 document.addEventListener("focusin", event => {
-  if (!pointerDownOutsideOptions && openField && shouldCloseStationOptions(fields[openField].wrapper, event.target)) closeOptions();
+  if (!pointerDownOutsideOptions && openField
+      && shouldCloseStationOptions(
+        fields[openField].wrapper,
+        event.target,
+        pointerDownKeepsOptionsOpen,
+      )) closeOptions();
 });
 
 form.addEventListener("submit", event => {

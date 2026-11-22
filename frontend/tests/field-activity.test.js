@@ -26,3 +26,13 @@ test("pressing outside the field and map closes station options", () => {
 
   assert.equal(shouldCloseStationOptions(fieldWrapper, outsideTarget), true);
 });
+
+test("dragging the options scrollbar keeps station options open", () => {
+  const fieldWrapper = { contains: () => false };
+  const formFocusedByScrollbar = { closest: () => null };
+
+  assert.equal(
+    shouldCloseStationOptions(fieldWrapper, formFocusedByScrollbar, true),
+    false,
+  );
+});

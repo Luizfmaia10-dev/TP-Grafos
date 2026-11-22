@@ -1,0 +1,255 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.11.21)  21 NOV 2026 14:08
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**C:/Users/ferna/TP-Grafos/output/texlive-sbc-smoke.tex
+(c:/Users/ferna/TP-Grafos/output/texlive-sbc-smoke.tex
+LaTeX2e <2026-11-01>
+L3 programming layer <2026-09-09>
+
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/latex
+/base/article.cls
+Document Class: article 2026-06-04 v1.4n Standard LaTeX document class
+
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/latex
+/base/size12.clo
+File: size12.clo 2026-06-04 v1.4n Standard LaTeX file (size option)
+)
+\c@part=\count276
+\c@section=\count277
+\c@subsection=\count278
+\c@subsubsection=\count279
+\c@paragraph=\count280
+\c@subparagraph=\count281
+\c@figure=\count282
+\c@table=\count283
+\abovecaptionskip=\skip49
+\belowcaptionskip=\skip50
+\bibindent=\dimen150
+) (c:/Users/ferna/TP-Grafos/docs/report/sbc-template.sty
+Package: sbc-template 2001/06/09
+
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/latex
+/geometry/geometry.sty
+Package: geometry 2026/11/15 v6.2 Page Geometry
+
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/latex
+/graphics/keyval.sty
+Package: keyval 2026-06-01 v1.15 key=value parser (DPC)
+\KV@toks@=\toks17
+)
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/gener
+ic/iftex/ifvtex.sty
+Package: ifvtex 2026/10/27 v1.7 ifvtex compatibility package
+
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/gener
+ic/iftex/iftex.sty
+Package: iftex 2026/11/17 v1.0h TeX engine tests
+))
+\Gm@cnth=\count284
+\Gm@cntv=\count285
+\c@Gm@tempcnt=\count286
+\Gm@bindingoffset=\dimen151
+\Gm@wd@mp=\dimen152
+\Gm@odd@mp=\dimen153
+\Gm@even@mp=\dimen154
+\Gm@layoutwidth=\dimen155
+\Gm@layoutheight=\dimen156
+\Gm@layouthoffset=\dimen157
+\Gm@layoutvoffset=\dimen158
+\Gm@dimlist=\toks18
+)
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/latex
+/caption/caption.sty
+Package: caption 2023/08/05 v3.6o Customizing captions (AR)
+
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/latex
+/caption/caption3.sty
+Package: caption3 2023/07/31 v2.4d caption3 kernel (AR)
+\caption@tempdima=\dimen159
+\captionmargin=\dimen160
+\caption@leftmargin=\dimen161
+\caption@rightmargin=\dimen162
+\caption@width=\dimen163
+\caption@indent=\dimen164
+\caption@parindent=\dimen165
+\caption@hangindent=\dimen166
+Package caption Info: Standard document class detected.
+)
+\c@caption@flags=\count287
+\c@continuedfloat=\count288
+)
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/latex
+/psnfss/times.sty
+Package: times 2020/03/25 PSNFSS-v9.3 (SPQR) 
+)
+\c@instn=\count289
+
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/latex
+/titlesec/titlesec.sty
+Package: titlesec 2025/01/04 v2.17 Sectioning titles
+\ttl@box=\box53
+\beforetitleunit=\skip51
+\aftertitleunit=\skip52
+\ttl@plus=\dimen167
+\ttl@minus=\dimen168
+\ttl@toksa=\toks19
+\titlewidth=\dimen169
+\titlewidthlast=\dimen170
+\titlewidthfirst=\dimen171
+)
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/latex
+/etoolbox/etoolbox.sty
+Package: etoolbox 2025/10/02 v2.5m e-TeX tools for LaTeX (JAW)
+\etb@tempcnta=\count290
+))
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/latex
+/base/fontenc.sty
+Package: fontenc 2026-07-31 v2.2a Standard LaTeX package
+LaTeX Font Info:    Trying to load font information for T1+ptm on input line 11
+6.
+
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/latex
+/psnfss/t1ptm.fd
+File: t1ptm.fd 2001/06/04 font definitions for T1/ptm.
+))
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/latex
+/base/inputenc.sty
+Package: inputenc 2024/02/08 v1.3d Input encoding file
+\inpenc@prehook=\toks20
+\inpenc@posthook=\toks21
+)
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/gener
+ic/babel/babel.sty
+Package: babel 2026/11/10 v26.16 The multilingual framework for LuaLaTeX, pdfLa
+TeX and XeLaTeX
+\babel@savecnt=\count291
+LaTeX Encoding Info:    Redeclaring text command \ij (encoding OT1) on input li
+ne 2100.
+LaTeX Encoding Info:    Redeclaring text command \IJ (encoding OT1) on input li
+ne 2102.
+LaTeX Encoding Info:    Redeclaring text command \ij (encoding T1) on input lin
+e 2104.
+LaTeX Encoding Info:    Redeclaring text command \IJ (encoding T1) on input lin
+e 2105.
+LaTeX Encoding Info:    Ignoring declaration for text command \ij (encoding ?) 
+on input line 2106.
+LaTeX Encoding Info:    Ignoring declaration for text command \IJ (encoding ?) 
+on input line 2108.
+LaTeX Encoding Info:    Ignoring declaration for text command \SS (encoding ?) 
+on input line 2133.
+\U@D=\dimen172
+\l@unhyphenated=\language23
+
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/gener
+ic/babel/txtbabel.def)
+\bbl@readstream=\read2
+\bbl@dirlevel=\count292
+
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/gener
+ic/babel/locale/invalid/babel-brazil.tex)
+
+Package babel Warning: Name 'brazil' is deprecated.
+(babel)                Use 'brazilian' instead.
+(babel)                Reported on input line 4485.
+
+Package babel Info: Importing font and identification data for 'brazil'
+(babel)             from babel-pt-BR.ini. Reported on input line 4485.
+
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/gener
+ic/babel-portuges/brazilian.ldf
+Language: portuges 2026/01/24 v1.2u Portuguese support from the babel system
+Package babel Info: Hyphen rules for 'brazil' set to \l@portuguese
+(babel)             (\language20). Reported on input line 100.
+Package babel Info: Making " an active character on input line 132.
+))
+(c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/tex/latex
+/l3kernel/l3backend-pdftex.def
+File: l3backend-pdftex.def 2026-09-09 L3 backend support: PDF output (pdfTeX)
+\l__color_backend_stack_int=\count293
+)
+No file texlive-sbc-smoke.aux.
+\openout1 = `texlive-sbc-smoke.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 6.
+LaTeX Font Info:    ... okay on input line 6.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 6.
+LaTeX Font Info:    ... okay on input line 6.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 6.
+LaTeX Font Info:    ... okay on input line 6.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 6.
+LaTeX Font Info:    ... okay on input line 6.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 6.
+LaTeX Font Info:    ... okay on input line 6.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 6.
+LaTeX Font Info:    ... okay on input line 6.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 6.
+LaTeX Font Info:    ... okay on input line 6.
+*geometry* driver: auto-detecting
+*geometry* detected driver: pdftex
+*geometry* verbose mode - [ preamble ] result:
+* driver: pdftex
+* paper: a4paper
+* layout: <same size as paper>
+* layoutoffset:(h,v)=(0.0pt,0.0pt)
+* modes: 
+* h-part:(L,W,R)=(85.35826pt, 426.79135pt, 85.35826pt)
+* v-part:(T,H,B)=(99.58464pt, 674.33032pt, 71.13188pt)
+* \paperwidth=597.50787pt
+* \paperheight=845.04684pt
+* \textwidth=426.79135pt
+* \textheight=674.33032pt
+* \oddsidemargin=13.08827pt
+* \evensidemargin=13.08827pt
+* \topmargin=-9.68535pt
+* \headheight=12.0pt
+* \headsep=25.0pt
+* \topskip=12.0pt
+* \footskip=30.0pt
+* \marginparwidth=44.0pt
+* \marginparsep=10.0pt
+* \columnsep=10.0pt
+* \skip\footins=10.8pt plus 4.0pt minus 2.0pt
+* \hoffset=0.0pt
+* \voffset=0.0pt
+* \mag=1000
+* \@twocolumnfalse
+* \@twosidefalse
+* \@mparswitchfalse
+* \@reversemarginfalse
+* (1in=72.27pt=25.4mm, 1cm=28.453pt)
+
+Package caption Info: Begin \AtBeginDocument code.
+Package caption Info: End \AtBeginDocument code.
+Package babel Info: 'brazil' activates 'portuges' shorthands.
+(babel)             Reported on input line 6.
+Package babel Info: Main language set to 'brazil'.
+[1
+
+{c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-var/fonts/map/
+pdftex/updmap/pdftex.map}{c:/Users/ferna/.cache/codex-runtimes/texlive-windows/
+2026/texmf-dist/fonts/enc/dvips/base/8r.enc}]
+(C:\Users\ferna\TP-Grafos\output/texlive-sbc-smoke.aux)
+ ***********
+LaTeX2e <2026-11-01>
+L3 programming layer <2026-09-09>
+ ***********
+ ) 
+Here is how much of TeX's memory you used:
+ 4713 strings out of 468449
+ 85232 string characters out of 5433165
+ 505513 words of memory out of 5000000
+ 33979 multiletter control sequences out of 15000+600000
+ 631509 words of font info for 43 fonts, out of 8000000 for 9000
+ 319 hyphenation exceptions out of 8191
+ 72i,5n,79p,321b,118s stack positions out of 10000i,1000n,20000p,200000b,200000s
+<c:/Users/ferna/.cache/codex-runtimes/texlive-windows/2026/texmf-dist/fonts/t
+ype1/urw/times/utmr8a.pfb>
+Output written on C:\Users\ferna\TP-Grafos\output/texlive-sbc-smoke.pdf (1 page
+, 11363 bytes).
+PDF statistics:
+ 14 PDF objects out of 1000 (max. 8388607)
+ 8 compressed objects within 1 object stream
+ 0 named destinations out of 1000 (max. 500000)
+ 1 words of extra memory for PDF output out of 10000 (max. 10000000)
+

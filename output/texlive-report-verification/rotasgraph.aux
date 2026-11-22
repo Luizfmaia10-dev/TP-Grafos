@@ -1,0 +1,63 @@
+\relax 
+\providecommand \babel@aux [2]{\global \let \babel@toc \@gobbletwo }
+\@nameuse{bbl@beforestart}
+\catcode `"\active 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\babel@aux{brazil}{}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introdução}{1}{section.1}\protected@file@percent }
+\citation{pbh}
+\citation{gtfs}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Problema, requisitos e recorte}{2}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Dados GTFS e construção da rede}{2}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Procedência e calendário}{2}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Higienização e perdas conservadoras}{3}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Modelagem matemática e entidades}{3}{section.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Visão resumida das entidades e contratos reais. A API cria o itinerário após receber o caminho; não há dependência do roteador para o itinerário. O diagrama completo permanece em \texttt  {docs/diagrams/}.}}{4}{figure.caption.1}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:classes}{{1}{4}{Visão resumida das entidades e contratos reais. A API cria o itinerário após receber o caminho; não há dependência do roteador para o itinerário. O diagrama completo permanece em \texttt {docs/diagrams/}}{figure.caption.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}A* dependente do tempo e correção}{4}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Rótulos, expansão e escolha de partidas}{4}{subsection.5.1}\protected@file@percent }
+\citation{hart}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}FIFO com possibilidade de espera}{5}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Heurística consistente e admissível}{5}{subsection.5.3}\protected@file@percent }
+\citation{python}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Reconstrução e apresentação do resultado}{6}{subsection.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Análise temporal e espacial}{6}{section.6}\protected@file@percent }
+\citation{tarjan}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Custos de apoio, além da consulta de menor chegada.}}{7}{table.caption.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}Análise estrutural e vulnerabilidade}{7}{section.7}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Topologia de 17/11/2026. Fonte: \texttt  {docs/analysis/topology.json}.}}{8}{table.caption.3}\protected@file@percent }
+\newlabel{tab:topology}{{2}{8}{Topologia de 17/11/2026. Fonte: \texttt {docs/analysis/topology.json}}{table.caption.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Cinco primeiras estações do ranking estrutural aprovado.}}{8}{table.caption.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {8}Arquitetura, API e interface}{8}{section.8}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Visão resumida dos componentes implementados. As setas indicam comunicação ou uso; a API carrega a rede via DataLoader na inicialização. As ferramentas analíticas são executadas por linha de comando.}}{9}{figure.caption.5}\protected@file@percent }
+\newlabel{fig:components}{{2}{9}{Visão resumida dos componentes implementados. As setas indicam comunicação ou uso; a API carrega a rede via DataLoader na inicialização. As ferramentas analíticas são executadas por linha de comando}{figure.caption.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Interface atual para seleção de estações e horário, capturada em 1440 por 900 pixels.}}{10}{figure.3}\protected@file@percent }
+\newlabel{fig:initial}{{3}{10}{Interface atual para seleção de estações e horário, capturada em 1440 por 900 pixels}{figure.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Paradas reais confirmadas e horário preenchido antes da consulta. A seleção preserva o ID da estação, não apenas seu rótulo.}}{10}{figure.4}\protected@file@percent }
+\newlabel{fig:search}{{4}{10}{Paradas reais confirmadas e horário preenchido antes da consulta. A seleção preserva o ID da estação, não apenas seu rótulo}{figure.4}{}}
+\citation{networkx}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Resultado real com espera, deslocamento e chegada; mapa e timeline representam a mesma resposta da API.}}{11}{figure.5}\protected@file@percent }
+\newlabel{fig:result}{{5}{11}{Resultado real com espera, deslocamento e chegada; mapa e timeline representam a mesma resposta da API}{figure.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {9}Verificação e avaliação experimental}{11}{section.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.1}Resultados e interpretação}{12}{subsection.9.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Custo completo da consulta na rede completa, em ms: mediana e IQR de sete repetições. Fonte: \texttt  {campaign/full/summary.csv}.}}{12}{table.caption.6}\protected@file@percent }
+\newlabel{tab:query-benchmark}{{4}{12}{Custo completo da consulta na rede completa, em ms: mediana e IQR de sete repetições. Fonte: \texttt {campaign/full/summary.csv}}{table.caption.6}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Preparação e RSS: \texttt  {campaign/full/results.json}.}}{13}{table.caption.7}\protected@file@percent }
+\newlabel{tab:prepared-benchmark}{{5}{13}{Preparação e RSS: \texttt {campaign/full/results.json}}{table.caption.7}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {10}Limitações e ameaças à validade}{13}{section.10}\protected@file@percent }
+\citation{sbc}
+\@writefile{toc}{\contentsline {section}{\numberline {11}Reprodutibilidade e responsabilidades}{14}{section.11}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Responsabilidades comprovadas pelo histórico integrado.}}{14}{table.caption.8}\protected@file@percent }
+\newlabel{tab:authors}{{6}{14}{Responsabilidades comprovadas pelo histórico integrado}{table.caption.8}{}}
+\bibcite{hart}{Hart et al. 1968}
+\bibcite{tarjan}{Tarjan 1972}
+\bibcite{gtfs}{MobilityData 2026}
+\bibcite{pbh}{PBH 2026}
+\bibcite{python}{Python Software Foundation 2026}
+\bibcite{networkx}{NetworkX 2026}
+\bibcite{sbc}{SBC 2017}
+\@writefile{toc}{\contentsline {section}{\numberline {12}Conclusão}{15}{section.12}\protected@file@percent }
+\gdef \@abspage@last{15}
