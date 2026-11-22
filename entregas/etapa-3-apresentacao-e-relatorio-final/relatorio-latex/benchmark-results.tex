@@ -1,0 +1,43 @@
+\subsection{Resultados e interpretação}
+A matriz terminou válida, sem timeout, excesso de RSS ou divergência: são 54 processos, 384 amostras e 96 resumos. Os subgrafos preservaram os extremos das consultas, mas 100 estações produziram zero conexões e 1.000 produziram 15.722; nenhum dos oito pares teve rota nesses recortes. Essas latências medem respostas sem rota, não escalabilidade de itinerários alcançáveis. Na rede completa, com 9.925 estações e 1.458.808 conexões, a referência expandida tem 1.479.535 eventos e 2.926.010 arestas. Seis casos têm rota e dois não; ambos os motores concordam em chegada ou ausência de caminho.
+
+\begin{table}[ht]
+\centering
+\caption{Custo completo da consulta na rede completa, em ms: mediana e IQR de sete repetições. Fonte: \texttt{campaign/full/summary.csv}.}
+\label{tab:query-benchmark}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+& \multicolumn{2}{c}{A* nativo} & \multicolumn{2}{c}{Dijkstra NetworkX} \\
+Caso & Mediana & IQR & Mediana & IQR \\
+\midrule
+long-07 & 1.640,334 & 219,319 & 113,803 & 6,619 \\
+long-14 & 1.111,706 & 193,058 & 195,255 & 55,802 \\
+medium-07 & 410,340 & 16,342 & 27,856 & 1,661 \\
+medium-14 & 264,174 & 22,199 & 17,620 & 0,352 \\
+short-07 & 149,375 & 21,296 & 4,286 & 1,012 \\
+short-14 & 67,510 & 3,410 & 4,438 & 1,787 \\
+no-route-1 & 2.595,359 & 258,083 & 8.290,382 & 1.873,659 \\
+no-route-2 & 188,883 & 4,128 & 146,531 & 5,250 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A Tabela~\ref{tab:query-benchmark} inclui preparação e limpeza específicas de cada consulta, além da busca, sem repetir a preparação global da rede. NetworkX apresenta menor mediana nos seis casos alcançáveis; o caso \code{no-route-1} inverte essa relação e é o mais lento em ambos. Distância Haversine caracteriza os estratos, mas não isola a dificuldade de busca. Os valores não autorizam combinar casos em um ganho universal.
+
+\begin{table}[ht]
+\centering
+\caption{Preparação e RSS: \texttt{campaign/full/results.json}.}
+\label{tab:prepared-benchmark}
+\begin{tabular}{@{}lrr@{}}
+\toprule Medida & A* nativo & Dijkstra NetworkX \\
+\midrule
+Preparação mediana (ms) & 734,682 & 14.333,139 \\
+RSS preparada mediana (MiB) & 212,301 & 2.237,703 \\
+Pico máximo amostrado (MiB) & 228,215 & 2.488,203 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A preparação é a mediana entre nove processos por motor e inclui a importação fria de NetworkX. A RSS preparada é um snapshot do Python após a preparação; o pico é o máximo amostrado entre processos, somando raiz e descendentes uma vez por PID. Inclui ingestão, launcher, conversão e serialização, pode perder picos breves e não mede memória física exclusiva. Não se subtraem picos para obter memória da busca.
+
+O monitor consulta a árvore de processos aproximadamente a cada 10 ms e pode interferir no tempo; não houve controle pareado desse efeito. As medianas da ingestão comum foram 96,434 s nos processos nativos e 33,818 s nos de NetworkX, evidenciando condições de execução diferentes. Os extremos foram preservados. Preparação, consultas amortizadas e RSS descrevem esta campanha e representações diferentes, sem estabelecer superioridade geral.

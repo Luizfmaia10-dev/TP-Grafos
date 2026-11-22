@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#032147">
+    <meta name="description" content="RotasGraph, uma experiência de planejamento de transporte público baseada na rede de Belo Horizonte.">
+    <title>RotasGraph · Planeje seu trajeto</title>
+    <link rel="icon" href="/assets/icons/graph.svg" type="image/svg+xml">
+    <link rel="preload" href="/assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/fonts/ibm-plex-mono-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/assets/app.css">
+    <script type="module" src="/js/app.js"></script>
+  </head>
+  <body class="bg-rg-paper font-sans text-rg-ink antialiased">
+    <a class="skip-link" href="#planner">Ir para o planejador</a>
+
+    <header class="site-header flex items-center justify-between bg-rg-navy text-white">
+      <a class="brand inline-flex shrink-0 items-center" href="/" aria-label="RotasGraph, página inicial">
+        <span class="brand-symbol flex items-center justify-center" aria-hidden="true">
+          <img src="/assets/icons/graph.svg" alt="">
+        </span>
+        <span class="brand-name">RotasGraph</span>
+      </a>
+
+      <div class="header-actions flex items-center">
+        <div class="location-meta flex items-center text-rg-map-text">
+          <span class="location-icon icon-slot" aria-hidden="true">
+            <img src="/assets/icons/location.svg" alt="">
+          </span>
+          <p class="city-label font-semibold">Belo Horizonte<span class="city-state">, MG</span></p>
+          <span class="location-divider" aria-hidden="true"></span>
+          <p class="data-source font-mono text-rg-map-muted">GTFS / BHTRANS</p>
+        </div>
+        <button id="theme-switch" class="theme-switch" type="button" role="switch" aria-checked="false" aria-label="Alternar tema claro e escuro">
+          <span class="theme-switch-label">Tema</span>
+          <span class="theme-switch-track" aria-hidden="true"><span class="theme-switch-thumb"></span></span>
+        </button>
+      </div>
+    </header>
+
+    <p id="query-announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+
+    <main id="planner" class="planner-shell" data-view="search" tabindex="-1">
+      <section class="search-panel flex min-w-0 flex-col" aria-labelledby="planner-title">
+        <div class="search-intro">
+          <div class="intro-copy">
+            <h1 id="planner-title" class="planner-title font-bold" tabindex="-1">Planeje seu trajeto</h1>
+            <p id="planner-description" class="planner-description text-rg-muted">Escolha duas paradas pelo nome ou no mapa.</p>
+          </div>
+          <button id="edit-search" class="edit-search" type="button" hidden><span class="edit-icon icon-slot" aria-hidden="true"><img src="/assets/icons/arrow-left.svg" alt=""></span> Editar busca</button>
+        </div>
+
+        <form id="route-form" class="search-form flex flex-col border border-rg-line bg-rg-surface shadow-rg-card" aria-label="Planejamento do trajeto" aria-busy="false" tabindex="-1" novalidate>
+          <p id="station-hint" class="sr-only">Escolha uma sugestão para confirmar a parada. Use as setas, Enter e Escape para navegar.</p>
+          <div id="origin-field" class="form-field flex min-w-0 flex-col">
+            <label class="field-label font-semibold" for="origin">Origem</label>
+            <div class="station-picker">
+              <div class="field-control flex items-center">
+                <span class="station-badge station-badge--origin font-mono" aria-hidden="true">A</span>
+                <input id="origin" class="station-input min-w-0 flex-1" name="origin" type="text" placeholder="Escolha uma parada" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="origin-options" aria-describedby="station-hint" required>
+                <button id="origin-clear" class="clear-field" type="button" aria-label="Limpar origem" hidden>Limpar</button>
+                <span id="origin-search-icon" class="search-icon icon-slot shrink-0" aria-hidden="true">
+                  <img src="/assets/icons/search.svg" alt="">
+                </span>
+              </div>
+              <ul id="origin-options" class="station-options" role="listbox" aria-label="Paradas para origem" hidden></ul>
+              <p id="origin-loading" class="station-loading" role="status" aria-live="polite" hidden>Buscando paradas…</p>
+              <p id="origin-empty" class="field-hint station-empty" hidden>Nenhuma parada encontrada na rede para esta busca.</p>
+            </div>
+            <p id="origin-error" class="field-error" hidden></p>
+          </div>
+
+          <div id="destination-field" class="form-field flex min-w-0 flex-col">
+            <label class="field-label font-semibold" for="destination">Destino</label>
+            <div class="station-picker">
+              <div class="field-control flex items-center">
+                <span class="station-badge station-badge--destination font-mono" aria-hidden="true">B</span>
+                <input id="destination" class="station-input min-w-0 flex-1" name="destination" type="text" placeholder="Escolha uma parada" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="destination-options" aria-describedby="station-hint" required>
+                <button id="destination-clear" class="clear-field" type="button" aria-label="Limpar destino" hidden>Limpar</button>
+                <span id="destination-search-icon" class="search-icon icon-slot shrink-0" aria-hidden="true">
+                  <img src="/assets/icons/search.svg" alt="">
+                </span>
+              </div>
+              <ul id="destination-options" class="station-options" role="listbox" aria-label="Paradas para destino" hidden></ul>
+              <p id="destination-loading" class="station-loading" role="status" aria-live="polite" hidden>Buscando paradas…</p>
+              <p id="destination-empty" class="field-hint station-empty" hidden>Nenhuma parada encontrada na rede para esta busca.</p>
+            </div>
+            <p id="destination-error" class="field-error" hidden></p>
+          </div>
+
+          <div id="departure-field" class="form-field time-field flex min-w-0 flex-col">
+            <label class="field-label font-semibold" for="departure-time">Horário de saída</label>
+            <div class="field-control flex items-center">
+              <button id="departure-picker-trigger" class="clock-button icon-slot shrink-0" type="button" aria-label="Escolher horário" aria-haspopup="dialog" aria-expanded="false" aria-controls="departure-picker">
+                <img src="/assets/icons/clock.svg" alt="" aria-hidden="true">
+                <span class="clock-button-label">Escolher</span>
+              </button>
+              <input id="departure-time" class="time-input min-w-0 flex-1 font-mono" name="departure_time" type="text" value="07:45" inputmode="numeric" autocomplete="off" spellcheck="false" aria-describedby="departure-hint departure-error" required>
+            </div>
+            <div id="departure-picker" class="time-picker" role="dialog" aria-labelledby="departure-picker-title" hidden>
+              <div class="time-picker-heading">
+                <div>
+                  <h2 id="departure-picker-title">Escolha o horário</h2>
+                  <p>Horas e minutos, sem segundos</p>
+                </div>
+                <span class="time-picker-format font-mono" aria-hidden="true">HH:MM</span>
+              </div>
+              <div class="time-wheels" aria-label="Seletor de horário">
+                <div class="time-wheel-group">
+                  <span class="time-wheel-label">Horas</span>
+                  <div class="time-wheel font-mono" data-wheel="hour" role="listbox" aria-label="Horas" tabindex="0"></div>
+                </div>
+                <span class="time-wheel-separator font-mono" aria-hidden="true">:</span>
+                <div class="time-wheel-group">
+                  <span class="time-wheel-label">Minutos</span>
+                  <div class="time-wheel font-mono" data-wheel="minute" role="listbox" aria-label="Minutos" tabindex="0"></div>
+                </div>
+              </div>
+              <div class="time-picker-actions">
+                <button class="time-picker-cancel" type="button" data-time-cancel>Cancelar</button>
+                <button class="time-picker-apply" type="button" data-time-apply>Aplicar horário</button>
+              </div>
+            </div>
+            <p id="departure-hint" class="sr-only">Use apenas horas e minutos, como 07:45. O separador aparece automaticamente e segundos não são aceitos. Horários após 24 horas pertencem ao mesmo dia de serviço.</p>
+            <p id="departure-error" class="field-error" hidden></p>
+          </div>
+
+          <button class="search-button flex items-center justify-center font-semibold" type="submit" disabled>Calcular trajeto</button>
+          <p id="selection-status" class="selection-status" hidden></p>
+        </form>
+
+        <section id="query-feedback" class="query-feedback" aria-labelledby="feedback-title" hidden>
+          <h2 id="feedback-title"></h2>
+          <p id="feedback-description"></p>
+        </section>
+
+        <section id="route-summary" class="route-summary" aria-label="Resumo do trajeto" hidden>
+          <div class="summary-metrics">
+            <div class="summary-metric">
+              <p class="metric-label">Tempo total</p>
+              <p class="metric-value" aria-hidden="true"><span id="total-minutes"></span><span class="metric-unit">min</span></p>
+              <p id="exact-total" class="sr-only"></p>
+            </div>
+            <div class="summary-metric summary-arrival">
+              <p class="metric-label">Chegada prevista</p>
+              <p class="metric-value"><span id="arrival-time" aria-hidden="true"></span><span id="exact-arrival" class="sr-only"></span></p>
+            </div>
+          </div>
+          <div class="duration-bar" aria-hidden="true"><span id="waiting-proportion"></span></div>
+          <div class="duration-key">
+            <p class="duration-wait"><span id="waiting-duration"></span></p>
+            <p class="duration-vehicle"><span id="vehicle-duration"></span></p>
+          </div>
+        </section>
+      </section>
+
+      <section class="map-panel min-w-0 overflow-hidden bg-rg-map" aria-labelledby="map-title" aria-describedby="map-description">
+        <p id="map-description" class="sr-only">Mapa esquemático da rede de transporte de Belo Horizonte. Selecione as paradas para preencher origem e destino. Os marcadores A e B identificam suas escolhas.</p>
+
+        <div class="network-layer">
+          <div class="network-background" aria-hidden="true">
+            <img class="network-image network-image--desktop" src="/assets/maps/network-desktop.svg" alt="" width="960" height="780" fetchpriority="high">
+            <img class="network-image network-image--mobile" src="/assets/maps/network-mobile.svg" alt="" width="358" height="256">
+
+            <span class="map-region map-region--pampulha font-mono">PAMPULHA</span>
+            <span class="map-region map-region--centro font-mono">CENTRO</span>
+
+            <span class="landmark-label landmark-label--mineirao">Mineirão</span>
+            <img class="landmark-dot landmark-dot--mineirao" src="/assets/icons/landmark.svg" alt="" width="6" height="6">
+            <span class="landmark-label landmark-label--ufmg">UFMG</span>
+            <img class="landmark-dot landmark-dot--ufmg" src="/assets/icons/landmark.svg" alt="" width="6" height="6">
+            <span class="landmark-label landmark-label--liberdade">Praça da Liberdade</span>
+            <img class="landmark-dot landmark-dot--liberdade" src="/assets/icons/landmark.svg" alt="" width="6" height="6">
+          </div>
+          <svg id="map-route" class="map-route" viewBox="0 0 960 780" width="960" height="780" aria-hidden="true" hidden></svg>
+          <div id="map-stations"></div>
+        </div>
+
+        <div class="map-heading absolute border border-rg-map-border bg-rg-map-panel text-rg-map-text">
+          <h2 id="map-title" class="map-title font-bold">Mapa da malha</h2>
+          <p class="map-subtitle text-rg-map-muted">Paradas e trajetos consultados</p>
+        </div>
+        <span id="map-selection-role" class="map-selection-role">Origem</span>
+
+        <div class="map-north absolute flex flex-col items-center justify-center bg-rg-map-panel text-rg-map-muted" role="img" aria-label="Norte">
+          <span class="north-label font-mono" aria-hidden="true">N</span>
+          <span class="north-icon icon-slot" aria-hidden="true">
+            <img src="/assets/icons/north.svg" alt="">
+          </span>
+        </div>
+
+        <div class="map-footer absolute flex items-center justify-between">
+          <span class="map-key flex items-center border border-rg-map-border bg-rg-map-panel text-rg-map-text">
+            <img id="map-key-station" src="/assets/icons/stop-key.svg" alt="" width="7" height="7" aria-hidden="true">
+            <span id="map-key-route" class="map-route-legend" hidden></span>
+            <span id="map-key-label">Paradas da rede</span>
+            <span id="map-key-short">Paradas</span>
+          </span>
+          <p class="map-caption font-mono text-rg-map-muted">Mapa esquemático<span class="map-caption-source"> · GTFS BHTRANS</span></p>
+        </div>
+      </section>
+
+      <section id="route-itinerary" class="route-itinerary" aria-labelledby="itinerary-title" hidden>
+        <div class="itinerary-heading">
+          <h2 id="itinerary-title">Itinerário</h2>
+          <p id="route-distance" class="font-mono" title="Soma das distâncias em linha reta entre as paradas"></p>
+        </div>
+        <ol id="itinerary-steps"></ol>
+        <p class="itinerary-note">Rota calculada com horários GTFS do dia de serviço. Distância aproximada entre paradas; o mapa é esquemático.</p>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,307 @@
+\documentclass[12pt]{article}
+\usepackage{sbc-template}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{graphicx,url,amsmath,amssymb,booktabs,tabularx,array}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+\hypersetup{hidelinks}
+\sloppy
+\title{RotasGraph: roteamento temporal e análise estrutural da rede de transporte público de Belo Horizonte}
+\author{Caio Cesar Falinacio dos Santos\inst{1}, Gabriel Aredes\inst{1},\\
+Joaquim Antonio\inst{1}, Luiz Fernando Cunha Maia\inst{1},\\
+Pedro Henrique Nogueira\inst{1}, Wanessa Oliveira Marcos\inst{1}}
+\address{Engenharia de Software -- Pontifícia Universidade Católica de Minas Gerais\\
+(PUC Minas) -- Minas Gerais -- Brasil\\
+Teoria dos Grafos e Computabilidade\\
+Professor responsável: Leonardo Vilela Cardoso}
+\newcommand{\code}[1]{\texttt{#1}}
+\begin{document}
+\maketitle
+\begin{abstract}
+RotasGraph computes earliest-arrival journeys from Belo Horizonte GTFS data using an in-memory directed temporal graph. A native Python A* combines timetable binary search with a Haversine lower bound. We state its correctness assumptions and account for ordered-list insertion and obsolete heap entries. Structural analysis of the selected service day finds 45 articulation points and 260 strongly connected components across 9,925 stops and 1,458,808 temporal connections. A REST interface displays the itinerary. Reproducible evidence and model limitations delimit the conclusions.
+\end{abstract}
+\begin{resumo}
+O RotasGraph calcula trajetos de menor chegada a partir do GTFS de Belo Horizonte, em um grafo dirigido temporal mantido em memória. O A* em Python nativo combina busca binária de partidas e heurística de Haversine. Explicitamos as hipóteses de correção e os custos da inserção ordenada e das entradas obsoletas no heap. A análise do dia selecionado encontra 45 articulações e 260 componentes fortemente conexas em 9.925 paradas e 1.458.808 conexões temporais. A interface REST exibe o itinerário. Evidências reproduzíveis e limitações delimitam as conclusões.
+\end{resumo}
+
+\section{Introdução}
+O transporte público é uma aplicação de grafos em que conectividade e tempo não podem ser confundidos. A presença de uma linha entre duas paradas não significa que o passageiro possa utilizá-la no horário desejado. Uma conexão pode já ter partido, uma linha expressa pode sair depois e chegar antes, e uma viagem cadastrada pode operar somente em outro dia. Minimizar apenas a distância ou somar durações sem contabilizar esperas produz respostas incompatíveis com os horários publicados.
+
+O objetivo deste trabalho é construir uma ferramenta para selecionar origem, destino e horário, calcular a menor chegada e apresentar um itinerário verificável. O recorte é Belo Horizonte, utilizando dados GTFS dos sistemas convencional e suplementar disponibilizados pela BHTRANS/SUMOB. O projeto também avalia cortes e componentes da malha, distinguindo resiliência estrutural de viabilidade temporal.
+
+O núcleo mantém listas de adjacência na RAM e implementa os algoritmos com a biblioteca padrão de Python. Essa escolha atende ao objetivo disciplinar de demonstrar a construção, a correção e a complexidade do processamento de grafos. Bibliotecas prontas não substituem o motor: NetworkX é restrito à referência experimental. FastAPI expõe o domínio por HTTP, enquanto HTML, Tailwind compilado localmente e JavaScript nativo compõem a interface.
+
+As contribuições são a integração de calendários e higienização GTFS a um grafo temporal, o A* com busca binária e prova condicional da heurística, a análise explícita dos custos reais das estruturas Python e uma análise estrutural independente da apresentação. Os resultados descrevem o feed selecionado e o ambiente observado; não constituem uma previsão de demanda, uma recomendação operacional à cidade ou uma prova de superioridade universal de um algoritmo.
+
+\section{Problema, requisitos e recorte}
+Uma consulta é a tripla $(o,d,t_0)$, em que $o$ e $d$ são estações distintas e $t_0$ é um horário no dia de serviço carregado. Deseja-se minimizar o horário de chegada $A(P,t_0)$ entre os caminhos temporalmente viáveis $P$ de $o$ a $d$. Como $t_0$ é fixo, minimizar a chegada equivale a minimizar $A(P,t_0)-t_0$, incluindo espera e deslocamento. Não se minimizam tarifa, distância, número de baldeações ou emissões.
+
+A interface deve consultar estações reais por nome ou identificador, invalidar a seleção quando o texto muda e informar carregamento, ausência de rota e erros. O resultado inclui data de serviço, horário de chegada, duração total, espera, deslocamento, distância estimada e instruções por trecho. A seleção pública usa IDs de estações. Pontos arbitrários e caminhada de acesso existem como capacidade interna, sem endpoint de coordenadas.
+
+O dia de serviço é configurado no servidor e resolvido antes das consultas. Horários como \code{25:15:30} continuam associados ao serviço iniciado no dia selecionado, sem módulo 24. Não há busca automática no calendário do dia seguinte. O domínio não utiliza banco de dados, APIs visuais nem bibliotecas de grafos. Entidades de alta cardinalidade usam \code{\_\_slots\_\_}; a interface não participa das decisões matemáticas.
+
+O MVP admite transferência no mesmo instante e na mesma estação, sem penalidade mínima. Não modela lotação, atraso em tempo real, velocidade de ruas, acessibilidade física, regras tarifárias ou permanência no mesmo veículo. O resultado é ótimo para o modelo e os registros aceitos, não uma garantia sobre a operação observada nas ruas. Essa distinção é necessária para interpretar tanto a demonstração quanto os experimentos.
+
+\section{Dados GTFS e construção da rede}
+\subsection{Procedência e calendário}
+O pacote oficial consultado em 17/11/2026 contém seis tabelas utilizadas: \code{stops.txt}, \code{routes.txt}, \code{trips.txt}, \code{stop\_times.txt}, \code{calendar.txt} e \code{calendar\_dates.txt} \cite{pbh}. O cadastro possui 9.925 paradas, 326 linhas, 113.692 viagens, 14 serviços e 67 exceções. Esses números descrevem o pacote, não as viagens ativas de uma consulta. A origem e os SHA-256 completos do ZIP e de cada CSV estão em \path{data/gtfs/README.md}.
+
+A seleção semanal considera vigência inclusiva e dia da semana. Depois, exceções do tipo 1 adicionam serviços e do tipo 2 removem serviços para a data. Os calendários foram obtidos junto com os quatro arquivos principais, evitando misturar versões. A especificação GTFS descreve essa relação entre viagem, serviço e dia de operação \cite{gtfs}. Inferir o significado de um ID numérico, ou unir todos os serviços em uma única rede, permitiria combinar viagens que nunca operam juntas.
+
+Para 17/11/2026, são selecionados \code{307679} e \code{307682}. A análise aprovada registra 25.956 viagens carregadas e 1.458.808 conexões, preservando todas as 9.925 paradas, inclusive as sem viagens ativas. O diagnóstico topológico registra 140 viagens rejeitadas. Registros de serviços inativos não são erros de CSV: são excluídos porque pertencem a outro calendário. O arquivo de horários ainda é lido integralmente, portanto filtrar o grafo reduz armazenamento, mas não elimina o custo de leitura do feed.
+
+Os TXT são CSVs versionados por Git LFS. Um ponteiro LFS não é uma tabela e precisa ser substituído pelo objeto completo antes da carga. O controle de hashes identifica o conteúdo efetivamente processado; um novo download pode trazer outro feed na mesma URL. A validação local de dia útil, sábado e Carnaval está documentada, mas os resultados topológicos deste artigo correspondem exclusivamente a 17/11/2026.
+
+\subsection{Higienização e perdas conservadoras}
+O carregador valida cabeçalhos, coordenadas finitas, faixas geográficas, IDs e referências. Duplicatas idênticas preservam o primeiro cadastro; um mesmo ID com dados conflitantes é excluído. Os modais aceitos de linhas GTFS são 1 e 3, convertidos para \code{SUBWAY} e \code{BUS}. A disponibilidade desses tipos no domínio não comprova presença de ambos no feed de ônibus.
+
+Os horários são processados por blocos contíguos de viagem e ordenados por \code{stop\_sequence} numérico. Uma viagem é validada integralmente antes da inserção: parada ausente, sequência repetida, duração negativa ou saída anterior à chegada rejeitam o bloco. Isso evita criar um atalho artificial ao simplesmente remover uma parada inválida do meio da viagem. Reaparição de uma viagem após outro bloco é falha estrutural explícita.
+
+Tempo zero entre IDs diferentes coloca a viagem em quarentena. Restrições de embarque ou desembarque diferentes de zero também excluem a viagem inteira, pois \code{Connection} não mantém o estado de permanência no veículo. Para o dia analisado, o diagnóstico conta 2.106 registros por tempo zero e 3.034 por restrições, além de 5.201.100 registros de serviço inativo. Contagens de registros não equivalem a contagens de viagens.
+
+Velocidade geodésica acima de 120 km/h é um alerta, não uma prova de erro nem um corte de velocidade. A distância é Haversine entre paradas, sem \code{shapes.txt} ou geometria de ruas. Os arquivos originais permanecem intactos: quarentena significa exclusão do grafo e registro de motivo, não edição do dataset. Assim, reexecutar a carga com a mesma versão e regras permite recuperar as decisões tomadas.
+
+\section{Modelagem matemática e entidades}
+O grafo é um multigrafo dirigido $G=(V,E)$: cada estação é um vértice e cada partida específica entre duas paradas consecutivas é uma aresta. Duas viagens da mesma linha em horários distintos geram conexões distintas, mesmo que possuam os mesmos extremos. Portanto, $E$ mede eventos temporais e pode ser muito maior que o número de pares adjacentes da malha.
+
+Uma conexão armazena linha, destino, modal, distância, horário de partida $p_c$ e duração $\tau_c$. A origem é implícita na lista de adjacência. Para transporte agendado, a conexão só é utilizável quando $t\leq p_c$ e sua chegada é $a_c=p_c+\tau_c$. O custo é
+\begin{equation}
+w_c(t)=(p_c-t)+\tau_c=a_c-t,\qquad t\leq p_c.
+\end{equation}
+Conexões perdidas são indisponíveis. Para caminhada, a partida é imediata e o custo é $\tau_c$, com chegada $t+\tau_c$. O horário zero armazenado em uma aresta \code{WALK} é uma convenção interna e não significa que o passageiro deva partir à meia-noite.
+
+\code{Station} é identificada por \code{station\_id}; nomes repetidos não colapsam paradas distintas. \code{TemporaryVertex} especializa a estação para pontos arbitrários de uso interno. \code{TransportGraph} mantém um dicionário de listas ordenadas por partida. \code{RouteSimulator} consulta esse grafo e retorna caminho ou \code{None}; a API constrói \code{Itinerary} posteriormente. \code{TimeUtils} converte segundos GTFS para minutos fracionários, preservando horas estendidas.
+
+\begin{figure}[ht]
+\centering
+\input{figures/domain-view.tex}
+\caption{Visão resumida das entidades e contratos reais. A API cria o itinerário após receber o caminho; não há dependência do roteador para o itinerário. O diagrama completo permanece em \texttt{docs/diagrams/}.}
+\label{fig:classes}
+\end{figure}
+
+O encaixe interno na rede procura a estação real mais próxima em $O(V)$, com limite de 0,8 km e caminhada a 5 km/h. Um marcador de origem cria ligação do ponto para a estação; um destino cria a ligação oposta. Um gerenciador de contexto remove a topologia temporária ao sair, inclusive sob exceção. A API atual não recebe coordenadas e não aciona esse fluxo. Compartilhar o grafo em requisições não autoriza mutá-lo com vértices temporários sem um contrato de isolamento apropriado.
+
+\section{A* dependente do tempo e correção}
+\subsection{Rótulos, expansão e escolha de partidas}
+O rótulo $g[v]$ representa a melhor chegada absoluta conhecida em $v$, com $g[o]=t_0$. O heap ordena por $f(v)=g[v]+h(v,d)$ e usa um contador para desempates, evitando comparar objetos \code{Station}. Cada relaxamento estritamente melhor atualiza o predecessor e insere nova entrada. Uma estação fechada não é expandida outra vez; entradas obsoletas permanecem no heap até sua remoção.
+
+Ao expandir $v$ no instante $g[v]$, o algoritmo verifica o prefixo com horário zero para caminhadas. Em seguida, \code{bisect\_left} localiza a primeira conexão cuja partida não antecede $g[v]$. O sufixo viável é percorrido por índices, sem criar uma fatia de lista. A busca binária descarta partidas perdidas; não escolhe sozinha a melhor viagem.
+
+Esse detalhe preserva correção quando uma partida posterior chega antes. Suponha duas ligações para o mesmo destino: saída às 08:00 com duração de 40 minutos e saída às 08:05 com duração de 10 minutos. Um passageiro presente às 07:59 deve escolher a chegada às 08:15. Examinar apenas a primeira partida aceitaria indevidamente 08:40. O roteador examina as duas e mantém o menor rótulo.
+
+Se já há uma chegada conhecida $B$ no destino final, partidas $p_c\geq B$ podem encerrar a varredura ordenada. Durações e esperas não negativas implicam $a_c\geq p_c\geq B$, portanto nenhuma dessas conexões melhora a solução. Conexões anteriores ao limite continuam sendo avaliadas; a poda não substitui a comparação de chegadas.
+
+\subsection{FIFO com possibilidade de espera}
+Para um par de estações, defina a melhor chegada utilizável como o mínimo de $p_c+\tau_c$ sobre partidas $p_c\geq t$. Quando $t$ aumenta, o conjunto de opções só diminui, logo seu mínimo não diminui. Essa é a propriedade FIFO relevante ao modelo com espera. Ela não exige que todas as viagens sejam ordenadas por chegada na mesma ordem das partidas.
+
+Chegar cedo a uma estação domina chegar tarde porque é permitido aguardar sem restrição. Assim, um rótulo de menor chegada conserva todas as escolhas disponíveis a um rótulo posterior. Caminhar imediatamente também satisfaz FIFO, já que $t+\tau_c$ é não decrescente. O argumento depende de não haver estado adicional, como veículo atual, limite de espera ou restrição de baldeação. Acrescentar esses requisitos exigiria rever os estados do grafo e a prova.
+
+\subsection{Heurística consistente e admissível}
+Usa-se $h(v,d)=d_H(v,d)/V_{\max}$, em que $d_H$ é Haversine e $V_{\max}$ limita superiormente a razão distância/duração de todas as conexões utilizáveis. O limite é derivado do grafo, e não do alerta de 120 km/h. Para qualquer conexão válida $(u,v)$, com distância igual à geodésica e duração positiva,
+\begin{align}
+d_H(u,d)&\leq d_H(u,v)+d_H(v,d),\\
+d_H(u,v)/V_{\max}&\leq\tau_{uv}\leq w_{uv}(t).
+\end{align}
+Portanto, $h(u,d)\leq w_{uv}(t)+h(v,d)$ e $h(d,d)=0$. A heurística é consistente; somar a desigualdade ao longo de qualquer caminho viável prova sua admissibilidade. A espera aumenta o custo sem aumentar o limite inferior. Sob FIFO e consistência, retirar o destino como mínimo do heap encerra a busca com chegada ótima, conforme o princípio do A* \cite{hart}.
+
+Uma velocidade máxima calculada ignorando durações não positivas não corrige uma aresta impossível. Por isso a carga exclui viagens com tempo zero entre estações distintas. Grafos construídos manualmente devem satisfazer as mesmas hipóteses. Um valor de velocidade excessivamente alto continua admissível, mas enfraquece a heurística; um valor baixo demais pode perder a garantia. Admissibilidade é propriedade do modelo e dos dados, não do nome do algoritmo.
+
+\subsection{Reconstrução e apresentação do resultado}
+O predecessor registra a conexão que melhorou cada estação. Ao alcançar o destino, o motor percorre esses vínculos e inverte a sequência. Sem caminho devolve \code{None}; origem igual ao destino devolve lista vazia internamente, embora o contrato HTTP rejeite essa consulta. Esses resultados não devem ser confundidos na interface.
+
+\code{Itinerary} valida continuidade e horários, calcula espera e deslocamento e produz instruções em português. Horários absolutos são arredondados uma vez para segundos antes das diferenças, de modo que o total coincida com a soma dos trechos e com espera mais viagem. O A* mantém minutos fracionários durante toda a busca. A formatação não altera a escolha da rota e não inventa identificadores de viagem ausentes do domínio.
+
+\section{Análise temporal e espacial}
+Sejam $V$ o número de estações, $E$ o número de conexões temporais, $K_v$ a quantidade de saídas de $v$, $X$ o conjunto de estações expandidas, $H$ o número de inserções no heap e $L$ o número de trechos retornados. Operações em dicionários e conjuntos têm custo médio amortizado; os limites não pressupõem proteção contra colisões patológicas de hash. Campos de horários e IDs são considerados de tamanho limitado pelo feed analisado.
+
+O grafo ocupa $O(V+E)$: há uma entrada por estação e uma referência por conexão. \code{\_\_slots\_\_} elimina o dicionário de atributos por instância e reduz constantes, mantendo a mesma ordem. Adicionar estação e recuperar a referência da adjacência custam $O(1)$ médio. Percorrer a lista retornada é outra operação e custa $O(K_v)$.
+
+\code{add\_connection} encontra a posição por \code{bisect\_right}, mas \code{list.insert} pode deslocar $K_v$ referências \cite{python}. Assim, a inserção completa custa $O(K_v+1)$ no pior caso; quando ocorre no final, a mutação é $O(1)$ amortizado, porém a busca binária ainda custa $O(\log(K_v+1)+1)$. Não é correto chamar a inserção ordenada inteira de logarítmica. A construção incremental pode acumular $O(\sum_v K_v^2)$ em deslocamentos no pior caso, além do parsing e da ordenação interna das viagens.
+
+Uma expansão custa $O(W_v+\log(K_v+1)+S_v+1)$, em que $W_v$ é o prefixo de horário zero e $S_v$ é o sufixo examinado. Logo, $O(\log K_v)$ descreve somente a localização da primeira partida. Como cada estação é expandida no máximo uma vez, as varreduras somam $O(E)$, e o custo refinado da consulta é
+\begin{equation}
+O\left(E+\sum_{v\in X}\log(K_v+1)+H\log(H+1)+L+|X|+1\right).
+\end{equation}
+
+O \code{heapq} não possui \emph{decrease-key}. Cada melhora insere uma tupla e conserva a entrada antiga, portanto $H=O(E+1)$ e o heap pode ocupar $O(E+1)$, não apenas $O(V)$. Definindo $K_{\max}=\max_v K_v$, com valor zero sem conexões, obtém-se
+\begin{equation}
+T_{A^*}=O\left(E\log(E+1)+V\log(K_{\max}+1)+L+V+1\right).
+\end{equation}
+Os termos constantes cobrem a inicialização e a expansão de uma origem isolada. O limite é rigoroso também quando $E=0$. A heurística pode reduzir trabalho observado, mas não melhora esse pior caso; uma heurística pouco informativa se aproxima de Dijkstra.
+
+Os mapas de rótulos e predecessores e o conjunto fechado usam $O(V)$, o heap usa $O(E+1)$ e a reconstrução usa $O(L)$. O espaço auxiliar é $O(V+E+1)$, equivalente a $O(V+E)$ em rede não vazia. O limite clássico com $\log V$ requer hipóteses sobre a implementação da fila que não devem ser transferidas automaticamente para esta versão com duplicatas.
+
+\begin{table}[ht]
+\centering
+\caption{Custos de apoio, além da consulta de menor chegada.}
+\begin{tabularx}{\textwidth}{@{}lXX@{}}
+\toprule Operação & Tempo & Espaço adicional \\
+\midrule
+Velocidade máxima & $O(V+E)$ & $O(1)$ \\
+Heurística Haversine & $O(1)$ & $O(1)$ \\
+Reconstrução / itinerário & $O(L)$ & $O(L)$ \\
+Autocomplete & $O(V)$ no pior caso & Até o limite solicitado \\
+Encaixe interno de ponto & $O(V)$ & $O(1)$ antes da inserção \\
+Remoção de ponto temporário & $O(V+E)$ & Até $O(K_{\max})$ \\
+Análise topológica & $O(V+E)$ esperado & $O(V+E)$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Análise estrutural e vulnerabilidade}
+\code{GraphAnalyzer} ignora horários e durações e exclui vértices temporários. A análise de articulações usa uma projeção não direcionada simples: conexões paralelas tornam-se uma adjacência e autoarestas são ignoradas. Uma articulação é um vértice cuja remoção aumenta a quantidade de componentes conexas dessa projeção. Não se usa o termo para afirmar corte forte do grafo dirigido.
+
+A busca em profundidade mantém descoberta e \emph{lowpoint}. Para um filho $v$ de $u$, a condição $low[v]\geq disc[u]$ identifica separação por $u$ não raiz; a raiz é articulação quando tem mais de um filho na árvore DFS. A implementação usa pilhas explícitas para não depender do limite de recursão do Python. A mesma travessia calcula o aumento de componentes após a remoção.
+
+Para a rede dirigida, Tarjan iterativo mantém índices, valores baixos, pilha de vértices e pertencimento à pilha. Quando o índice de um vértice coincide com seu valor baixo, os vértices retirados até ele formam uma componente fortemente conexa (CFC) \cite{tarjan}. A projeção e as buscas custam $O(V+E)$ esperado; ordenar $C$ estações críticas acrescenta $O(C\log(C+1))$.
+
+Define-se criticidade como $\max(0,\kappa(G-v)-\kappa(G))$, em que $\kappa$ conta componentes na projeção simples. O ranking usa score decrescente, depois grau simples decrescente e ID crescente. Ele mede fragmentação adicional, não passageiros afetados, centralidade de demanda ou perda de cobertura geográfica. Grau de estação não é quantidade de partidas porque arestas paralelas foram deduplicadas.
+
+\begin{table}[ht]
+\centering
+\caption{Topologia de 17/11/2026. Fonte: \texttt{docs/analysis/topology.json}.}
+\label{tab:topology}
+\begin{tabular}{@{}lr@{}}
+\toprule Indicador & Valor \\
+\midrule
+Estações reais registradas & 9.925 \\
+Conexões temporais aceitas & 1.458.808 \\
+Viagens carregadas & 25.956 \\
+Pontos de articulação na projeção & 45 \\
+Componentes fortemente conexas & 260 \\
+Estações na maior CFC & 9.665 \\
+Estações na segunda CFC & 2 \\
+CFCs unitárias & 258 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+As CFCs totalizam 9.925 estações: $9.665+2+258$. A maior contém aproximadamente 97,38\% do cadastro. As componentes unitárias não devem ser rotuladas todas como paradas isoladas: um vértice pode ter conexões de entrada ou saída e ainda não participar de um ciclo dirigido. A Tabela~\ref{tab:topology} descreve conectividade estrutural; mesmo dois vértices na maior CFC podem não ter viagem viável a partir de um horário específico.
+
+\begin{table}[ht]
+\centering
+\caption{Cinco primeiras estações do ranking estrutural aprovado.}
+\begin{tabularx}{\textwidth}{@{}lXr@{}}
+\toprule ID & Nome no feed & Score \\
+\midrule
+14784866 & Rod Anel Rodoviario Celso Mello Azevedo 22499 & 2 \\
+14785457 & Avenida Presidente Antonio Carlos 3721 & 1 \\
+14792434 & Pca Engenheiro Flavio Gutierrez 1 & 1 \\
+14785996 & Rua Professor Eduardo Afonso De Morais 410 & 1 \\
+14789634 & Rua Jeronimo Firmino Martins 131 & 1 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+O primeiro score indica duas componentes adicionais após a remoção dessa parada, em relação ao número anterior. Não significa duas linhas interrompidas. O JSON guarda os 45 IDs de articulação, todos os tamanhos de CFC, até vinte posições do ranking e hashes de origem. As regras de higienização e a manutenção de estações sem serviço alteram a projeção; repetir a análise para outra data exige reconstruir o grafo e registrar nova procedência.
+
+\section{Arquitetura, API e interface}
+A inicialização do FastAPI carrega uma rede para \code{GTFS\_SERVICE\_DATE} e mantém grafo, índice de estações, data e velocidade máxima compartilhados. Cada busca cria seu simulador, sem reingestão ou mutação das conexões. Sem data configurada, a interface estática e \code{/health} respondem, mas consultas de rede retornam 503. O endpoint de saúde comprova disponibilidade da aplicação, não a existência de uma rede carregada.
+
+\begin{figure}[ht]
+\centering
+\input{figures/component-view.tex}
+\caption{Visão resumida dos componentes implementados. As setas indicam comunicação ou uso; a API carrega a rede via DataLoader na inicialização. As ferramentas analíticas são executadas por linha de comando.}
+\label{fig:components}
+\end{figure}
+
+\code{GET /stations} filtra por nome ou ID, normalizando caixa e acentos, com limite de 1 a 100. Nomes iguais mantêm IDs diferentes. \code{POST /routes/search} recebe \code{origin\_id}, \code{destination\_id} e \code{departure\_time} em \code{HH:MM}; segundos são preservados internamente no GTFS. Campos adicionais, origem igual ao destino e formatos inválidos são rejeitados, impedindo que uma data enviada pelo cliente seja silenciosamente ignorada.
+
+Um caminho encontrado retorna 200 com \code{status=found}; ausência de caminho retorna 200 com \code{status=no-route} e rota nula. ID desconhecido gera 404, dados inválidos geram 422 e rede não configurada gera 503. A construção da resposta transforma o caminho em \code{Itinerary} e não recalcula o algoritmo. Nenhum endpoint de análise topológica ou de clique arbitrário é anunciado.
+
+No frontend, um adaptador concentra Fetch e conversão entre nomes HTTP e nomes internos. Cada autocomplete possui cancelamento independente; respostas antigas não substituem novas seleções. Editar texto invalida seu ID, cancela rota pendente e remove o resultado anterior. O formulário bloqueia novo envio durante a consulta e expõe carregamento com \code{aria-busy} e região de status.
+
+O mapa desenha um segmento SVG para cada trecho com coordenadas reais projetadas: ônibus vermelho, metrô azul e caminhada cinza tracejada. Origem e destino permanecem identificados por A e B. A projeção é esquemática, não uma geometria de vias. Quando o resultado ultrapassa o recorte base, o viewport se expande e a transformação é comum a fundo, marcadores e segmentos. A timeline preserva os horários exatos para tecnologia assistiva, embora o resumo arredonde minutos visualmente.
+
+\begin{center}\begin{minipage}{.86\textwidth}
+\includegraphics[width=\linewidth]{../../Artefatos/Prototipos/prototipo-1-tela-inicial.png}
+\captionof{figure}{Interface atual para seleção de estações e horário, capturada em 1440 por 900 pixels.}
+\label{fig:initial}
+\end{minipage}\end{center}
+
+\begin{center}\begin{minipage}{.86\textwidth}
+\includegraphics[width=\linewidth]{../../Artefatos/Prototipos/prototipo-2-buscar-rota.png}
+\captionof{figure}{Paradas reais confirmadas e horário preenchido antes da consulta. A seleção preserva o ID da estação, não apenas seu rótulo.}
+\label{fig:search}
+\end{minipage}\end{center}
+
+\begin{center}\begin{minipage}{.86\textwidth}
+\includegraphics[width=\linewidth]{../../Artefatos/Prototipos/prototipo-3-instrucoes.png}
+\captionof{figure}{Resultado real com espera, deslocamento e chegada; mapa e timeline representam a mesma resposta da API.}
+\label{fig:result}
+\end{minipage}\end{center}
+
+As três capturas substituem os protótipos históricos como evidência visual da versão integrada. No caso demonstrado, a consulta de \code{15140072} para \code{14788235} às 04:00, em 17/11/2026, chega às 04:15:11: são 14 minutos de espera e 1 minuto e 11 segundos de deslocamento. A duração total é 15 minutos e 11 segundos. O ID \code{561787} é o identificador de linha presente no domínio; ele não é apresentado como número comercial inventado.
+
+\section{Verificação e avaliação experimental}
+Os testes do motor usam grafos sintéticos para isolar o comportamento e não depender de download LFS. Incluem partida exata, conexão perdida, espera, baldeações, destino inalcançável, caminhada, reconstrução e uma partida posterior que chega antes. A comparação com Dijkstra dependente do tempo em grafos pequenos verifica a chegada ótima e a continuidade temporal do caminho. Concordância em uma amostra é evidência de regressão, não substitui as hipóteses da prova.
+
+A ingestão é verificada com calendários semanais, exceções, data sem operação, duplicidades, coordenadas, referências, sequências e quarentena. O analisador cobre cadeia, ciclo, componentes desconectadas, arestas paralelas, autoarestas e grafo vazio. A API é testada com redes sintéticas para validar contratos e separar erro de entrada, rede indisponível e ausência de rota. A sequência de testes antes da implementação e a refatoração são registradas no histórico e nos planos técnicos do projeto.
+
+Na integração visual, as verificações registradas abrangem desktop e celular, temas claro e escuro, movimento normal e reduzido, navegação por teclado, edição e cancelamento. A regressão móvel reproduziu sobreposição do autocomplete com o seletor de horário e confirmou sua correção. O resultado real foi conferido em 1440 por 900, 1280 por 720 e 390 por 844 pixels. Testes automáticos de geometria e DOM complementam a inspeção; não equivalem a uma certificação integral de acessibilidade nem a testes com todos os leitores de tela.
+
+O benchmark compara o A* nativo com Dijkstra do NetworkX em uma expansão temporal equivalente. Cada evento de estação e horário torna-se um vértice; arestas de viagem e espera conservam a semântica temporal. O grafo de referência é uma representação diferente, portanto comparar somente o laço de busca esconderia custos de adaptação e preparação. Medem-se separadamente preparação, busca e consulta completa, com verificação de chegada ou ausência de caminho \cite{networkx}.
+
+O manifesto seleciona oito pares distintos com semente 42: distâncias Haversine curtas abaixo de 2 km, médias entre 2 e menos de 8 km e longas a partir de 8 km, em 07:00 e 14:00, além de dois casos sem rota. A seleção preenche estratos usando a rede completa e registra sua procedência. Os casos sem rota encontrados são das 07:00. Essa amostra deliberada serve à caracterização, não estima a distribuição de viagens da população.
+
+A campanha usa redes com 100, 1.000 e todas as estações, dois aquecimentos e sete repetições, com limite por processo de 600 segundos e RSS amostrada de 4.096 MiB. A execução de 21/11/2026 usou Windows 11, Python 3.14.7, NetworkX 3.7 e psutil 7.2.2, sobre a revisão \code{b4359d6} com alterações locais. Metadados, hashes e amostras estão em \path{docs/benchmarks/campaign/}. O IQR é calculado com quantis inclusivos; não se confunde com a diferença entre a menor e a maior mediana de casos distintos.
+
+\input{benchmark-results.tex}
+
+\section{Limitações e ameaças à validade}
+A validade interna depende da equivalência temporal entre o motor e a referência, da seleção de serviços correta e da verificação de caminhos. Um teste que consultasse um grafo com calendários misturados poderia concordar matematicamente e ainda representar um dia impossível. Da mesma forma, um benchmark sobre um subgrafo não substitui medições da rede completa: remoção de estações modifica alcançabilidade e quantidade de conexões examinadas.
+
+O modelo mantém uma única melhor chegada por estação porque a espera é permitida e não há estado de veículo ou tarifa. Uma extensão com tempo mínimo de transferência, continuidade a bordo ou restrições de embarque exigiria estados adicionais ou nova política de relaxamento. A quarentena atual evita trajetos sabidamente incompatíveis com esse domínio, ao custo de excluir serviços potencialmente utilizáveis em uma modelagem mais rica.
+
+Haversine representa deslocamento geodésico entre paradas e não distância viária. O mapa compartilha essa simplificação: segmentos retos não afirmam o percurso físico do veículo. Dados publicados não incluem a realização observada de cada viagem, portanto o ótimo é o de horários planejados, sem trânsito em tempo real. Não há integração tarifária, ocupação, acessibilidade de calçadas ou tratamento de cancelamentos ao vivo.
+
+A validade externa é limitada a um feed, um dia de serviço e um ambiente computacional. CPU, memória, sistema operacional, versão do interpretador e atividade concorrente afetam tempos e RSS. Aquecimentos e repetições reduzem ruído, mas não tornam oito pares uma amostra representativa. Uma implementação pode vencer em busca e perder no custo total de preparação; nenhuma conclusão geral deve ignorar essa separação.
+
+A análise de articulação é não direcionada e sem tempo. O ranking não estima número de passageiros, frequência de atendimento ou importância socioeconômica. A maior CFC demonstra caminhos dirigidos estruturais, sem assegurar compatibilidade de horários. Articulações e CFCs ajudam a discutir fragilidade matemática da rede aceita, mas não bastam para decidir alterações de infraestrutura.
+
+\section{Reprodutibilidade e responsabilidades}
+As entradas e evidências permanecem separadas: \path{data/gtfs/README.md} identifica o feed; \path{docs/analysis/topology.json} contém resultados topológicos; \path{docs/benchmarks/} contém manifestos e relatórios experimentais. Diagramas editáveis Mermaid e seus PNG/SVG ficam em \path{docs/diagrams/}, incluindo casos de uso, classes, componentes, estados e duas sequências. As fontes deste artigo e da apresentação permitem recompilar os PDFs, usando o estilo SBC de dezembro de 2017 \cite{sbc}, cuja origem e licença são registradas em \path{docs/report/TEMPLATE_SOURCE.md}.
+
+Para preparar a base, execute \code{git lfs pull} e \code{git lfs fsck}. A CLI de validação recebe \code{--date 2026-11-17}; a de análise topológica usa a mesma data e salva JSON. Os testes Python são executados em \path{backend/} com \code{python -m pytest}; os testes de interface e a compilação CSS usam \code{npm test} e \code{npm run build} em \path{frontend/}. \code{npm run check:server} requer a aplicação inicializada. Os comandos detalhados, sem dependência de dados reais para testes unitários, ficam nos guias específicos.
+
+O histórico auditado é o conjunto alcançável por \code{HEAD} na revisão \code{b4359d6}, com 116 commits: 110 sem merge e seis merges. Os aliases são consolidados pelo e-mail do autor, sem reescrever histórico. A Tabela~\ref{tab:authors} resume responsabilidades sustentadas por commits, e \path{docs/AUTHORSHIP_AUDIT.md} apresenta contagens, e-mails, método e evidências individuais. Quantidade de commits não mede esforço ou qualidade.
+
+\begin{table}[ht]
+\centering
+\caption{Responsabilidades comprovadas pelo histórico integrado.}
+\label{tab:authors}
+\begin{tabularx}{\textwidth}{@{}p{.34\textwidth}X@{}}
+\toprule Integrante & Contribuições documentadas \\
+\midrule
+Caio Cesar Falinacio dos Santos & Planejamento, slots, A* temporal, velocidade máxima e testes com oráculo. \\
+Gabriel Aredes & Conversões temporais, interface responsiva, seleção e verificação estática. \\
+Joaquim Antonio & Dataset, carregador e calendários GTFS, itinerário e benchmark inicial. \\
+Luiz Fernando Cunha Maia & Grafo ordenado, pontos temporários, higienização, integração e mapa. \\
+Pedro Henrique Nogueira & Entidades e ciclo de vida da rede, endpoints de estações e rotas. \\
+Wanessa Oliveira Marcos & Testes iniciais, endpoint de saúde, Haversine e heurística. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Os módulos foram modificados por mais de uma pessoa ao longo do desenvolvimento. Contribuições da consolidação ainda não commitadas, incluindo a auditoria e os artefatos acadêmicos, não recebem autoria individual inferida. A explicação oral é distribuída conforme as áreas registradas. O roteiro de 15 minutos está em \path{docs/VIDEO_SCRIPT.md}; gravação, participação dos seis membros e envio da entrega permanecem atividades humanas.
+
+\section{Conclusão}
+O RotasGraph integra GTFS, grafo em memória, A* temporal e itinerários. A menor chegada é garantida sob FIFO com espera e heurística consistente, respeitadas as hipóteses de velocidade, distância e duração. A análise assintótica inclui varredura após bisect, inserção ordenada e duplicatas no heap.
+
+A rede de 17/11/2026 apresenta 45 articulações e 260 CFCs, sem inferência sobre demanda. A campanha confirmou equivalência nos oito casos completos, com seis alcançáveis. Preparação e RSS menores no motor nativo coexistem com consultas de comportamento diferente por caso. Representações, amortização e condições da máquina impedem declarar superioridade geral de A* ou Dijkstra.
+
+Estado de viagem, transferências mínimas, geometria viária e múltiplos dias são extensões possíveis. Cada uma exige rever estados, dominância dos rótulos e validação, mantendo explícitos o modelo e seus limites.
+
+\begin{thebibliography}{99}
+\bibitem[Hart et al. 1968]{hart} Hart, P. E., Nilsson, N. J. e Raphael, B. (1968). A formal basis for the heuristic determination of minimum cost paths. \emph{IEEE Transactions on Systems Science and Cybernetics}, 4(2), 100--107. \url{https://doi.org/10.1109/TSSC.1968.300136}.
+\bibitem[Tarjan 1972]{tarjan} Tarjan, R. (1972). Depth-first search and linear graph algorithms. \emph{SIAM Journal on Computing}, 1(2), 146--160. \url{https://doi.org/10.1137/0201010}.
+\bibitem[MobilityData 2026]{gtfs} MobilityData. GTFS Schedule Reference. \url{https://gtfs.org/documentation/schedule/reference/}. Consulta em 21/11/2026.
+\bibitem[PBH 2026]{pbh} Prefeitura de Belo Horizonte. Dados abertos: GTFS. \url{https://ckan.pbh.gov.br/dataset/gtfs}. Pacote utilizado consultado em 17/11/2026.
+\bibitem[Python Software Foundation 2026]{python} Python Software Foundation. Documentação de \emph{bisect}, \emph{heapq} e modelo de dados. \url{https://docs.python.org/3/library/bisect.html}; \url{https://docs.python.org/3/library/heapq.html}. Consulta em 21/11/2026.
+\bibitem[NetworkX 2026]{networkx} NetworkX Developers. \emph{single\_source\_dijkstra}. \url{https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.shortest_paths.weighted.single_source_dijkstra.html}. Consulta em 21/11/2026.
+\bibitem[SBC 2017]{sbc} Sociedade Brasileira de Computação. \emph{SBC Conferences Template}, estilo atualizado em dezembro de 2017. \url{https://www.overleaf.com/latex/templates/sbc-conferences-template/blbxwjwzdngr}. Licença CC BY 4.0.
+\end{thebibliography}
+\end{document}

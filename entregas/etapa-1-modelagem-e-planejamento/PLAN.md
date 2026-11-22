@@ -1,0 +1,91 @@
+# Plano Geral de Desenvolvimento (Trabalho Pratico - Grafos)
+
+Projeto: Otimizador de Rotas de Transporte Urbano (MVP)
+Equipe: Caio Cesar Falinacio dos Santos, Gabriel Aredes, Joaquim Antonio, Luiz Fernando Cunha Maia, Pedro Henrique Nogueira, Wanessa Oliveira Marcos.
+Disciplina: Teoria dos Grafos e Computabilidade - PUC Minas
+Data Limite: 22/11/2026 23:59
+
+---
+
+## Parte 1: Planejamento e Documentacao Inicial
+- [x] Consolidar requisitos e limitacoes academicas no arquivo `AGENTS.md`.
+- [x] Padronizar toda a arquitetura de codigo e entidades de dominio em ingles.
+- [x] Especificar o diagrama UML de classes em Mermaid com as classes `Station`, `TemporaryVertex`, `Connection`, `VehicleType`, `TransportGraph`, `DataLoader`, `RouteSimulator`, `GraphAnalyzer`, `Itinerary`, `TimeUtils`.
+- [x] Criar o diagrama de componentes justificando a separacao em camadas (Data Ingestion, Core Graph Engine, API Controller, Presentation).
+- [x] Revisao e aprovacao do plano de trabalho por todos os 6 membros da equipe.
+
+## Parte 2: Scaffolding e Infraestrutura
+- [x] Configurar a estrutura de diretorios do projeto: `backend/` (`app/`, `tests/`), `frontend/`, `docs/`, `data/`.
+- [x] Configurar ambiente virtual Python (`venv`) e `requirements.txt` com dependencias estritas (`fastapi`, `uvicorn`, `pytest`, `pytest-cov`, e `networkx` exclusivo para benchmarks de performance).
+- [x] Configurar suite de testes automatizados com `pytest` para a aplicacao do Test-Driven Development (TDD).
+- [x] Criar endpoint basico de teste (`/health`) em FastAPI e servir o prototipo estatico da interface para validar o ciclo completo localmente.
+
+## Parte 3: Ingestao de Dados (Data Ingestion)
+- [x] Obter e organizar o dataset de transporte publico de Belo Horizonte (BHTRANS / GTFS) no diretorio `data/`, mantendo os parsers desacoplados para permitir troca de fonte de dados se necessario.
+- [x] Configurar Git LFS para `data/gtfs/*.txt` e documentar a obtencao e atualizacao dos dados, pois `stop_times.txt` excede o limite de arquivos do GitHub.
+- [x] Implementar a classe `TimeUtils` com testes unitarios (conversao de strings `HH:MM:SS` para minutos fracionarios e vice-versa, preservando segundos e aceitando horarios acima de 24h).
+- [x] Implementar a classe `DataLoader` para leitura dos arquivos CSV/GTFS (`stops.txt`, `stop_times.txt`, `routes.txt`, `trips.txt`).
+- [x] Aplicar sanitizacao e tratamento de dados ausentes (coordenadas invalidas, horarios fora de ordem, paradas duplicadas).
+- [x] Instanciar os objetos de dominio `Station`, `Connection` e `VehicleType` com base nos dados higienizados.
+- [x] Validar cobertura de testes unitarios do modulo de ingestao.
+- [x] Impedir a mistura silenciosa de calendarios exigindo selecao explicita de `service_id` quando o feed declarar mais de um servico e ignorar viagens inativas durante a carga.
+- [x] Colocar em quarentena viagens com restricoes de `pickup_type` ou `drop_off_type` enquanto o roteador nao modelar permanencia no mesmo veiculo.
+- [x] Obter os arquivos de calendario de servico (`calendar.txt` e/ou `calendar_dates.txt`) da mesma versao do pacote GTFS oficial, versiona-los com Git LFS e atualizar `data/gtfs/README.md` e os hashes. Se nao existirem na fonte oficial, levar a decisao de selecao manual de `service_id` para a equipe, sem inferencia heuristica. Diagnostico em `docs/ISSUE_SERVICE_CALENDAR.md`.
+- [x] Filtrar no `DataLoader` as viagens pelo calendario ativo (data ou tipo de dia informado na carga), ignorando os `service_id` inativos, sem alterar `Connection`, `TransportGraph` ou `RouteSimulator`. Cobrir com testes TDD: servico inativo nao gera conexoes, servico ativo gera, e excecoes de `calendar_dates.txt` sao aplicadas quando o arquivo existir.
+- [x] Repetir a validacao de `docs/GTFS_VALIDATION.md` com o filtro de calendario e registrar as novas contagens de conexoes, memoria e tempo de carga em `docs/DATA_LOADER.md`.
+
+## Parte 4: Estrutura do Grafo em Memoria
+- [x] Implementar a classe `Station` com metodos especiais `__hash__`, `__eq__`, atributos geograficos (`latitude`, `longitude`) e identificador unico.
+- [x] Implementar a classe `Connection` representando arestas direcionadas com destino, tipo de veiculo (`VehicleType`), tempo de percurso e horario.
+- [x] Aplicar a propriedade `__slots__` em `Station` e `Connection` para otimizar o uso de memória RAM da aplicação.
+- [x] Implementar a classe `TransportGraph` utilizando lista de adjacencia baseada em dicionarios nativos do Python (`dict[Station, list[Connection]]`), garantindo que as listas de conexoes sejam mantidas ordenadas por horario de partida para permitir busca binaria.
+- [x] Garantir complexidade $O(1)$ para adicao de vertices e recuperacao de vizinhos (`get_neighbors`).
+- [x] Implementar metodos para adicao e remocao de vertices e conexoes temporarias (`remove_temporary_vertex`).
+- [x] Proibir terminantemente qualquer dependencia de bibliotecas de grafos prontas nesta camada.
+- [x] Desenvolver bateria de testes unitarios em TDD para validar insercao, busca de adjacencias e consistencia da topologia.
+
+## Parte 5: Motor de Roteamento (Algoritmo A*)
+- [x] Implementar a formula da distancia de Haversine em `RouteSimulator` para calculo de distancia geodésica em linha reta entre duas coordenadas.
+- [x] Formular a funcao heuristica consistente e admissivel $h(u, v) = \text{haversine}(u, v) / V_{\max}$, em que $V_{\max}$ e a velocidade maxima teorica observavel na rede.
+- [x] Implementar a busca heuristica A* dependente do tempo (*Time-Dependent A\**) na classe `RouteSimulator` utilizando a biblioteca nativa `heapq` para controle da fila de prioridade.
+- [x] Utilizar busca binária (módulo nativo `bisect`) sobre a lista de conexões ordenadas da estação para determinar a próxima partida em $O(\log K)$ e calcular o tempo de espera dinâmico.
+- [x] Reconstruir o caminho otimo a partir dos ponteiros de predecessores gerados pelo algoritmo.
+- [x] Escrever testes unitarios cobrindo cenarios com rotas diretas, transferencias entre linhas/modais e casos em que nao ha caminho viavel.
+
+## Parte 6: Vertices Temporarios e Resposta Estruturada
+- [x] Implementar a especializacao `TemporaryVertex` e a logica de aproximacao (*snap-to-network*) a partir de cliques do usuario em coordenadas arbitrarias.
+- [x] Conectar o ponto temporario as estacoes mais proximas dentro de um raio configuravel (ex: 800m) criando arestas do modal `WALK` ponderadas pela velocidade media de caminhada (~5 km/h).
+- [x] Implementar a classe `Itinerary` para encapsular a solucao (tempo total de viagem, tempo de espera, distancia total percorrida e lista de instrucoes passo a passo).
+- [x] Implementar serializacao para dicionario e JSON no `Itinerary`.
+- [x] Garantir limpeza automatica dos vertices temporarios no grafo apos cada consulta.
+
+## Parte 7: Interface Grafica (Frontend)
+- [x] Integrar o prototipo HTML/Tailwind ao backend FastAPI servido estaticamente.
+- [x] Garantir a aplicacao das cores do guia de design do `AGENTS.md` (Metro em Blue `#209dd7`, Onibus em Red `#e11d48`, Acoes em Purple `#753991`, Cabecalho em Navy `#032147`, Caminhada/Temporario em Yellow `#ecad0a` e Gray `#888888`).
+- [x] Implementar a interacao de selecao de origem e destino diretamente no mapa e via campos de texto.
+- [x] Exibir indicadores visuais de carregamento durante a consulta a API.
+
+## Parte 8: Integracao Frontend + Backend
+- [x] Desenvolver endpoints REST no FastAPI:
+  - [x] `GET /stations`: listagem de estacoes disponiveis para autocompletar.
+  - [x] `POST /routes/search`: calculo de rota recebendo origem, destino e horario de partida.
+- [x] Conectar os eventos de clique e submissao do frontend as chamadas da API via `fetch`.
+- [x] Renderizar o itinerario retornado na timeline lateral com instrucoes discriminadas por modal.
+- [x] Desenhar o trajeto no mapa SVG com as cores e espessuras correspondentes a cada trecho.
+- [x] Tratar cenarios extremos no frontend (origem/destino identicos, estacoes desconexas, horario sem viagens disponiveis).
+
+## Parte 9: Avaliacao de Desempenho e Complexidade
+- [x] Desenvolver scripts de benchmark comparando tempo de execucao e consumo de memoria do motor proprio de A* com o algoritmo de Dijkstra/A* do NetworkX (uso exclusivo para analise comparativa).
+- [x] Avaliar a escalabilidade variando o tamanho da base de dados e a distancia entre os pares de teste.
+- [x] Documentar analise formal da complexidade temporal e espacial na notacao Big-O para todas as estruturas centrais.
+- [x] Implementar a classe `GraphAnalyzer` no backend com métodos para identificar Pontos de Articulação (DFS + `lowpt`) e Componentes Fortemente Conexos (Kosaraju ou Tarjan).
+- [x] Gerar relatório analítico das Top N estações críticas (hubs/gargalos cuja interrupção isolaria regiões da cidade).
+- [x] Identificar limitacoes computacionais e oportunidades de otimizacao.
+
+## Parte 10: Artefatos Finais e Entrega
+- [x] Redigir o relatorio tecnico em LaTeX aderindo estritamente ao template oficial da SBC (12 a 15 paginas).
+- [x] Detalhar formalmente no relatorio a modelagem do grafo, analise de corretude, complexidade e secao de responsabilidades com o trabalho individual dos 6 integrantes.
+- [x] Elaborar os slides para a apresentacao oral presencial (duracao exata de 10 minutos).
+- [ ] Gravar e editar o video demonstrativo (12 a 18 minutos) com a participacao e explicacao de features por todos os 6 membros da equipe.
+- [x] Auditar o historico de commits no repositorio Git para garantir a presenca dos commits individuais de cada integrante.
+- [x] Gerar pacote final `.zip` contendo o codigo-fonte completo, o arquivo `.tex` fonte e o PDF compilado para submissao no Canvas ate 22/11/2026.
