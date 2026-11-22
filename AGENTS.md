@@ -54,9 +54,9 @@ O domínio do sistema é estruturado em inglês com tolerância zero a acoplamen
 1. Aplicação estrita de práticas de Test-Driven Development (TDD) e Extreme Programming (XP) em todas as etapas de desenvolvimento do motor de cálculo.
 2. Utilização obrigatória do idioma Inglês para a nomenclatura de funções, variáveis, classes e documentação interna de código.
 3. Isolamento arquitetural de domínio (MVC/Desacoplamento): a lógica e as estruturas do grafo matemático devem manter tolerância zero a dependências visuais da interface.
-4. Keep it simple - NEVER over-engineer, ALWAYS simplify, NO unnecessary defensive programming. O foco crítico está em manter a complexidade Big-O restrita.
-5. Be concise. Keep README minimal. IMPORTANT: no emojis ever.
-6. When hitting issues, always identify root cause before trying a fix. Do not guess. Prove with evidence, then fix the root cause.
+4. Mantenha simples - NUNCA faça superengenharia (over-engineering), SEMPRE simplifique, SEM programação defensiva desnecessária. O foco crítico está em manter a complexidade Big-O restrita.
+5. Seja conciso. Mantenha o README minimalista. IMPORTANTE: nunca utilize emojis.
+6. Ao encontrar problemas, sempre identifique a causa raiz antes de tentar uma correção. Não adivinhe. Prove com evidências e, então, corrija a causa raiz.
 7. Otimização de memória: todas as instâncias de classes de dados/domínio de alta cardinalidade (`Station`, `Connection`, `Itinerary`, etc.) devem utilizar `__slots__` para eliminar o overhead do dicionário interno `__dict__`.
 8. Atualização de Progresso (`docs/PLAN.md`): sempre que concluir uma tarefa ou implementação, o agente deve atualizar o arquivo `docs/PLAN.md` marcando apenas o progresso nos checkboxes (`[ ]` para `[x]`), sem alterar o texto original dos itens — exceto quando identificar uma falha técnica ou melhoria arquitetural comprovadamente necessária no plano.
 
