@@ -7,26 +7,45 @@ disponível e as consultas apresentam a indisponibilidade da rede.
 
 ## Fluxo
 
-- Cada campo consulta `GET /stations?query=texto&limit=20` com Fetch e
-  `AbortSignal`. As sugestões mostram nome e ID da parada; selecionar confirma
-  seu ID. Editar o texto invalida a seleção anterior.
-- Os controladores de sugestões são independentes. Fechar, limpar ou selecionar
-  cancela a consulta pendente; respostas antigas não reabrem outro campo.
-  Carregamento, lista vazia e falha têm estados visíveis e acessíveis.
+- Na inicialização, o frontend consulta `GET /config/geocoding`. Com uma chave
+  disponível, o autocomplete do Geoapify/OpenStreetMap pesquisa somente
+  endereços de Belo Horizonte e devolve rótulo, latitude e longitude.
+- O botão de origem abre um modal. Depois da escolha do endereço, o frontend
+  chama `POST /snap/candidates`; a candidata mais próxima é recomendada, mas o
+  usuário pode confirmar outra parada dentro do limite.
+- O destino permanece na página principal. Selecionar seu endereço chama o
+  mesmo endpoint e conecta automaticamente a parada mais próxima.
+- O modal de caminhada mantém limites independentes A e B. Cada um aceita
+  qualquer metro inteiro entre 100 e 2.000, começa em 800 e pode ser salvo sem
+  endereço. Com endereço, a alteração revalida as candidatas após 220 ms.
+- Autocomplete, snap e rota usam `AbortSignal`; limpar, editar ou fechar cancela
+  a operação correspondente e respostas antigas são descartadas.
 - O formulário envia um único `POST /routes/search` enquanto estiver carregando:
 
 ```json
 {
-  "origin_id": "001",
-  "destination_id": "003",
+  "mode": "address",
+  "origin": {
+    "label": "Rua de origem, 10",
+    "latitude": -19.9001,
+    "longitude": -43.9002,
+    "max_walk_meters": 650,
+    "station_id": "001"
+  },
+  "destination": {
+    "label": "Rua de destino, 20",
+    "latitude": -19.9101,
+    "longitude": -43.9102,
+    "max_walk_meters": 900
+  },
   "departure_time": "07:59"
 }
 ```
 
+`api-service.js` converte os nomes internos em camelCase para esse JSON HTTP.
 O horário enviado é `HH:MM`, sem segundos. Horas acima de 24 pertencem ao mesmo
-dia de serviço; a interface não aplica módulo 24. Origem e destino iguais são
-rejeitados antes do envio. Tema, máscara de horário, seletor de horas/minutos e
-limpeza de campo permanecem disponíveis.
+dia de serviço; a interface não aplica módulo 24. Tema, máscara de horário,
+seletor de horas/minutos e limpeza de campo permanecem disponíveis.
 
 ## Resposta e apresentação
 
@@ -34,8 +53,8 @@ limpeza de campo permanecem disponíveis.
 camelCase. IDs permanecem strings. A resposta informa `status`, `service_date`,
 origem e destino. Quando `status` é `found`, `route` contém chegada, duração
 total, espera e deslocamento em segundos, distância em quilômetros, passos e
-instruções. Cada passo informa extremos com coordenadas, modal, ID da rota,
-partida, chegada, espera, duração e distância.
+instruções. Cada passo informa extremos com coordenadas, modal, ID interno,
+número público da linha, partida, chegada, espera, duração e distância.
 
 A timeline usa os passos e as instruções recebidos, incluindo esperas e os
 modais BUS, SUBWAY e WALK. Instruções são preservadas no idioma fornecido pela
@@ -54,7 +73,9 @@ externo, evitando faixas livres sem deformar ou recortar a camada principal.
 Fundo, segmentos SVG e marcadores usam a mesma transformação, inclusive após
 redimensionar entre desktop e celular. Editar ou limpar a busca restaura o
 viewport base e o dimensionamento cover da busca sem resultado.
-Selecionar pontos arbitrários ainda depende de uma futura API de encaixe na rede.
+Os segmentos inicial e final de caminhada ligam os endereços às paradas usadas
+pelo snap-to-network. A distância é Haversine em linha reta, não uma rota
+pedestre sobre ruas.
 
 ## Estados e cancelamento
 
@@ -63,8 +84,8 @@ Selecionar pontos arbitrários ainda depende de uma futura API de encaixe na red
 | Consulta pendente | Texto de carregamento, `aria-busy`, anúncio acessível e envio bloqueado |
 | `found` | Resumo, timeline e segmentos da resposta atual |
 | `no-route` | Nenhum trajeto encontrado; orientação para ajustar paradas ou horário |
-| HTTP 404 | Parada não encontrada |
-| HTTP 422 | Dados inválidos |
+| HTTP 404 no snap | Nenhuma parada dentro do limite; mostra a distância mínima quando disponível |
+| HTTP 422 | Endereço, coordenada, limite, parada de origem ou horário inválido |
 | HTTP 503 | Rede indisponível |
 | Outros erros HTTP | Não foi possível consultar a rede |
 | Falha de Fetch, JSON ou contrato | Falha de conexão; orientação para tentar novamente |

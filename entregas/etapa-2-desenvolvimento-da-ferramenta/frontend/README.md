@@ -1,7 +1,7 @@
 # RotasGraph - frontend
 
 Interface responsiva em HTML/Tailwind e JavaScript nativo, servida pelo FastAPI
-na mesma origem dos endpoints `GET /stations` e `POST /routes/search`.
+na mesma origem dos endpoints `POST /snap/candidates` e `POST /routes/search`.
 A busca usa a rede GTFS do dia de serviço configurado e apresenta resumo,
 timeline e segmentos SVG por modal sobre o mapa esquemático de Belo Horizonte.
 
@@ -9,6 +9,17 @@ timeline e segmentos SVG por modal sobre o mapa esquemático de Belo Horizonte.
 
 Na raiz do repositório, com o ambiente Python do projeto ativo, obtenha os
 arquivos GTFS completos via Git LFS conforme [o guia do dataset](../data/gtfs/README.md).
+Crie `.env.local` na raiz, sem versioná-lo, com a chave pública usada pelo
+autocomplete:
+
+```dotenv
+GEOAPIFY_API_KEY=cole-a-chave-local-aqui
+```
+
+No painel do Geoapify, restrinja a chave aos referenciadores usados pelo projeto,
+como `http://127.0.0.1:8000/*`. O plano gratuito não exige cartão e o sistema
+limita as sugestões de endereço ao recorte de Belo Horizonte.
+
 Configure a pasta e a data de serviço antes de iniciar:
 
 ```powershell
@@ -61,28 +72,33 @@ python -m pytest -c backend/pytest.ini backend/tests
 
 ## Roteiro de conferencia
 
-1. Pesquise origem e destino por nome ou ID. Confira carregamento e sugestões
-   de `GET /stations`; confirme cada parada pela sugestão ou pelo mapa.
-2. Informe a partida em `HH:MM`, sem segundos, e calcule. Confira o
+1. Abra `Definir origem`, escolha um endereço de Belo Horizonte e confirme uma
+   das paradas dentro do limite. A primeira é a recomendação mais próxima.
+2. Informe o endereço de destino no formulário. A parada de destino é escolhida
+   automaticamente. Em `Limites`, ajuste separadamente origem e destino entre
+   100 m e 2 km; sem endereço, o limite pode ser salvo e o modal informa que a
+   distância mínima ainda não está disponível.
+3. Informe a partida em `HH:MM`, sem segundos, e calcule. Confira o
    `POST /routes/search`, o estado de carregamento e o bloqueio de envio duplicado.
    Horas acima de 24 continuam no mesmo dia de serviço.
-3. Em um resultado encontrado, confira dia de serviço, resumo, esperas e passos
-   da timeline. No mapa, ônibus usa vermelho, metrô azul e caminhada cinza
+4. Em um resultado encontrado, confira dia de serviço, resumo, esperas e passos
+   da timeline. O primeiro e o último trechos devem ser caminhadas entre cada
+   endereço e a rede. No mapa, ônibus usa vermelho, metrô azul e caminhada cinza
    tracejada, conforme os modais retornados pela API.
-4. Confira uma rota dentro do recorte original e outra fora dele. A primeira
+5. Confira uma rota dentro do recorte original e outra fora dele. A primeira
    mantém o `viewBox` lógico base; a segunda expande o viewport com margem e
    preserva a proporção. Em todo resultado, a camada física cabe no painel com
    os marcadores completos; uma extensão desfocada do próprio mapa preenche o
    espaço externo sem deformar a camada principal. Fundo, segmentos e marcadores
    permanecem alinhados. Para o feed de `2026-11-17`, use também `15140072` para
    `14788235` às `04:14`; revalide os IDs ao atualizar o dataset.
-5. Edite ou limpe a busca: a rota desaparece e o mapa restaura o viewport base e
+6. Edite ou limpe a busca: a rota desaparece e o mapa restaura o viewport base e
    o dimensionamento cover.
    Edite também durante o carregamento; uma resposta antiga não deve substituir
    a seleção nova. Confira ausência de caminho e rede indisponível.
-6. Use teclado, máscara e seletor de horário, limpeza de campos e tema salvo.
+7. Use teclado, máscara e seletor de horário, limpeza de campos e tema salvo.
    Repita com movimento reduzido ativado no sistema.
-7. Confira desktop e celular (1440, 390 e 360 px), redimensione com o resultado
+8. Confira desktop e celular (1440, 390 e 360 px), redimensione com o resultado
    aberto e amplie o texto. Rota, horários e nomes devem continuar legíveis.
 
 O mapa conecta paradas de forma esquemática e não representa ruas. Contratos,

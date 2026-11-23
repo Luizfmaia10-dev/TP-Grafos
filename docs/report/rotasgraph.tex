@@ -21,10 +21,10 @@ Professor responsável: Leonardo Vilela Cardoso}
 \begin{document}
 \maketitle
 \begin{abstract}
-RotasGraph computes earliest-arrival journeys from Belo Horizonte GTFS data using an in-memory directed temporal graph. A native Python A* combines timetable binary search with a Haversine lower bound. We state its correctness assumptions and account for ordered-list insertion and obsolete heap entries. Structural analysis of the selected service day finds 45 articulation points and 260 strongly connected components across 9,925 stops and 1,458,808 temporal connections. A REST interface displays the itinerary. Reproducible evidence and model limitations delimit the conclusions.
+RotasGraph computes earliest-arrival journeys from Belo Horizonte GTFS data using an in-memory directed temporal graph. A native Python A* combines timetable binary search with a Haversine lower bound. We state its correctness assumptions and account for ordered-list insertion and obsolete heap entries. Structural analysis of the selected service day finds 45 articulation points and 260 strongly connected components across 9,925 stops and 1,458,808 temporal connections. A REST interface geocodes addresses, attaches walking edges and displays public route numbers. Reproducible evidence and model limitations delimit the conclusions.
 \end{abstract}
 \begin{resumo}
-O RotasGraph calcula trajetos de menor chegada a partir do GTFS de Belo Horizonte, em um grafo dirigido temporal mantido em memória. O A* em Python nativo combina busca binária de partidas e heurística de Haversine. Explicitamos as hipóteses de correção e os custos da inserção ordenada e das entradas obsoletas no heap. A análise do dia selecionado encontra 45 articulações e 260 componentes fortemente conexas em 9.925 paradas e 1.458.808 conexões temporais. A interface REST exibe o itinerário. Evidências reproduzíveis e limitações delimitam as conclusões.
+O RotasGraph calcula trajetos de menor chegada a partir do GTFS de Belo Horizonte, em um grafo dirigido temporal mantido em memória. O A* em Python nativo combina busca binária de partidas e heurística de Haversine. Explicitamos as hipóteses de correção e os custos da inserção ordenada e das entradas obsoletas no heap. A análise do dia selecionado encontra 45 articulações e 260 componentes fortemente conexas em 9.925 paradas e 1.458.808 conexões temporais. A interface REST geocodifica endereços, acrescenta caminhadas e exibe números públicos de linhas. Evidências reproduzíveis e limitações delimitam as conclusões.
 \end{resumo}
 
 \section{Introdução}
@@ -37,11 +37,11 @@ O núcleo mantém listas de adjacência na RAM e implementa os algoritmos com a 
 As contribuições são a integração de calendários e higienização GTFS a um grafo temporal, o A* com busca binária e prova condicional da heurística, a análise explícita dos custos reais das estruturas Python e uma análise estrutural independente da apresentação. Os resultados descrevem o feed selecionado e o ambiente observado; não constituem uma previsão de demanda, uma recomendação operacional à cidade ou uma prova de superioridade universal de um algoritmo.
 
 \section{Problema, requisitos e recorte}
-Uma consulta é a tripla $(o,d,t_0)$, em que $o$ e $d$ são estações distintas e $t_0$ é um horário no dia de serviço carregado. Deseja-se minimizar o horário de chegada $A(P,t_0)$ entre os caminhos temporalmente viáveis $P$ de $o$ a $d$. Como $t_0$ é fixo, minimizar a chegada equivale a minimizar $A(P,t_0)-t_0$, incluindo espera e deslocamento. Não se minimizam tarifa, distância, número de baldeações ou emissões.
+Uma consulta do motor é a tripla $(o,d,t_0)$, em que $o$ e $d$ são vértices distintos e $t_0$ é o horário inicial. No fluxo público, os endereços tornam-se vértices temporários ligados às paradas por caminhada. Minimiza-se $A(P,t_0)$ entre caminhos temporais viáveis; como $t_0$ é fixo, isso equivale a minimizar $A(P,t_0)-t_0$, incluindo caminhada, espera e transporte. Não se minimizam tarifa, distância, baldeações ou emissões.
 
-A interface deve consultar estações reais por nome ou identificador, invalidar a seleção quando o texto muda e informar carregamento, ausência de rota e erros. O resultado inclui data de serviço, horário de chegada, duração total, espera, deslocamento, distância estimada e instruções por trecho. A seleção pública usa IDs de estações. Pontos arbitrários e caminhada de acesso existem como capacidade interna, sem endpoint de coordenadas.
+A interface geocodifica endereços de Belo Horizonte. O passageiro confirma uma parada de origem dentro de seu limite; no destino, usa-se a mais próxima. Mudar endereço, parada ou limite invalida o resultado. A interface informa carregamento, ausência de rota e erros, e apresenta data de serviço, chegada, duração, espera, deslocamento, distância e instruções.
 
-O dia de serviço é configurado no servidor e resolvido antes das consultas. Horários como \code{25:15:30} continuam associados ao serviço iniciado no dia selecionado, sem módulo 24. Não há busca automática no calendário do dia seguinte. O domínio não utiliza banco de dados, APIs visuais nem bibliotecas de grafos. Entidades de alta cardinalidade usam \code{\_\_slots\_\_}; a interface não participa das decisões matemáticas.
+O dia de serviço é resolvido no servidor. Horários como \code{25:15:30} permanecem no serviço selecionado, sem módulo 24 ou busca automática no dia seguinte. O domínio não usa banco ou bibliotecas de grafos. Geoapify/OpenStreetMap fornecem apenas sugestões e coordenadas; roteamento e encaixe permanecem locais \cite{geocoding}. Entidades de alta cardinalidade usam \code{\_\_slots\_\_}.
 
 O MVP admite transferência no mesmo instante e na mesma estação, sem penalidade mínima. Não modela lotação, atraso em tempo real, velocidade de ruas, acessibilidade física, regras tarifárias ou permanência no mesmo veículo. O resultado é ótimo para o modelo e os registros aceitos, não uma garantia sobre a operação observada nas ruas. Essa distinção é necessária para interpretar tanto a demonstração quanto os experimentos.
 
@@ -73,7 +73,7 @@ w_c(t)=(p_c-t)+\tau_c=a_c-t,\qquad t\leq p_c.
 \end{equation}
 Conexões perdidas são indisponíveis. Para caminhada, a partida é imediata e o custo é $\tau_c$, com chegada $t+\tau_c$. O horário zero armazenado em uma aresta \code{WALK} é uma convenção interna e não significa que o passageiro deva partir à meia-noite.
 
-\code{Station} é identificada por \code{station\_id}; nomes repetidos não colapsam paradas distintas. \code{TemporaryVertex} especializa a estação para pontos arbitrários de uso interno. \code{TransportGraph} mantém um dicionário de listas ordenadas por partida. \code{RouteSimulator} consulta esse grafo e retorna caminho ou \code{None}; a API constrói \code{Itinerary} posteriormente. \code{TimeUtils} converte segundos GTFS para minutos fracionários, preservando horas estendidas.
+\code{Station} usa \code{station\_id}; nomes iguais não colapsam paradas. \code{TemporaryVertex} representa os endereços. \code{Connection} conserva \code{route\_id} para o vínculo GTFS e \code{route\_short\_name} para apresentação. \code{TransportGraph} mantém listas ordenadas; \code{RouteSimulator} retorna caminho ou \code{None}; a API cria \code{Itinerary}. \code{TimeUtils} preserva horas estendidas.
 
 \begin{figure}[ht]
 \centering
@@ -82,7 +82,7 @@ Conexões perdidas são indisponíveis. Para caminhada, a partida é imediata e 
 \label{fig:classes}
 \end{figure}
 
-O encaixe interno na rede procura a estação real mais próxima em $O(V)$, com limite de 0,8 km e caminhada a 5 km/h. Um marcador de origem cria ligação do ponto para a estação; um destino cria a ligação oposta. Um gerenciador de contexto remove a topologia temporária ao sair, inclusive sob exceção. A API atual não recebe coordenadas e não aciona esse fluxo. Compartilhar o grafo em requisições não autoriza mutá-lo com vértices temporários sem um contrato de isolamento apropriado.
+O encaixe recebe coordenadas e limites independentes entre 100 m e 2 km. Percorre estações reais, calcula Haversine e ordena candidatas por distância e ID. A origem aceita qualquer candidata válida; o destino usa a primeira. Caminhadas adotam 5 km/h e arestas ponto--parada ou parada--ponto. Um \emph{overlay} privado evita mutar o grafo compartilhado e é limpo ao fim, inclusive sob exceção.
 
 \section{A* dependente do tempo e correção}
 \subsection{Rótulos, expansão e escolha de partidas}
@@ -115,7 +115,7 @@ O predecessor registra a conexão que melhorou cada estação. Ao alcançar o de
 \code{Itinerary} valida continuidade e horários, calcula espera e deslocamento e produz instruções em português. Horários absolutos são arredondados uma vez para segundos antes das diferenças, de modo que o total coincida com a soma dos trechos e com espera mais viagem. O A* mantém minutos fracionários durante toda a busca. A formatação não altera a escolha da rota e não inventa identificadores de viagem ausentes do domínio.
 
 \section{Análise temporal e espacial}
-Sejam $V$ o número de estações, $E$ o número de conexões temporais, $K_v$ a quantidade de saídas de $v$, $X$ o conjunto de estações expandidas, $H$ o número de inserções no heap e $L$ o número de trechos retornados. Operações em dicionários e conjuntos têm custo médio amortizado; os limites não pressupõem proteção contra colisões patológicas de hash. Campos de horários e IDs são considerados de tamanho limitado pelo feed analisado.
+Sejam $V$ o número de estações, $E$ o número de conexões temporais, $K_v$ a quantidade de saídas de $v$, $X$ o conjunto de estações expandidas, $H$ o número de inserções no heap, $L$ o número de trechos retornados e $C\leq V$ o número de candidatas de um encaixe. Operações em dicionários e conjuntos têm custo médio amortizado; os limites não pressupõem proteção contra colisões patológicas de hash. Campos de horários e IDs são considerados de tamanho limitado pelo feed analisado.
 
 O grafo ocupa $O(V+E)$: há uma entrada por estação e uma referência por conexão. \code{\_\_slots\_\_} elimina o dicionário de atributos por instância e reduz constantes, mantendo a mesma ordem. Adicionar estação e recuperar a referência da adjacência custam $O(1)$ médio. Percorrer a lista retornada é outra operação e custa $O(K_v)$.
 
@@ -132,7 +132,7 @@ T_{A^*}=O\left(E\log(E+1)+V\log(K_{\max}+1)+L+V+1\right).
 \end{equation}
 Os termos constantes cobrem a inicialização e a expansão de uma origem isolada. O limite é rigoroso também quando $E=0$. A heurística pode reduzir trabalho observado, mas não melhora esse pior caso; uma heurística pouco informativa se aproxima de Dijkstra.
 
-Os mapas de rótulos e predecessores e o conjunto fechado usam $O(V)$, o heap usa $O(E+1)$ e a reconstrução usa $O(L)$. O espaço auxiliar é $O(V+E+1)$, equivalente a $O(V+E)$ em rede não vazia. O limite clássico com $\log V$ requer hipóteses sobre a implementação da fila que não devem ser transferidas automaticamente para esta versão com duplicatas.
+Rótulos, predecessores e fechados usam $O(V)$; o heap usa $O(E+1)$ e a reconstrução $O(L)$. O espaço auxiliar é $O(V+E)$. Em modo endereço, a aresta final exige ordenar uma adjacência adicional em $O(K_s\log(K_s+1))$, termo dominado por $O(E\log(E+1))$. O limite clássico com $\log V$ não vale automaticamente para este heap com duplicatas.
 
 \begin{table}[ht]
 \centering
@@ -143,9 +143,9 @@ Os mapas de rótulos e predecessores e o conjunto fechado usam $O(V)$, o heap us
 Velocidade máxima & $O(V+E)$ & $O(1)$ \\
 Heurística Haversine & $O(1)$ & $O(1)$ \\
 Reconstrução / itinerário & $O(L)$ & $O(L)$ \\
-Autocomplete & $O(V)$ no pior caso & Até o limite solicitado \\
-Encaixe interno de ponto & $O(V)$ & $O(1)$ antes da inserção \\
-Remoção de ponto temporário & $O(V+E)$ & Até $O(K_{\max})$ \\
+Autocomplete geográfico & serviço externo; até 6 respostas & $O(1)$ com limite fixo \\
+Candidatas do encaixe & $O(V+C\log(C+1))$ & $O(C)$ \\
+Anexar / remover aresta temporária & $O(1)$ médio & $O(1)$ por ponta \\
 Análise topológica & $O(V+E)$ esperado & $O(V+E)$ \\
 \bottomrule
 \end{tabularx}
@@ -199,7 +199,7 @@ As CFCs totalizam 9.925 estações: $9.665+2+258$. A maior contém aproximadamen
 O primeiro score indica duas componentes adicionais após a remoção dessa parada, em relação ao número anterior. Não significa duas linhas interrompidas. O JSON guarda os 45 IDs de articulação, todos os tamanhos de CFC, até vinte posições do ranking e hashes de origem. As regras de higienização e a manutenção de estações sem serviço alteram a projeção; repetir a análise para outra data exige reconstruir o grafo e registrar nova procedência.
 
 \section{Arquitetura, API e interface}
-A inicialização do FastAPI carrega uma rede para \code{GTFS\_SERVICE\_DATE} e mantém grafo, índice de estações, data e velocidade máxima compartilhados. Cada busca cria seu simulador, sem reingestão ou mutação das conexões. Sem data configurada, a interface estática e \code{/health} respondem, mas consultas de rede retornam 503. O endpoint de saúde comprova disponibilidade da aplicação, não a existência de uma rede carregada.
+A inicialização do FastAPI carrega uma rede para \code{GTFS\_SERVICE\_DATE} e mantém grafo, índice de estações, data e velocidade máxima compartilhados. Cada busca cria seu simulador e seu overlay temporário, sem reingestão ou mutação das conexões comuns. Sem data configurada, a interface estática e \code{/health} respondem, mas consultas de rede retornam 503. O endpoint de saúde comprova disponibilidade da aplicação, não a existência de uma rede carregada.
 
 \begin{figure}[ht]
 \centering
@@ -208,40 +208,34 @@ A inicialização do FastAPI carrega uma rede para \code{GTFS\_SERVICE\_DATE} e 
 \label{fig:components}
 \end{figure}
 
-\code{GET /stations} filtra por nome ou ID, normalizando caixa e acentos, com limite de 1 a 100. Nomes iguais mantêm IDs diferentes. \code{POST /routes/search} recebe \code{origin\_id}, \code{destination\_id} e \code{departure\_time} em \code{HH:MM}; segundos são preservados internamente no GTFS. Campos adicionais, origem igual ao destino e formatos inválidos são rejeitados, impedindo que uma data enviada pelo cliente seja silenciosamente ignorada.
+\code{GET /stations} preserva a busca por parada. \code{POST /snap/candidates} lista paradas entre 100 m e 2 km. \code{POST /routes/search} aceita o modo por IDs ou \code{address}, com coordenadas, limites e parada de origem; a partida usa \code{HH:MM}. \code{/config/geocoding} informa a disponibilidade do autocomplete. Combinações incompletas são rejeitadas.
 
-Um caminho encontrado retorna 200 com \code{status=found}; ausência de caminho retorna 200 com \code{status=no-route} e rota nula. ID desconhecido gera 404, dados inválidos geram 422 e rede não configurada gera 503. A construção da resposta transforma o caminho em \code{Itinerary} e não recalcula o algoritmo. Nenhum endpoint de análise topológica ou de clique arbitrário é anunciado.
+Um caminho retorna 200 com \code{status=found}; ausência usa \code{status=no-route}. ID desconhecido ou nenhuma parada no limite gera 404; coordenadas, limites ou origem inválidos geram 422; rede indisponível gera 503. A API cria \code{Itinerary} sem recalcular a rota. A análise topológica continua na linha de comando.
 
-No frontend, um adaptador concentra Fetch e conversão entre nomes HTTP e nomes internos. Cada autocomplete possui cancelamento independente; respostas antigas não substituem novas seleções. Editar texto invalida seu ID, cancela rota pendente e remove o resultado anterior. O formulário bloqueia novo envio durante a consulta e expõe carregamento com \code{aria-busy} e região de status.
+O adaptador frontend concentra Fetch e conversões. O Geoapify restringe resultados a Belo Horizonte, exige três caracteres e retorna até seis endereços; chamadas antigas são canceladas. A origem recomenda a parada mais próxima, mas aceita outra candidata válida. O modal de caminhada ajusta cada ponta por metro; o destino é automático. Mudanças cancelam a rota anterior e o formulário bloqueia envio duplicado.
 
-O mapa desenha um segmento SVG para cada trecho com coordenadas reais projetadas: ônibus vermelho, metrô azul e caminhada cinza tracejada. Origem e destino permanecem identificados por A e B. A projeção é esquemática, não uma geometria de vias. Quando o resultado ultrapassa o recorte base, o viewport se expande e a transformação é comum a fundo, marcadores e segmentos. A timeline preserva os horários exatos para tecnologia assistiva, embora o resumo arredonde minutos visualmente.
+O mapa projeta cada trecho: ônibus vermelho, metrô azul e caminhada cinza tracejada. Endereços, paradas e marcadores A/B compartilham a transformação; o desenho é esquemático e seu viewport se expande quando necessário. A timeline preserva horários e mostra \code{route\_short\_name}, nunca \code{route\_id}; sem nome público, usa ``Linha não informada''.
 
-\begin{center}\begin{minipage}{.86\textwidth}
-\includegraphics[width=\linewidth]{../../Artefatos/Prototipos/prototipo-1-tela-inicial.png}
-\captionof{figure}{Interface atual para seleção de estações e horário, capturada em 1440 por 900 pixels.}
-\label{fig:initial}
-\end{minipage}\end{center}
-
-\begin{center}\begin{minipage}{.86\textwidth}
-\includegraphics[width=\linewidth]{../../Artefatos/Prototipos/prototipo-2-buscar-rota.png}
-\captionof{figure}{Paradas reais confirmadas e horário preenchido antes da consulta. A seleção preserva o ID da estação, não apenas seu rótulo.}
+\begin{center}\begin{minipage}{.80\textwidth}
+\includegraphics[width=\linewidth]{figures/interface-origin-snap.png}
+\captionof{figure}{O endereço de origem é convertido em coordenadas; a parada mais próxima é recomendada e outras candidatas dentro do limite continuam disponíveis.}
 \label{fig:search}
 \end{minipage}\end{center}
 
-\begin{center}\begin{minipage}{.86\textwidth}
-\includegraphics[width=\linewidth]{../../Artefatos/Prototipos/prototipo-3-instrucoes.png}
-\captionof{figure}{Resultado real com espera, deslocamento e chegada; mapa e timeline representam a mesma resposta da API.}
+\begin{center}\begin{minipage}{.80\textwidth}
+\includegraphics[width=\linewidth]{figures/interface-result.png}
+\captionof{figure}{Resultado real por endereços: caminhada de acesso, número público da linha, espera, mapa e timeline derivados da mesma resposta da API.}
 \label{fig:result}
 \end{minipage}\end{center}
 
-As três capturas substituem os protótipos históricos como evidência visual da versão integrada. No caso demonstrado, a consulta de \code{15140072} para \code{14788235} às 04:00, em 17/11/2026, chega às 04:15:11: são 14 minutos de espera e 1 minuto e 11 segundos de deslocamento. A duração total é 15 minutos e 11 segundos. O ID \code{561787} é o identificador de linha presente no domínio; ele não é apresentado como número comercial inventado.
+As capturas documentam o fluxo integrado. Da Rua Professor Kalman Sibalszky 56 à Avenida Guarapari 1020, às 07:45 de 17/11/2026, há caminhadas de 16 m e 30 m. A chegada ocorre às 09:00:20, com 40 min 33 s de espera e 34 min 47 s em deslocamento. A timeline mostra 510; o ID interno 561865 permanece apenas no GTFS.
 
 \section{Verificação e avaliação experimental}
 Os testes do motor usam grafos sintéticos para isolar o comportamento e não depender de download LFS. Incluem partida exata, conexão perdida, espera, baldeações, destino inalcançável, caminhada, reconstrução e uma partida posterior que chega antes. A comparação com Dijkstra dependente do tempo em grafos pequenos verifica a chegada ótima e a continuidade temporal do caminho. Concordância em uma amostra é evidência de regressão, não substitui as hipóteses da prova.
 
-A ingestão é verificada com calendários semanais, exceções, data sem operação, duplicidades, coordenadas, referências, sequências e quarentena. O analisador cobre cadeia, ciclo, componentes desconectadas, arestas paralelas, autoarestas e grafo vazio. A API é testada com redes sintéticas para validar contratos e separar erro de entrada, rede indisponível e ausência de rota. A sequência de testes antes da implementação e a refatoração são registradas no histórico e nos planos técnicos do projeto.
+A ingestão cobre calendários, exceções, duplicidades, coordenadas, referências, sequências, nomes públicos e quarentena. O analisador cobre cadeia, ciclo, componentes, paralelas, autoarestas e vazio. A API testa candidatos ordenados, limites por metro, coordenadas inválidas, estação fora do raio, caminhada nas duas pontas, limpeza do overlay e rede indisponível.
 
-Na integração visual, as verificações registradas abrangem desktop e celular, temas claro e escuro, movimento normal e reduzido, navegação por teclado, edição e cancelamento. A regressão móvel reproduziu sobreposição do autocomplete com o seletor de horário e confirmou sua correção. O resultado real foi conferido em 1440 por 900, 1280 por 720 e 390 por 844 pixels. Testes automáticos de geometria e DOM complementam a inspeção; não equivalem a uma certificação integral de acessibilidade nem a testes com todos os leitores de tela.
+Na integração visual, verificam-se desktop, celular, temas, movimento reduzido, teclado, edição e cancelamento. Testes isolam horário, modais, endereço, Geoapify, limites e número público da linha. O fluxo das Figuras~\ref{fig:search} e~\ref{fig:result} foi refeito em 1440 por 900 pixels. Testes DOM não equivalem a certificação integral de acessibilidade.
 
 O benchmark compara o A* nativo com Dijkstra do NetworkX em uma expansão temporal equivalente. Cada evento de estação e horário torna-se um vértice; arestas de viagem e espera conservam a semântica temporal. O grafo de referência é uma representação diferente, portanto comparar somente o laço de busca esconderia custos de adaptação e preparação. Medem-se separadamente preparação, busca e consulta completa, com verificação de chegada ou ausência de caminho \cite{networkx}.
 
@@ -256,7 +250,7 @@ A validade interna depende da equivalência temporal entre o motor e a referênc
 
 O modelo mantém uma única melhor chegada por estação porque a espera é permitida e não há estado de veículo ou tarifa. Uma extensão com tempo mínimo de transferência, continuidade a bordo ou restrições de embarque exigiria estados adicionais ou nova política de relaxamento. A quarentena atual evita trajetos sabidamente incompatíveis com esse domínio, ao custo de excluir serviços potencialmente utilizáveis em uma modelagem mais rica.
 
-Haversine representa deslocamento geodésico entre paradas e não distância viária. O mapa compartilha essa simplificação: segmentos retos não afirmam o percurso físico do veículo. Dados publicados não incluem a realização observada de cada viagem, portanto o ótimo é o de horários planejados, sem trânsito em tempo real. Não há integração tarifária, ocupação, acessibilidade de calçadas ou tratamento de cancelamentos ao vivo.
+Haversine mede linha reta, não distância viária ou rota caminhável; o raio pode atravessar barreiras físicas e o mapa é apenas esquemático. O ótimo usa horários planejados, sem tarifa, lotação, acessibilidade de calçadas, trânsito ou cancelamentos ao vivo. O autocomplete depende da disponibilidade, cota e precisão do Geoapify/OpenStreetMap; o texto sai do navegador, mas não é persistido. A chave pública deve ser restrita por referenciador. O provedor não recebe o grafo nem calcula a rota.
 
 A validade externa é limitada a um feed, um dia de serviço e um ambiente computacional. CPU, memória, sistema operacional, versão do interpretador e atividade concorrente afetam tempos e RSS. Aquecimentos e repetições reduzem ruído, mas não tornam oito pares uma amostra representativa. Uma implementação pode vencer em busca e perder no custo total de preparação; nenhuma conclusão geral deve ignorar essa separação.
 
@@ -265,7 +259,7 @@ A análise de articulação é não direcionada e sem tempo. O ranking não esti
 \section{Reprodutibilidade e responsabilidades}
 As entradas e evidências permanecem separadas: \path{data/gtfs/README.md} identifica o feed; \path{docs/analysis/topology.json} contém resultados topológicos; \path{docs/benchmarks/} contém manifestos e relatórios experimentais. Diagramas editáveis Mermaid e seus PNG/SVG ficam em \path{docs/diagrams/}, incluindo casos de uso, classes, componentes, estados e duas sequências. As fontes deste artigo e da apresentação permitem recompilar os PDFs, usando o estilo SBC de dezembro de 2017 \cite{sbc}, cuja origem e licença são registradas em \path{docs/report/TEMPLATE_SOURCE.md}.
 
-Para preparar a base, execute \code{git lfs pull} e \code{git lfs fsck}. A CLI de validação recebe \code{--date 2026-11-17}; a de análise topológica usa a mesma data e salva JSON. Os testes Python são executados em \path{backend/} com \code{python -m pytest}; os testes de interface e a compilação CSS usam \code{npm test} e \code{npm run build} em \path{frontend/}. \code{npm run check:server} requer a aplicação inicializada. Os comandos detalhados, sem dependência de dados reais para testes unitários, ficam nos guias específicos.
+Execute \code{git lfs pull} e \code{git lfs fsck}; validação e topologia usam \code{--date 2026-11-17}. O autocomplete requer \code{GEOAPIFY\_API\_KEY} em \path{.env.local}, nunca no artigo. Rode \code{python -m pytest} em \path{backend/} e \code{npm test}, \code{npm run build} e \code{npm run check:server} em \path{frontend/}; o último exige a aplicação ativa.
 
 O histórico auditado é o conjunto alcançável por \code{HEAD} na revisão \code{b4359d6}, com 116 commits: 110 sem merge e seis merges. Os aliases são consolidados pelo e-mail do autor, sem reescrever histórico. A Tabela~\ref{tab:authors} resume responsabilidades sustentadas por commits, e \path{docs/AUTHORSHIP_AUDIT.md} apresenta contagens, e-mails, método e evidências individuais. Quantidade de commits não mede esforço ou qualidade.
 
@@ -289,19 +283,22 @@ Wanessa Oliveira Marcos & Testes iniciais, endpoint de saúde, Haversine e heur�
 Os módulos foram modificados por mais de uma pessoa ao longo do desenvolvimento. Contribuições da consolidação ainda não commitadas, incluindo a auditoria e os artefatos acadêmicos, não recebem autoria individual inferida. A explicação oral é distribuída conforme as áreas registradas. O roteiro de 15 minutos está em \path{docs/VIDEO_SCRIPT.md}; gravação, participação dos seis membros e envio da entrega permanecem atividades humanas.
 
 \section{Conclusão}
-O RotasGraph integra GTFS, grafo em memória, A* temporal e itinerários. A menor chegada é garantida sob FIFO com espera e heurística consistente, respeitadas as hipóteses de velocidade, distância e duração. A análise assintótica inclui varredura após bisect, inserção ordenada e duplicatas no heap.
+O RotasGraph integra GTFS, grafo em memória, A* temporal e trajetos entre endereços. O snap acrescenta caminhadas sem mutar a rede; a tela separa número público e ID interno. Sob FIFO e heurística consistente, obtém-se a menor chegada. A análise inclui varredura após bisect, inserção ordenada, candidatas e duplicatas no heap.
 
 A rede de 17/11/2026 apresenta 45 articulações e 260 CFCs, sem inferência sobre demanda. A campanha confirmou equivalência nos oito casos completos, com seis alcançáveis. Preparação e RSS menores no motor nativo coexistem com consultas de comportamento diferente por caso. Representações, amortização e condições da máquina impedem declarar superioridade geral de A* ou Dijkstra.
 
 Estado de viagem, transferências mínimas, geometria viária e múltiplos dias são extensões possíveis. Cada uma exige rever estados, dominância dos rótulos e validação, mantendo explícitos o modelo e seus limites.
 
+\small
 \begin{thebibliography}{99}
+\setlength{\itemsep}{0pt}
 \bibitem[Hart et al. 1968]{hart} Hart, P. E., Nilsson, N. J. e Raphael, B. (1968). A formal basis for the heuristic determination of minimum cost paths. \emph{IEEE Transactions on Systems Science and Cybernetics}, 4(2), 100--107. \url{https://doi.org/10.1109/TSSC.1968.300136}.
 \bibitem[Tarjan 1972]{tarjan} Tarjan, R. (1972). Depth-first search and linear graph algorithms. \emph{SIAM Journal on Computing}, 1(2), 146--160. \url{https://doi.org/10.1137/0201010}.
-\bibitem[MobilityData 2026]{gtfs} MobilityData. GTFS Schedule Reference. \url{https://gtfs.org/documentation/schedule/reference/}. Consulta em 21/11/2026.
-\bibitem[PBH 2026]{pbh} Prefeitura de Belo Horizonte. Dados abertos: GTFS. \url{https://ckan.pbh.gov.br/dataset/gtfs}. Pacote utilizado consultado em 17/11/2026.
-\bibitem[Python Software Foundation 2026]{python} Python Software Foundation. Documentação de \emph{bisect}, \emph{heapq} e modelo de dados. \url{https://docs.python.org/3/library/bisect.html}; \url{https://docs.python.org/3/library/heapq.html}. Consulta em 21/11/2026.
-\bibitem[NetworkX 2026]{networkx} NetworkX Developers. \emph{single\_source\_dijkstra}. \url{https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.shortest_paths.weighted.single_source_dijkstra.html}. Consulta em 21/11/2026.
-\bibitem[SBC 2017]{sbc} Sociedade Brasileira de Computação. \emph{SBC Conferences Template}, estilo atualizado em dezembro de 2017. \url{https://www.overleaf.com/latex/templates/sbc-conferences-template/blbxwjwzdngr}. Licença CC BY 4.0.
+\bibitem[MobilityData 2026]{gtfs} MobilityData. \emph{GTFS Schedule Reference}. \href{https://gtfs.org/documentation/schedule/reference/}{Documentação oficial}. Consulta em 21/11/2026.
+\bibitem[PBH 2026]{pbh} Prefeitura de Belo Horizonte. \emph{Dados abertos: GTFS}. \href{https://ckan.pbh.gov.br/dataset/gtfs}{Portal oficial}. Pacote consultado em 17/11/2026.
+\bibitem[Python Software Foundation 2026]{python} Python Software Foundation. \emph{bisect} e \emph{heapq}. \href{https://docs.python.org/3/library/}{Biblioteca padrão}. Consulta em 21/11/2026.
+\bibitem[NetworkX 2026]{networkx} NetworkX Developers. \emph{single\_source\_dijkstra}. \href{https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.shortest_paths.weighted.single_source_dijkstra.html}{Documentação oficial}. Consulta em 21/11/2026.
+\bibitem[Geoapify/OSM 2026]{geocoding} Geoapify. \href{https://apidocs.geoapify.com/docs/geocoding/address-autocomplete/}{Address Autocomplete API}. OpenStreetMap contributors. \href{https://www.openstreetmap.org/copyright}{Copyright and License}. Consulta em 22/11/2026.
+\bibitem[SBC 2017]{sbc} Sociedade Brasileira de Computação. \href{https://www.overleaf.com/latex/templates/sbc-conferences-template/blbxwjwzdngr}{SBC Conferences Template}, dezembro de 2017. Licença CC BY 4.0.
 \end{thebibliography}
 \end{document}

@@ -15,8 +15,16 @@ def stations():
 
 def test_transfer_totals_and_instructions():
     a, b, c = stations()
-    path = [(a, Connection("10", b, VehicleType.BUS, 5.5, 2, 480.5)),
-            (b, Connection("M1", c, VehicleType.SUBWAY, 4.25, 3, 487.5))]
+    path = [
+        (a, Connection(
+            "internal-bus", b, VehicleType.BUS, 5.5, 2, 480.5,
+            route_short_name="10",
+        )),
+        (b, Connection(
+            "internal-metro", c, VehicleType.SUBWAY, 4.25, 3, 487.5,
+            route_short_name="M1",
+        )),
+    ]
     itinerary = Itinerary(a, 480, path)
     assert itinerary.total_seconds == 705
     assert itinerary.waiting_seconds == 120
@@ -32,6 +40,31 @@ def test_transfer_totals_and_instructions():
     assert "metrô" in itinerary.instructions[3]
     assert not hasattr(itinerary, "__dict__")
     assert not hasattr(itinerary.steps[0], "__dict__")
+
+
+def test_public_route_name_replaces_internal_gtfs_id_in_instructions():
+    a, b, _ = stations()
+    connection = Connection(
+        "561865", b, VehicleType.BUS, 5, 2, 480, route_short_name="510"
+    )
+
+    itinerary = Itinerary(a, 480, [(a, connection)])
+
+    assert itinerary.steps[0].route_id == "561865"
+    assert itinerary.steps[0].route_short_name == "510"
+    assert "ônibus 510" in itinerary.instructions[0]
+    assert "561865" not in itinerary.instructions[0]
+
+
+def test_missing_public_route_name_does_not_expose_internal_gtfs_id():
+    a, b, _ = stations()
+    connection = Connection("561865", b, VehicleType.BUS, 5, 2, 480)
+
+    itinerary = Itinerary(a, 480, [(a, connection)])
+
+    assert itinerary.steps[0].route_short_name == "Linha não informada"
+    assert "ônibus Linha não informada" in itinerary.instructions[0]
+    assert "561865" not in itinerary.instructions[0]
 
 
 def test_walk_departs_immediately_and_preserves_service_day():

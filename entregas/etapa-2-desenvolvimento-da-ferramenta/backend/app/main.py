@@ -7,11 +7,27 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import router as routes_router
+from app.api.snap import router as snap_router
 from app.api.stations import router as stations_router
 from app.network import RouteNetwork
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent.parent
 FRONTEND_DIR = PROJECT_DIR / "frontend"
+LOCAL_ENV_FILE = PROJECT_DIR / ".env.local"
+
+
+def read_local_setting(name: str) -> str | None:
+    """Read one local setting without adding a dotenv dependency."""
+    environment_value = environ.get(name)
+    if environment_value:
+        return environment_value
+    if not LOCAL_ENV_FILE.exists():
+        return None
+    for line in LOCAL_ENV_FILE.read_text(encoding="utf-8").splitlines():
+        key, separator, value = line.partition("=")
+        if separator and key.strip() == name:
+            return value.strip() or None
+    return None
 
 
 def create_app(
@@ -46,7 +62,13 @@ def create_app(
     def health():
         return {"status": "ok"}
 
+    @app.get("/config/geocoding")
+    def geocoding_config():
+        api_key = read_local_setting("GEOAPIFY_API_KEY")
+        return {"api_key": api_key, "available": api_key is not None}
+
     app.include_router(stations_router)
+    app.include_router(snap_router)
     app.include_router(routes_router)
     app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
     return app

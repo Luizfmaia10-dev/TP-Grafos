@@ -14,6 +14,23 @@ from app.route_simulator import RouteSimulator
 
 
 QUERY = {"origin_id": "001", "destination_id": "003", "departure_time": "07:59"}
+ADDRESS_QUERY = {
+    "mode": "address",
+    "origin": {
+        "label": "Rua de origem, 10",
+        "latitude": -19.9001,
+        "longitude": -43.9,
+        "max_walk_meters": 800,
+        "station_id": "001",
+    },
+    "destination": {
+        "label": "Rua de destino, 20",
+        "latitude": -19.9021,
+        "longitude": -43.902,
+        "max_walk_meters": 800,
+    },
+    "departure_time": "07:59",
+}
 
 
 @pytest.fixture(autouse=True)
@@ -33,8 +50,14 @@ def network():
     }
     for station in stations.values():
         graph.add_station(station)
-    graph.add_connection(stations["001"], Connection("bus", stations["002"], VehicleType.BUS, 5.5, 1, 480))
-    graph.add_connection(stations["002"], Connection("metro", stations["003"], VehicleType.SUBWAY, 4.25, 2, 487))
+    graph.add_connection(stations["001"], Connection(
+        "bus", stations["002"], VehicleType.BUS, 5.5, 1, 480,
+        route_short_name="510",
+    ))
+    graph.add_connection(stations["002"], Connection(
+        "metro", stations["003"], VehicleType.SUBWAY, 4.25, 2, 487,
+        route_short_name="M1",
+    ))
     # The direct connection arrives later than the transfer route.
     graph.add_connection(stations["001"], Connection("slow", stations["003"], VehicleType.BUS, 30, 3, 480))
     return RouteNetwork(graph, stations, RouteSimulator.max_speed_of(graph), date(2026, 11, 17))
@@ -68,12 +91,14 @@ def test_search_returns_fastest_route_with_transfer_and_exact_costs(client):
     assert first == {
         "origin": result["origin"],
         "destination": {"station_id": "002", "name": "Transfer", "latitude": -19.901, "longitude": -43.901},
-        "route_id": "bus", "vehicle_type": "BUS", "departure_time": "08:00:00",
+        "route_id": "bus", "route_short_name": "510", "vehicle_type": "BUS",
+        "departure_time": "08:00:00",
         "arrival_time": "08:05:30", "waiting_seconds": 60, "travel_seconds": 330, "distance_km": 1,
     }
     assert second["origin"] == first["destination"]
     assert second["destination"] == result["destination"]
     assert second["route_id"] == "metro"
+    assert second["route_short_name"] == "M1"
     assert second["vehicle_type"] == "SUBWAY"
     assert second["departure_time"] == "08:07:00"
     assert second["arrival_time"] == "08:11:15"
@@ -81,9 +106,9 @@ def test_search_returns_fastest_route_with_transfer_and_exact_costs(client):
     assert second["travel_seconds"] == 255
     assert route["instructions"] == [
         "Aguarde em Central até 08:00:00.",
-        "Pegue o ônibus bus de Central até Transfer às 08:00:00; chegada às 08:05:30.",
+        "Pegue o ônibus 510 de Central até Transfer às 08:00:00; chegada às 08:05:30.",
         "Aguarde em Transfer até 08:07:00.",
-        "Pegue o metrô metro de Transfer até Terminal às 08:07:00; chegada às 08:11:15.",
+        "Pegue o metrô M1 de Transfer até Terminal às 08:07:00; chegada às 08:11:15.",
     ]
 
 
@@ -95,6 +120,66 @@ def test_direct_route_departing_exactly_at_requested_time(client):
     assert route["waiting_seconds"] == 0
     assert route["total_seconds"] == 330
     assert len(route["steps"]) == 1
+
+
+def test_address_search_adds_walks_without_mutating_the_shared_graph(client, network):
+    stations_before = list(network.graph.iter_stations())
+    neighbors_before = {
+        station: list(network.graph.get_neighbors(station))
+        for station in stations_before
+    }
+
+    response = client.post("/routes/search", json=ADDRESS_QUERY)
+
+    assert response.status_code == 200
+    result = response.json()
+    assert result["status"] == "found"
+    assert result["origin"]["name"] == "Rua de origem, 10"
+    assert result["destination"]["name"] == "Rua de destino, 20"
+    assert [step["vehicle_type"] for step in result["route"]["steps"]] == [
+        "WALK",
+        "BUS",
+        "SUBWAY",
+        "WALK",
+    ]
+    assert list(network.graph.iter_stations()) == stations_before
+    for station, connections in neighbors_before.items():
+        assert network.graph.get_neighbors(station) == connections
+
+
+def test_address_search_rejects_selected_origin_station_outside_limit(client):
+    query = {
+        **ADDRESS_QUERY,
+        "origin": {
+            **ADDRESS_QUERY["origin"],
+            "max_walk_meters": 100,
+            "station_id": "004",
+        },
+    }
+
+    response = client.post("/routes/search", json=query)
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": {"code": "selected_station_outside_limit", "field": "origin"}
+    }
+
+
+def test_address_search_rejects_destination_without_station_in_limit(client):
+    query = {
+        **ADDRESS_QUERY,
+        "destination": {
+            **ADDRESS_QUERY["destination"],
+            "latitude": 0.0,
+            "longitude": 0.0,
+        },
+    }
+
+    response = client.post("/routes/search", json=query)
+
+    assert response.status_code == 404
+    assert response.json()["detail"]["code"] == "no_station_within_limit"
+    assert response.json()["detail"]["field"] == "destination"
 
 
 @pytest.mark.parametrize("changes", [

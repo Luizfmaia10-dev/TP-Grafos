@@ -55,6 +55,7 @@ def test_build_graph_connects_consecutive_stops_in_a_valid_trip(tmp_path):
     assert second.destination.latitude == pytest.approx(-19.9000)
     assert second.destination.longitude == pytest.approx(-43.9500)
     assert first.route_id == second.route_id == "route-1"
+    assert first.route_short_name == second.route_short_name == "101"
     assert first.vehicle_type is second.vehicle_type is VehicleType.BUS
     assert first.departure_time == pytest.approx(480.0)
     assert first.travel_time == pytest.approx(10.5)
@@ -123,6 +124,16 @@ def gtfs_feed(tmp_path):
         return DataLoader(tmp_path)
 
     return write
+
+
+def test_missing_public_route_name_never_becomes_visible_internal_id(gtfs_feed):
+    graph = gtfs_feed().build_graph()
+    origin = Station("A", "Central", -19.9167, -43.9345)
+
+    connection = graph.get_neighbors(origin)[0]
+
+    assert connection.route_id == "r"
+    assert connection.route_short_name == "Linha não informada"
 
 
 @pytest.mark.parametrize(

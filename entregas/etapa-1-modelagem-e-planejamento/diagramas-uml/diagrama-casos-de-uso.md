@@ -5,18 +5,23 @@ Capacidades disponíveis, representadas com `flowchart`.
 ```mermaid
 flowchart LR
     Passenger[Passageiro]
+    Geocoder[Geoapify / OpenStreetMap]
     Operator[Operador de dados]
     Analyst[Analista da rede]
     GTFS[Arquivos GTFS de Belo Horizonte]
     subgraph Public[Interface e REST]
-        Stations([Consultar estações])
-        Selection([Selecionar paradas por nome ou marcador])
-        Search([Buscar rota para HH:MM])
-        Validate([Validar IDs distintos e horário])
+        Address([Selecionar endereços de Belo Horizonte])
+        Limits([Configurar limites A e B entre 100 m e 2 km])
+        Candidates([Consultar paradas dentro do limite])
+        Origin([Confirmar parada de acesso da origem])
+        Destination([Usar parada mais próxima do destino])
+        Search([Buscar rota por endereços para HH:MM])
+        Validate([Validar endereços, limites, parada de origem e horário])
         Calculate([Calcular menor chegada com A* temporal])
-        Itinerary([Montar itinerário na API])
+        Itinerary([Montar itinerário com caminhadas])
         View([Visualizar resumo, timeline e mapa])
         Edit([Editar ou cancelar consulta])
+        StationREST([Consultar rota por IDs via REST])
     end
     subgraph CLI[Ferramentas por linha de comando]
         Load([Carregar e higienizar GTFS por data])
@@ -25,14 +30,22 @@ flowchart LR
         Critical([Listar articulações, CFCs e Top 20])
         Benchmark([Comparar roteamento com NetworkX])
     end
-    Passenger --> Stations
-    Passenger --> Selection
+    Passenger --> Address
+    Passenger --> Limits
+    Passenger --> Origin
     Passenger --> Search
     Passenger --> View
     Passenger --> Edit
+    Address --> Geocoder
+    Address -.->|inclui| Candidates
+    Candidates -.->|origem| Origin
+    Candidates -.->|destino| Destination
     Search -.->|inclui| Validate
+    Search -.->|inclui| Origin
+    Search -.->|inclui| Destination
     Search -.->|inclui| Calculate
     Search -.->|se houver caminho| Itinerary
+    StationREST -.->|modo alternativo| Calculate
     Operator --> Load
     Operator --> Check
     GTFS --> Load
@@ -43,17 +56,22 @@ flowchart LR
     Analyze -.->|gera| Critical
 ```
 
-O REST expõe `GET /stations`, `POST /routes/search` e `GET /health`, além dos
-recursos estáticos e documentação FastAPI. A busca recebe apenas `origin_id`,
-`destination_id` e `departure_time`; marcadores escolhem estações cadastradas.
+O frontend usa `GET /config/geocoding`, Geoapify/OpenStreetMap e
+`POST /snap/candidates`. A origem recomenda a parada mais próxima, mas permite
+outra candidata dentro do limite; o destino usa automaticamente a primeira.
+Os limites são independentes, aceitam metros inteiros entre 100 e 2.000 e podem
+ser salvos antes do endereço.
 
-`snap_to_network` é interno, sem caso de uso público de coordenadas arbitrárias.
+`POST /routes/search` recebe `mode: "address"`, os dois endereços com
+coordenadas e limites, a parada confirmada da origem e `departure_time`. O modo
+por `origin_id` e `destination_id` permanece como contrato REST alternativo.
+As caminhadas temporárias são removidas ao final da consulta.
 A análise usa `python -m app.analyze_topology`, sem endpoint analítico.
 Seu ranking mede impacto estrutural, sem inferir demanda. O benchmark existente
 não comprova a escalabilidade da campanha ainda pendente.
 
-Consulte [a API](../../docs/API.md), [a CLI](../../docs/GRAPH_ANALYZER.md) e
-[o benchmark](../../docs/BENCHMARK.md).
+Consulte [a API](../../../docs/API.md), [a CLI](../../../docs/GRAPH_ANALYZER.md) e
+[o benchmark](../../../docs/BENCHMARK.md).
 
 ## Referências do padrão
 

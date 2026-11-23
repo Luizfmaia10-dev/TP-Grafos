@@ -35,6 +35,46 @@ test("station search defaults to twenty results and preserves an empty response"
   assert.equal(requestedUrl, "/stations?query=&limit=20");
 });
 
+test("geocoding configuration exposes only the public browser key and availability", async () => {
+  const api = createApi(async url => {
+    assert.equal(url, "/config/geocoding");
+    return Response.json({ api_key: "browser-key", available: true });
+  });
+
+  assert.deepEqual(await api.getGeocodingConfig(), {
+    apiKey: "browser-key",
+    available: true,
+  });
+});
+
+test("snap candidate search serializes coordinates and normalizes distances", async () => {
+  const calls = [];
+  const api = createApi(async (url, options) => {
+    calls.push({ url, options });
+    return Response.json({
+      minimum_distance_meters: 240,
+      count: 1,
+      candidates: [{ station: central, distance_meters: 240 }],
+    });
+  });
+
+  const result = await api.listSnapCandidates({
+    latitude: -19.9,
+    longitude: -43.9,
+    maxWalkMeters: 800,
+  });
+
+  assert.equal(calls[0].url, "/snap/candidates");
+  assert.deepEqual(JSON.parse(calls[0].options.body), {
+    latitude: -19.9,
+    longitude: -43.9,
+    max_walk_meters: 800,
+  });
+  assert.equal(result.minimumDistanceMeters, 240);
+  assert.equal(result.candidates[0].station.stationId, "001");
+  assert.equal(result.candidates[0].distanceMeters, 240);
+});
+
 const query = { originId: "001", destinationId: "004", departureTime: "25:05" };
 const central = { station_id: "001", name: "Central", latitude: -19.9, longitude: -43.9 };
 const transfer = { station_id: "002", name: "Transfer", latitude: -19.901, longitude: -43.901 };
@@ -75,7 +115,8 @@ test("route search posts the service-day query and normalizes every travel mode"
         arrival_time: "25:19:30", total_seconds: 870, waiting_seconds: 150,
         travel_seconds: 720, distance_km: 3.2, instructions,
         steps: [
-          { origin: central, destination: transfer, route_id: "bus", vehicle_type: "BUS",
+          { origin: central, destination: transfer, route_id: "bus", route_short_name: "510",
+            vehicle_type: "BUS",
             departure_time: "25:06:00", arrival_time: "25:11:30", waiting_seconds: 60,
             travel_seconds: 330, distance_km: 1 },
           { origin: transfer, destination: terminal, route_id: "metro", vehicle_type: "SUBWAY",
@@ -105,7 +146,8 @@ test("route search posts the service-day query and normalizes every travel mode"
     destination: normalizedDestination, query, arrivalTime: "25:19:30", totalSeconds: 870,
     waitingSeconds: 150, travelSeconds: 720, distanceKm: 3.2, instructions,
     steps: [
-      { origin: normalizedCentral, destination: normalizedTransfer, routeId: "bus", vehicleType: "BUS",
+      { origin: normalizedCentral, destination: normalizedTransfer, routeId: "bus",
+        routeShortName: "510", vehicleType: "BUS",
         departureTime: "25:06:00", arrivalTime: "25:11:30", waitingSeconds: 60,
         travelSeconds: 330, distanceKm: 1 },
       { origin: normalizedTransfer, destination: normalizedTerminal, routeId: "metro", vehicleType: "SUBWAY",
@@ -117,6 +159,71 @@ test("route search posts the service-day query and normalizes every travel mode"
     ],
   });
   assert.equal(result.query, query);
+});
+
+test("address route search keeps destination on the page and origin station in its modal", async () => {
+  const calls = [];
+  const addressQuery = {
+    mode: "address",
+    origin: {
+      label: "Rua A",
+      latitude: -19.9,
+      longitude: -43.9,
+      maxWalkMeters: 800,
+      stationId: "001",
+    },
+    destination: {
+      label: "Rua B",
+      latitude: -19.91,
+      longitude: -43.91,
+      maxWalkMeters: 1_200,
+    },
+    departureTime: "07:45",
+  };
+  const api = createApi(async (url, options) => {
+    calls.push({ url, options });
+    return Response.json({
+      status: "no-route",
+      service_date: "2026-11-17",
+      origin: central,
+      destination,
+      departure_time: "07:45",
+      route: null,
+    });
+  });
+
+  await api.searchRoute(addressQuery);
+
+  assert.deepEqual(JSON.parse(calls[0].options.body), {
+    mode: "address",
+    origin: {
+      label: "Rua A",
+      latitude: -19.9,
+      longitude: -43.9,
+      max_walk_meters: 800,
+      station_id: "001",
+    },
+    destination: {
+      label: "Rua B",
+      latitude: -19.91,
+      longitude: -43.91,
+      max_walk_meters: 1_200,
+    },
+    departure_time: "07:45",
+  });
+});
+
+test("structured snap errors preserve their detail", async () => {
+  const api = createApi(async () => Response.json({
+    detail: { code: "no_station_within_limit", minimum_distance_meters: 340 },
+  }, { status: 404 }));
+
+  await assert.rejects(
+    () => api.listSnapCandidates({ latitude: 0, longitude: 0, maxWalkMeters: 100 }),
+    error => error instanceof ApiError
+      && error.detail.code === "no_station_within_limit"
+      && error.detail.minimum_distance_meters === 340,
+  );
 });
 
 test("a no-route response preserves endpoints and query without route fields", async () => {

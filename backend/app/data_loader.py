@@ -170,11 +170,16 @@ class DataLoader:
         return Station(row['stop_id'], row['stop_name'], latitude, longitude)
 
     @staticmethod
-    def _parse_route(row: dict[str, str]) -> VehicleType:
+    def _parse_route(row: dict[str, str]) -> tuple[VehicleType, str]:
         vehicle_type = {'1': VehicleType.SUBWAY, '3': VehicleType.BUS}.get(row['route_type'])
         if vehicle_type is None:
             raise ValueError('unsupported_route_type')
-        return vehicle_type
+        public_name = (
+            row.get('route_short_name', '').strip()
+            or row.get('route_long_name', '').strip()
+            or 'Linha não informada'
+        )
+        return vehicle_type, public_name
 
     def build_graph(self) -> TransportGraph:
         """Build a fresh graph and reset diagnostics on each invocation."""
@@ -243,12 +248,14 @@ class DataLoader:
                 self._reject('stop_times.txt', rows[0][0], trip_id, reason, len(rows))
                 continue
             route_id = trips[trip_id]
+            vehicle_type, route_short_name = routes[route_id]
             for origin, destination, departure, duration, distance, line in connections:
                 if duration > 0 and distance / (duration / 60) > 120:
                     self.report.warnings['suspicious_speed'] += 1
                     self._example('suspicious_speed', 'stop_times.txt', line, trip_id)
                 graph.add_connection(origin, Connection(
-                    route_id, destination, routes[route_id], duration, distance, departure
+                    route_id, destination, vehicle_type, duration, distance, departure,
+                    route_short_name,
                 ))
             self.report.files['stop_times.txt'].accepted += len(rows)
             self.report.connections += len(connections)

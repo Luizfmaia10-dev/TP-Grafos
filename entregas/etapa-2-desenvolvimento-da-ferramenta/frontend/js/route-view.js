@@ -28,7 +28,8 @@ export function buildTimelineEntries(result) {
     const modal = MODALS[step.vehicleType];
     entries.push({
       ...step, ...modal, time: step.departureTime, station: step.origin,
-      title: modal.kind === "walk" ? modal.label : `${modal.label} · ${step.routeId}`,
+      title: modal.kind === "walk" ? modal.label
+        : `${modal.label} · ${step.routeShortName || "Linha não informada"}`,
       description: result.instructions[instructionIndex++],
     });
   }

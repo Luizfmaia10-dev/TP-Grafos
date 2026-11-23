@@ -67,9 +67,59 @@ estacoes: no pior caso, faz O(S) verificacoes de texto para S estacoes.
 Acumula apenas os resultados ate o limite, sem copiar nem ordenar o grafo.
 O contrato tambem pode ser consultado em `/docs` e `/openapi.json`.
 
+## GET /config/geocoding
+
+Retorna a configuracao usada pelo autocomplete de enderecos:
+
+```json
+{"api_key": "chave-configurada", "available": true}
+```
+
+A chave vem de `GEOAPIFY_API_KEY`, preferencialmente em `.env.local`. Quando
+ausente, `api_key` e `null` e `available` e `false`; a interface desabilita a
+busca por enderecos. Geoapify/OpenStreetMap fornecem apenas sugestoes e
+coordenadas. O grafo e a rota nao saem do servidor.
+
+## POST /snap/candidates
+
+Pre-visualiza as paradas alcançaveis a partir de uma coordenada:
+
+```json
+{
+  "latitude": -19.9001,
+  "longitude": -43.9002,
+  "max_walk_meters": 800
+}
+```
+
+`max_walk_meters` aceita qualquer inteiro entre 100 e 2.000. A resposta ordena
+as estacoes reais por distancia de Haversine e, em empate, por ID:
+
+```json
+{
+  "minimum_distance_meters": 111,
+  "count": 2,
+  "candidates": [
+    {
+      "station": {
+        "station_id": "001", "name": "Central",
+        "latitude": -19.9, "longitude": -43.9
+      },
+      "distance_meters": 111
+    }
+  ]
+}
+```
+
+Limite fora da faixa e coordenada invalida retornam HTTP 422. Quando nenhuma
+parada cabe no limite, a API retorna HTTP 404 com
+`code: "no_station_within_limit"` e a distancia minima necessaria, quando
+existe alguma estacao em ate 2 km.
+
 ## POST /routes/search
 
-Recebe IDs de estacoes do catalogo e horario no dia de servico carregado:
+Aceita o modo por IDs e o modo por enderecos. O modo por IDs permanece
+compativel com clientes REST existentes:
 
 ```json
 {
@@ -79,13 +129,40 @@ Recebe IDs de estacoes do catalogo e horario no dia de servico carregado:
 }
 ```
 
-Todos os campos sao obrigatorios. IDs devem ser strings nao vazias; espacos
-externos sao removidos. Origem e destino devem ser distintos. O horario usa
+Nesse modo, os três campos sao obrigatorios. IDs devem ser strings nao vazias;
+espacos externos sao removidos. Origem e destino devem ser distintos. O horario usa
 somente `HH:MM`, sem segundos, e permite horas acima de 23, como `25:00`.
 Internamente, o motor acrescenta segundos zerados sem reduzir a precisao dos
 horarios GTFS. Nao enviar data na consulta: `GTFS_SERVICE_DATE` seleciona o
 calendario na inicializacao. Campos adicionais sao rejeitados para evitar
 que uma data enviada pelo cliente seja ignorada silenciosamente.
+
+O fluxo principal da interface usa `mode: "address"`:
+
+```json
+{
+  "mode": "address",
+  "origin": {
+    "label": "Rua de origem, 10",
+    "latitude": -19.9001,
+    "longitude": -43.9002,
+    "max_walk_meters": 650,
+    "station_id": "001"
+  },
+  "destination": {
+    "label": "Rua de destino, 20",
+    "latitude": -19.9101,
+    "longitude": -43.9102,
+    "max_walk_meters": 900
+  },
+  "departure_time": "07:59"
+}
+```
+
+Origem e destino possuem limites independentes. A origem exige uma parada
+previamente retornada por `/snap/candidates`; o destino usa automaticamente a
+mais proxima. O backend recalcula as candidatas e rejeita uma parada de origem
+que tenha ficado fora do limite.
 
 Exemplo de resposta HTTP 200 para uma rota direta sintetica:
 
@@ -119,6 +196,7 @@ Exemplo de resposta HTTP 200 para uma rota direta sintetica:
           "latitude": -19.901, "longitude": -43.901
         },
         "route_id": "bus",
+        "route_short_name": "50",
         "vehicle_type": "BUS",
         "departure_time": "08:00:00",
         "arrival_time": "08:10:00",
@@ -129,7 +207,7 @@ Exemplo de resposta HTTP 200 para uma rota direta sintetica:
     ],
     "instructions": [
       "Aguarde em Central até 08:00:00.",
-      "Pegue o ônibus bus de Central até Terminal às 08:00:00; chegada às 08:10:00."
+      "Pegue o ônibus 50 de Central até Terminal às 08:00:00; chegada às 08:10:00."
     ]
   }
 }
@@ -154,7 +232,8 @@ fracionarios, sem arredondar durante o A*.
 
 Distancias sao somas em km, sem arredondamento adicional; no GTFS, sao
 estimadas por Haversine entre paradas, sem geometria de ruas. `route_id`
-identifica a linha internamente, sem representar seu numero comercial.
+identifica a rota internamente; `route_short_name` apresenta o numero publico
+da linha e usa `Linha não informada` quando o feed nao o fornece.
 Nao sao inventados `trip_id`, `service_id` ou nomes ausentes no dominio.
 
 | Situacao | Resposta |
@@ -162,15 +241,19 @@ Nao sao inventados `trip_id`, `service_id` ou nomes ausentes no dominio.
 | Caminho encontrado | HTTP 200, `status: "found"` e `route` preenchida |
 | Sem caminho, partida perdida ou data carregada sem viagens | HTTP 200, `status: "no-route"` e `route: null`; preserva os demais campos da consulta |
 | ID desconhecido | HTTP 404, `{"detail": {"code": "unknown_station", "field": "origin_id"}}` ou `destination_id` |
+| Nenhuma parada no limite | HTTP 404, `code: "no_station_within_limit"`, com `field` no modo por endereco |
+| Limite fora de 100 a 2.000 m | HTTP 422, `code: "snap_distance_out_of_range"` |
+| Parada de origem fora do limite | HTTP 422, `code: "selected_station_outside_limit"` |
 | Campos ausentes, invalidos, adicionais ou origem igual ao destino | HTTP 422, formato de validacao do FastAPI |
 | Rede nao configurada | HTTP 503, conforme a secao de carga |
 
 A API usa `RouteSimulator.calculate_route` com um simulador por consulta e
-o grafo compartilhado, sem modificar conexoes ou carregar o feed novamente.
+o grafo compartilhado, sem carregar o feed novamente. No modo por endereco,
+duas arestas `WALK` direcionais ficam em um overlay privado do simulador e sao
+removidas no `finally`; o `TransportGraph` nao e mutado.
 A montagem da resposta fica em `app/api/`, em O(P) para P conexoes no
 caminho; o dominio nao depende de FastAPI ou dos modelos HTTP. A classe de
-dominio `Itinerary` concentra os totais, passos e instrucoes. O contrato nao
-aceita coordenadas arbitrarias.
+dominio `Itinerary` concentra os totais, passos e instrucoes.
 
 Para testar pelo PowerShell com o servidor configurado e aberto, substitua
 os IDs sinteticos por IDs retornados por `/stations`:

@@ -18,6 +18,7 @@ classDiagram
     }
     class Connection {
         +str route_id
+        +str route_short_name
         +Station destination
         +VehicleType vehicle_type
         +float travel_time
@@ -56,6 +57,7 @@ classDiagram
         +Station origin
         +Station destination
         +str route_id
+        +str route_short_name
         +VehicleType vehicle_type
         +str departure_time
         +str arrival_time
@@ -71,10 +73,33 @@ classDiagram
         +TransportGraph graph
         +float max_speed
         +int last_expanded_count
+        -dict _temporary_connections
         +calculate_route(...) list | None
         +max_speed_of(graph)$ float
         +heuristic(current, target) float
-        +snap_to_network(...) contextmanager
+        +find_snap_candidates(latitude, longitude, max_distance_km) list~SnapCandidate~
+        +snap_to_network(latitude, longitude, marker_type, max_distance_km, station_id, label) contextmanager
+    }
+    class SnapCandidate {
+        +Station station
+        +float distance_km
+    }
+    class AddressPoint {
+        <<API model>>
+        +str label
+        +float latitude
+        +float longitude
+        +int max_walk_meters
+        +str station_id
+    }
+    class RouteSearchRequest {
+        <<API model>>
+        +str mode
+        +str origin_id
+        +str destination_id
+        +AddressPoint origin
+        +AddressPoint destination
+        +str departure_time
     }
     class GraphAnalyzer {
         -TransportGraph _graph
@@ -91,7 +116,10 @@ classDiagram
     DataLoader ..> TransportGraph : constrói
     DataLoader ..> TimeUtils : converte horários
     RouteSimulator --> TransportGraph : consulta
-    RouteSimulator ..> TemporaryVertex : uso interno
+    RouteSimulator ..> TemporaryVertex : cria por consulta
+    RouteSimulator ..> SnapCandidate : ordena candidatas
+    RouteSearchRequest o-- AddressPoint : origem e destino
+    RouteSearchRequest ..> RouteSimulator : valida e aciona
     GraphAnalyzer --> TransportGraph : analisa
     Itinerary o-- ItineraryStep : passos
     Itinerary ..> TimeUtils : formata horários

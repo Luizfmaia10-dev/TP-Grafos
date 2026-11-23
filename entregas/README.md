@@ -25,7 +25,7 @@ entregas/
 │
 └── etapa-3-apresentacao-e-relatorio-final/
     ├── relatorio-latex/               # Codigo-fonte completo em LaTeX no template oficial da SBC
-    ├── pdf-finais/                    # PDFs compilados (Artigo de 15 paginas, Slides, Analise de Complexidade)
+    ├── pdf-finais/                    # PDFs compilados (Artigo de 14 paginas, Slides, Analise de Complexidade)
     ├── slides/                        # Slides da apresentacao de 10 min (LaTeX Beamer e PDF)
     ├── VIDEO_SCRIPT.md                # Roteiro detalhado com falas para gravacao do video (12 a 18 min)
     ├── AUTHORSHIP_AUDIT.md            # Rastreamento individual de responsabilidades e commits dos 6 membros

@@ -40,11 +40,15 @@ def test_snap_origin_connects_to_nearest_real_station_and_cleans_up():
     simulator = RouteSimulator(graph, max_speed=1.0)
 
     with simulator.snap_to_network(0.0, 0.001, "origin") as vertex:
-        connection = graph.get_neighbors(vertex)[0]
-
         assert isinstance(vertex, TemporaryVertex)
         assert vertex.marker_type == "origin"
         assert vertex.station_id != existing_temporary.station_id
+        assert list(graph.iter_stations()) == [nearest, farther, existing_temporary]
+
+        route = simulator.calculate_route(vertex, nearest, departure_time=0.0)
+
+        assert route is not None
+        connection = route[0][1]
         assert connection.route_id == "temporary-walk"
         assert connection.destination == nearest
         assert connection.vehicle_type is VehicleType.WALK
@@ -64,14 +68,100 @@ def test_snap_destination_connects_nearest_station_to_temporary_vertex():
     simulator = RouteSimulator(graph, max_speed=1.0)
 
     with simulator.snap_to_network(0.0, 0.001, "destination") as vertex:
-        connection = graph.get_neighbors(nearest)[0]
+        assert list(graph.iter_stations()) == [nearest]
 
+        route = simulator.calculate_route(nearest, vertex, departure_time=0.0)
+
+        assert route is not None
+        connection = route[0][1]
         assert connection.destination == vertex
         assert connection.vehicle_type is VehicleType.WALK
-        assert graph.get_neighbors(vertex) == []
+        assert graph.get_neighbors(nearest) == []
 
     assert list(graph.iter_stations()) == [nearest]
     assert graph.get_neighbors(nearest) == []
+
+
+def test_find_snap_candidates_returns_real_stations_in_distance_order():
+    graph = TransportGraph()
+    near = Station("near", "Near", 0.0, 0.001)
+    far = Station("far", "Far", 0.0, 0.004)
+    outside = Station("outside", "Outside", 0.0, 0.02)
+    temporary = TemporaryVertex("temporary", "Temporary", 0.0, 0.0, "origin")
+    for station in (far, temporary, outside, near):
+        graph.add_station(station)
+    simulator = RouteSimulator(graph, max_speed=1.0)
+
+    candidates = simulator.find_snap_candidates(0.0, 0.0, 0.8)
+
+    assert [candidate.station for candidate in candidates] == [near, far]
+    assert candidates[0].distance_km < candidates[1].distance_km
+
+
+@pytest.mark.parametrize("max_distance_km", [0.099, 2.001, float("nan")])
+def test_find_snap_candidates_rejects_limit_outside_supported_range(max_distance_km):
+    simulator = RouteSimulator(TransportGraph(), max_speed=1.0)
+
+    with pytest.raises(ValueError, match="between 0.1 and 2.0 kilometres"):
+        simulator.find_snap_candidates(0.0, 0.0, max_distance_km)
+
+
+def test_snap_origin_accepts_a_selected_station_inside_the_limit():
+    graph = TransportGraph()
+    nearest = Station("nearest", "Nearest", 0.0, 0.001)
+    selected = Station("selected", "Selected", 0.0, 0.004)
+    for station in (nearest, selected):
+        graph.add_station(station)
+    simulator = RouteSimulator(graph, max_speed=1.0)
+
+    with simulator.snap_to_network(
+        0.0,
+        0.0,
+        "origin",
+        max_distance_km=0.8,
+        station_id="selected",
+        label="Rua escolhida",
+    ) as vertex:
+        route = simulator.calculate_route(vertex, selected, 0.0)
+
+    assert vertex.name == "Rua escolhida"
+    assert route is not None
+    assert route[0][1].destination == selected
+
+
+def test_origin_and_destination_snaps_are_request_local_and_cleaned_together():
+    graph = TransportGraph()
+    origin_station = Station("origin", "Origin station", 0.0, 0.0)
+    destination_station = Station("destination", "Destination station", 0.0, 0.1)
+    for station in (origin_station, destination_station):
+        graph.add_station(station)
+    bus = Connection(
+        "bus", destination_station, VehicleType.BUS, 10.0, 10.0, 10.0
+    )
+    graph.add_connection(origin_station, bus)
+    stations_before = list(graph.iter_stations())
+    neighbors_before = list(graph.get_neighbors(destination_station))
+    simulator = RouteSimulator(graph, max_speed=1.0)
+
+    with simulator.snap_to_network(
+        0.0, 0.001, "origin", max_distance_km=0.8, label="Origem"
+    ) as origin:
+        with simulator.snap_to_network(
+            0.0, 0.099, "destination", max_distance_km=0.8, label="Destino"
+        ) as destination:
+            assert list(graph.iter_stations()) == stations_before
+            assert graph.get_neighbors(destination_station) == neighbors_before
+            route = simulator.calculate_route(origin, destination, 0.0)
+
+            assert route is not None
+            assert [connection.vehicle_type for _, connection in route] == [
+                VehicleType.WALK,
+                VehicleType.BUS,
+                VehicleType.WALK,
+            ]
+
+    assert list(graph.iter_stations()) == stations_before
+    assert graph.get_neighbors(destination_station) == neighbors_before
 
 
 @pytest.mark.parametrize(

@@ -21,6 +21,8 @@ coverage.xml
 .playwright-cli/
 .taste-skill/
 .worktrees/
+.superpowers/
+.env.local
 
 # Data Caches
 data/cache/*

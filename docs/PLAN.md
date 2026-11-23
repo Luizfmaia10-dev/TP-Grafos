@@ -53,8 +53,8 @@ Data Limite: 22/11/2026 23:59
 - [x] Escrever testes unitarios cobrindo cenarios com rotas diretas, transferencias entre linhas/modais e casos em que nao ha caminho viavel.
 
 ## Parte 6: Vertices Temporarios e Resposta Estruturada
-- [x] Implementar a especializacao `TemporaryVertex` e a logica de aproximacao (*snap-to-network*) a partir de cliques do usuario em coordenadas arbitrarias.
-- [x] Conectar o ponto temporario as estacoes mais proximas dentro de um raio configuravel (ex: 800m) criando arestas do modal `WALK` ponderadas pela velocidade media de caminhada (~5 km/h).
+- [x] Implementar a especializacao `TemporaryVertex` e a logica de aproximacao (*snap-to-network*) a partir de enderecos geocodificados em coordenadas arbitrarias.
+- [x] Conectar o ponto temporario a uma estacao valida dentro de limites independentes de 100 a 2.000 metros, com 800 metros como padrao, criando arestas direcionais do modal `WALK` ponderadas pela velocidade media de caminhada (~5 km/h).
 - [x] Implementar a classe `Itinerary` para encapsular a solucao (tempo total de viagem, tempo de espera, distancia total percorrida e lista de instrucoes passo a passo).
 - [x] Implementar serializacao para dicionario e JSON no `Itinerary`.
 - [x] Garantir limpeza automatica dos vertices temporarios no grafo apos cada consulta.

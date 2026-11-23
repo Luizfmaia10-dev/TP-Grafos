@@ -15,7 +15,7 @@
   <body class="bg-rg-paper font-sans text-rg-ink antialiased">
     <a class="skip-link" href="#planner">Ir para o planejador</a>
 
-    <header class="site-header flex items-center justify-between bg-rg-navy text-white">
+    <header class="site-header bg-rg-navy text-white">
       <a class="brand inline-flex shrink-0 items-center" href="/" aria-label="RotasGraph, página inicial">
         <span class="brand-symbol flex items-center justify-center" aria-hidden="true">
           <img src="/assets/icons/graph.svg" alt="">
@@ -23,8 +23,8 @@
         <span class="brand-name">RotasGraph</span>
       </a>
 
-      <div class="header-actions flex items-center">
-        <div class="location-meta flex items-center text-rg-map-text">
+      <div class="header-actions">
+        <div class="location-meta text-rg-map-text">
           <span class="location-icon icon-slot" aria-hidden="true">
             <img src="/assets/icons/location.svg" alt="">
           </span>
@@ -32,6 +32,14 @@
           <span class="location-divider" aria-hidden="true"></span>
           <p class="data-source font-mono text-rg-map-muted">GTFS / BHTRANS</p>
         </div>
+        <button id="origin-dialog-trigger" class="header-tool" type="button" aria-haspopup="dialog" aria-controls="origin-dialog">
+          <span class="header-tool-mark" aria-hidden="true">A</span>
+          <span>Definir origem</span>
+        </button>
+        <button id="limits-dialog-trigger" class="header-tool" type="button" aria-haspopup="dialog" aria-controls="limits-dialog">
+          <span class="header-tool-icon" aria-hidden="true">↔</span>
+          <span id="limits-trigger-label">A 800 m · B 800 m</span>
+        </button>
         <button id="theme-switch" class="theme-switch" type="button" role="switch" aria-checked="false" aria-label="Alternar tema claro e escuro">
           <span class="theme-switch-label">Tema</span>
           <span class="theme-switch-track" aria-hidden="true"><span class="theme-switch-thumb"></span></span>
@@ -46,45 +54,34 @@
         <div class="search-intro">
           <div class="intro-copy">
             <h1 id="planner-title" class="planner-title font-bold" tabindex="-1">Planeje seu trajeto</h1>
-            <p id="planner-description" class="planner-description text-rg-muted">Escolha duas paradas pelo nome ou no mapa.</p>
+            <p id="planner-description" class="planner-description text-rg-muted">Informe os endereços para conectá-los à rede de transporte.</p>
           </div>
           <button id="edit-search" class="edit-search" type="button" hidden><span class="edit-icon icon-slot" aria-hidden="true"><img src="/assets/icons/arrow-left.svg" alt=""></span> Editar busca</button>
         </div>
 
         <form id="route-form" class="search-form flex flex-col border border-rg-line bg-rg-surface shadow-rg-card" aria-label="Planejamento do trajeto" aria-busy="false" tabindex="-1" novalidate>
-          <p id="station-hint" class="sr-only">Escolha uma sugestão para confirmar a parada. Use as setas, Enter e Escape para navegar.</p>
           <div id="origin-field" class="form-field flex min-w-0 flex-col">
-            <label class="field-label font-semibold" for="origin">Origem</label>
-            <div class="station-picker">
-              <div class="field-control flex items-center">
-                <span class="station-badge station-badge--origin font-mono" aria-hidden="true">A</span>
-                <input id="origin" class="station-input min-w-0 flex-1" name="origin" type="text" placeholder="Escolha uma parada" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="origin-options" aria-describedby="station-hint" required>
-                <button id="origin-clear" class="clear-field" type="button" aria-label="Limpar origem" hidden>Limpar</button>
-                <span id="origin-search-icon" class="search-icon icon-slot shrink-0" aria-hidden="true">
-                  <img src="/assets/icons/search.svg" alt="">
-                </span>
+            <span class="field-label font-semibold">Origem</span>
+            <div class="address-summary">
+              <span class="station-badge station-badge--origin font-mono" aria-hidden="true">A</span>
+              <div class="address-summary-copy min-w-0">
+                <strong id="origin-address-label">Origem ainda não definida</strong>
+                <span id="origin-station-label">Informe um endereço e confirme a parada de acesso.</span>
               </div>
-              <ul id="origin-options" class="station-options" role="listbox" aria-label="Paradas para origem" hidden></ul>
-              <p id="origin-loading" class="station-loading" role="status" aria-live="polite" hidden>Buscando paradas…</p>
-              <p id="origin-empty" class="field-hint station-empty" hidden>Nenhuma parada encontrada na rede para esta busca.</p>
+              <button id="origin-change" class="secondary-action" type="button">Alterar</button>
             </div>
             <p id="origin-error" class="field-error" hidden></p>
           </div>
 
           <div id="destination-field" class="form-field flex min-w-0 flex-col">
-            <label class="field-label font-semibold" for="destination">Destino</label>
-            <div class="station-picker">
-              <div class="field-control flex items-center">
+            <span id="destination-label" class="field-label font-semibold">Destino</span>
+            <div class="address-picker">
+              <div class="field-control address-control flex items-center">
                 <span class="station-badge station-badge--destination font-mono" aria-hidden="true">B</span>
-                <input id="destination" class="station-input min-w-0 flex-1" name="destination" type="text" placeholder="Escolha uma parada" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="destination-options" aria-describedby="station-hint" required>
+                <div id="destination-autocomplete" class="places-autocomplete min-w-0 flex-1" aria-labelledby="destination-label"></div>
                 <button id="destination-clear" class="clear-field" type="button" aria-label="Limpar destino" hidden>Limpar</button>
-                <span id="destination-search-icon" class="search-icon icon-slot shrink-0" aria-hidden="true">
-                  <img src="/assets/icons/search.svg" alt="">
-                </span>
               </div>
-              <ul id="destination-options" class="station-options" role="listbox" aria-label="Paradas para destino" hidden></ul>
-              <p id="destination-loading" class="station-loading" role="status" aria-live="polite" hidden>Buscando paradas…</p>
-              <p id="destination-empty" class="field-hint station-empty" hidden>Nenhuma parada encontrada na rede para esta busca.</p>
+              <p id="destination-snap-status" class="field-hint">A parada mais próxima será escolhida automaticamente.</p>
             </div>
             <p id="destination-error" class="field-error" hidden></p>
           </div>
@@ -128,6 +125,7 @@
 
           <button class="search-button flex items-center justify-center font-semibold" type="submit" disabled>Calcular trajeto</button>
           <p id="selection-status" class="selection-status" hidden></p>
+          <p class="geocoder-attribution">Endereços por <a href="https://www.geoapify.com/" target="_blank" rel="noreferrer">Geoapify</a> e <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>.</p>
         </form>
 
         <section id="query-feedback" class="query-feedback" aria-labelledby="feedback-title" hidden>
@@ -210,5 +208,89 @@
         <p class="itinerary-note">Rota calculada com horários GTFS do dia de serviço. Distância aproximada entre paradas; o mapa é esquemático.</p>
       </section>
     </main>
+
+    <dialog id="origin-dialog" class="snap-dialog" aria-labelledby="origin-dialog-title">
+      <form method="dialog" class="dialog-card">
+        <div class="dialog-heading">
+          <div>
+            <p class="dialog-eyebrow">Ponto de partida</p>
+            <h2 id="origin-dialog-title">Defina sua origem</h2>
+            <p>Digite um endereço de Belo Horizonte. Indicaremos as paradas que você consegue alcançar a pé.</p>
+          </div>
+          <button class="dialog-close" type="button" data-dialog-close="origin-dialog" aria-label="Fechar">×</button>
+        </div>
+        <div class="dialog-body">
+          <div class="form-field">
+            <span id="origin-address-input-label" class="field-label font-semibold">Endereço de origem</span>
+            <div id="origin-autocomplete" class="places-autocomplete places-autocomplete--dialog" aria-labelledby="origin-address-input-label"></div>
+            <p id="origin-address-error" class="field-error" hidden></p>
+          </div>
+          <section class="candidate-section" aria-labelledby="origin-candidates-title">
+            <div class="candidate-heading">
+              <div>
+                <h3 id="origin-candidates-title">Parada de acesso</h3>
+                <p id="origin-candidates-help">A mais próxima será recomendada. Você pode escolher outra dentro do seu limite.</p>
+              </div>
+              <span id="origin-limit-chip" class="limit-chip">Até 800 m</span>
+            </div>
+            <p id="origin-candidates-status" class="candidate-status">Informe um endereço para encontrar paradas próximas.</p>
+            <div id="origin-candidates" class="candidate-list" role="radiogroup" aria-label="Paradas dentro do limite"></div>
+          </section>
+        </div>
+        <div class="dialog-actions">
+          <button class="dialog-secondary" type="button" data-dialog-close="origin-dialog">Cancelar</button>
+          <button id="origin-confirm" class="dialog-primary" type="button" disabled>Confirmar origem</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="limits-dialog" class="snap-dialog" aria-labelledby="limits-dialog-title">
+      <form method="dialog" class="dialog-card dialog-card--limit">
+        <div class="dialog-heading">
+          <div>
+            <p class="dialog-eyebrow">Preferência de caminhada</p>
+            <h2 id="limits-dialog-title">Quanto você aceita caminhar?</h2>
+            <p>Escolha o raio máximo usado para procurar uma parada próxima. Origem e destino têm limites independentes.</p>
+          </div>
+          <button class="dialog-close" type="button" data-dialog-close="limits-dialog" aria-label="Fechar">×</button>
+        </div>
+        <div class="limit-tabs" role="tablist" aria-label="Ponto a configurar">
+          <button id="limit-tab-origin" class="limit-tab" type="button" role="tab" aria-selected="true" data-limit-field="origin">Origem</button>
+          <button id="limit-tab-destination" class="limit-tab" type="button" role="tab" aria-selected="false" data-limit-field="destination">Destino</button>
+        </div>
+        <div class="dialog-body limit-body">
+          <div id="limit-visual" class="limit-visual" aria-hidden="true">
+            <span class="limit-ring limit-ring--outer"></span>
+            <span class="limit-ring limit-ring--middle"></span>
+            <span class="limit-ring limit-ring--inner"></span>
+            <span id="limit-visual-point" class="limit-visual-point">A</span>
+          </div>
+          <div class="limit-controls">
+            <div class="limit-value-row">
+              <div>
+                <span class="field-label">Limite selecionado</span>
+                <strong id="limit-value" class="limit-value font-mono">800 m</strong>
+              </div>
+              <span class="limit-range-label">100 m – 2 km</span>
+            </div>
+            <input id="limit-slider" class="limit-slider" type="range" min="100" max="2000" step="1" value="800" aria-label="Limite máximo de caminhada em metros">
+            <div class="limit-presets" aria-label="Atalhos de distância">
+              <button type="button" data-limit-value="300">300 m</button>
+              <button type="button" data-limit-value="800">800 m</button>
+              <button type="button" data-limit-value="1200">1,2 km</button>
+              <button type="button" data-limit-value="2000">2 km</button>
+            </div>
+            <div id="limit-feedback" class="limit-feedback" data-state="missing-address">
+              <strong id="limit-address">Endereço de origem ainda não informado.</strong>
+              <p id="limit-message">Você pode salvar este limite agora. Depois de informar o endereço, mostraremos a parada mais próxima.</p>
+            </div>
+          </div>
+        </div>
+        <div class="dialog-actions">
+          <button class="dialog-secondary" type="button" data-dialog-close="limits-dialog">Cancelar</button>
+          <button id="limit-confirm" class="dialog-primary" type="button">Confirmar limite</button>
+        </div>
+      </form>
+    </dialog>
   </body>
 </html>

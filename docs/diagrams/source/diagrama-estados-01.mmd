@@ -1,19 +1,40 @@
 stateDiagram-v2
     [*] --> Editing
-    state "Seleção incompleta ou inválida" as Editing
+    state "Edição incompleta" as Editing
+    state "Buscando endereço" as Geocoding
+    state "Consultando paradas no limite" as Snapping
+    state "Confirmando parada da origem" as OriginChoice
+    state "Limite sem parada alcançável" as Insufficient
+    state "Editando limite A ou B" as LimitEditing
     state "Consulta pronta" as Ready
     state "Carregando (loading)" as Loading
     state "Rota encontrada (found)" as Found
     state "Sem rota (no-route)" as NoRoute
     state "Falha da consulta (error)" as Error
-    Editing --> Ready: dados válidos
-    Ready --> Editing: editar
+    Editing --> Geocoding: digitar e selecionar sugestão
+    Geocoding --> Snapping: endereço com coordenadas
+    Geocoding --> Editing: vazio, erro ou cancelamento
+    Snapping --> OriginChoice: candidatas de nova origem
+    Snapping --> Editing: destino conectado à mais próxima
+    Snapping --> LimitEditing: limite existente revalidado
+    Snapping --> Insufficient: nenhuma parada no limite
+    OriginChoice --> Editing: confirmar candidata válida
+    OriginChoice --> Geocoding: trocar endereço
+    Insufficient --> LimitEditing: aumentar limite
+    Insufficient --> Geocoding: trocar endereço
+    Editing --> LimitEditing: abrir preferências
+    LimitEditing --> Editing: confirmar sem consulta completa
+    LimitEditing --> Ready: confirmar com consulta completa
+    LimitEditing --> Snapping: validar endereço existente
+    Editing --> Ready: origem confirmada, destino conectado e HH:MM válido
+    Ready --> Editing: editar endereço ou horário
+    Ready --> LimitEditing: alterar limite
     Ready --> Loading: enviar
     Loading --> Found: caminho
     Loading --> NoRoute: sem caminho
     Loading --> Error: falha
     Loading --> Editing: editar e cancelar
-    Found --> Ready: editar busca
+    Found --> Editing: editar busca
     NoRoute --> Loading: repetir
     NoRoute --> Editing: ajustar
     Error --> Loading: repetir

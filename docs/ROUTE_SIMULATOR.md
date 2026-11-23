@@ -14,15 +14,30 @@ Calcula o caminho de menor horário de chegada (*earliest arrival*) partindo de 
 - **Origem idêntica ao destino:** Retorna lista vazia `[]`.
 - **Destino inalcançável:** Retorna `None`.
 
-A API REST recebe `origin_id`, `destination_id` e `departure_time`; após receber
-o caminho, `build_route_result` cria o `Itinerary`. O roteador não o constrói.
-`snap_to_network` é uma capacidade interna, sem contrato REST para coordenadas.
+A API REST preserva o modo por `origin_id` e `destination_id`, mas a interface
+usa `mode: "address"`, com coordenadas, limites independentes de 100 a 2.000
+metros e a parada confirmada da origem. `POST /snap/candidates` pre-visualiza
+as paradas válidas. Após receber o caminho, `build_route_result` cria o
+`Itinerary`; `calculate_route` nunca retorna esse objeto.
+
+`snap_to_network` continua sendo um context manager interno do motor, acionado
+pelo controlador REST no modo por endereço. Ele cria uma aresta `WALK`
+direcional em `_temporary_connections`: ponto--parada na origem e
+parada--ponto no destino. O overlay e removido no `finally`, sem mutar o
+`TransportGraph` compartilhado.
 
 ### `max_speed_of(graph: TransportGraph) -> float` *(staticmethod)*
 
 Percorre todas as arestas do grafo com `travel_time > 0` e retorna a velocidade máxima observada ($\text{distancia} / \text{travel\_time}$ em km/min).
 - Ignora arestas com `travel_time <= 0` evitando divisões por zero.
 - Se o grafo não contiver arestas com tempo positivo, retorna a velocidade de caminhada padrão ($5\text{ km/h} \approx 0.0833\text{ km/min}$).
+
+### `find_snap_candidates(latitude, longitude, max_distance_km) -> list[SnapCandidate]`
+
+Valida coordenadas e limite, ignora `TemporaryVertex`, calcula Haversine para
+cada estação real e retorna somente as candidatas no raio. A ordenação usa
+distância crescente e `station_id` como desempate. A API limita a preferência
+do usuário a 100--2.000 metros; 800 metros é apenas o valor inicial da interface.
 
 ### `heuristic(current: Station, target: Station) -> float`
 

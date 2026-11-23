@@ -4,12 +4,12 @@
   relation/.style={-{Latex[length=2mm]},line width=.5pt},
   relation label/.style={font=\fontsize{9}{11}\selectfont,fill=white,inner sep=2pt}
 ]
-\node[layer] (frontend) at (0,0) {\textbf{Frontend}\\HTML, Tailwind local e JavaScript nativo; mapa SVG e timeline};
-\node[layer] (api) at (0,-1.9) {\textbf{FastAPI}\\\texttt{GET /stations} e \texttt{POST /routes/search}\\RouteNetwork compartilha grafo, índice, velocidade e data de serviço.};
+\node[layer] (frontend) at (0,0) {\textbf{Frontend}\\HTML, Tailwind e JavaScript; autocomplete Geoapify/OSM, mapa SVG e timeline};
+\node[layer] (api) at (0,-1.9) {\textbf{FastAPI}\\\texttt{/config/geocoding}, \texttt{POST /snap/candidates} e \texttt{POST /routes/search}\\RouteNetwork compartilha grafo, índice, velocidade e data de serviço.};
 \node[layer] (domain) at (0,-4.1) {\textbf{Domínio em memória}\\TransportGraph + RouteSimulator (A* temporal)\\Itinerary (passos, totais e instruções) + TimeUtils};
 \node[tool] (loader) at (-3.5,-6.5) {\textbf{Ingestão}\\DataLoader + calendário\\Seis TXT GTFS locais via Git LFS};
 \node[tool] (cli) at (3.5,-6.5) {\textbf{Ferramentas de linha de comando}\\Validação, benchmark e GraphAnalyzer\\Relatórios JSON e CSV};
-\draw[relation] (frontend.south) -- node[relation label,right]{HTTP / JSON} (api.north);
+\draw[relation] (frontend.south) -- node[relation label,right]{HTTP / JSON e coordenadas} (api.north);
 \draw[relation] (api.south) -- node[relation label,right]{consulta e criação do itinerário} (domain.north);
 \draw[relation] (loader.north) -- node[relation label,above right]{constrói o grafo} (domain.south west);
 \draw[relation] (cli.north) -- node[relation label,above left]{consulta e analisa} (domain.south east);

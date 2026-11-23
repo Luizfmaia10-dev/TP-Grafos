@@ -23,6 +23,7 @@ classDiagram
     }
     class Connection {
         +str route_id
+        +str route_short_name
         +Station destination
         +VehicleType vehicle_type
         +float travel_time
@@ -61,6 +62,7 @@ classDiagram
         +Station origin
         +Station destination
         +str route_id
+        +str route_short_name
         +VehicleType vehicle_type
         +str departure_time
         +str arrival_time
@@ -76,10 +78,33 @@ classDiagram
         +TransportGraph graph
         +float max_speed
         +int last_expanded_count
+        -dict _temporary_connections
         +calculate_route(...) list | None
         +max_speed_of(graph)$ float
         +heuristic(current, target) float
-        +snap_to_network(...) contextmanager
+        +find_snap_candidates(latitude, longitude, max_distance_km) list~SnapCandidate~
+        +snap_to_network(latitude, longitude, marker_type, max_distance_km, station_id, label) contextmanager
+    }
+    class SnapCandidate {
+        +Station station
+        +float distance_km
+    }
+    class AddressPoint {
+        <<API model>>
+        +str label
+        +float latitude
+        +float longitude
+        +int max_walk_meters
+        +str station_id
+    }
+    class RouteSearchRequest {
+        <<API model>>
+        +str mode
+        +str origin_id
+        +str destination_id
+        +AddressPoint origin
+        +AddressPoint destination
+        +str departure_time
     }
     class GraphAnalyzer {
         -TransportGraph _graph
@@ -96,7 +121,10 @@ classDiagram
     DataLoader ..> TransportGraph : constrói
     DataLoader ..> TimeUtils : converte horários
     RouteSimulator --> TransportGraph : consulta
-    RouteSimulator ..> TemporaryVertex : uso interno
+    RouteSimulator ..> TemporaryVertex : cria por consulta
+    RouteSimulator ..> SnapCandidate : ordena candidatas
+    RouteSearchRequest o-- AddressPoint : origem e destino
+    RouteSearchRequest ..> RouteSimulator : valida e aciona
     GraphAnalyzer --> TransportGraph : analisa
     Itinerary o-- ItineraryStep : passos
     Itinerary ..> TimeUtils : formata horários
@@ -111,9 +139,14 @@ classDiagram
 `DataLoader(data_directory, active_service_ids=None, *, service_date=None)`
 expõe `build_graph()`; o diagnóstico fica em `loader.report` (`LoadReport`).
 
-`snap_to_network(latitude, longitude, marker_type)` é um context manager
-interno, sem contrato REST. Conecta à
-estação real mais próxima em até 800 m e limpa a topologia ao sair do contexto.
-O REST usa somente `origin_id`, `destination_id` e `departure_time`.
-`GraphAnalyzer` é usado pela [CLI topológica](../../docs/GRAPH_ANALYZER.md),
+`POST /snap/candidates` recebe coordenadas e um limite inteiro entre 100 e
+2.000 metros. `find_snap_candidates` ignora vértices temporários e ordena as
+estações reais por distância de Haversine e ID. A origem pode indicar qualquer
+`station_id` retornado; o destino usa a candidata mais próxima.
+
+`snap_to_network` cria uma aresta `WALK` direcional em
+`_temporary_connections`: ponto--parada na origem e parada--ponto no destino.
+O overlay privado é removido no `finally`, sem alterar o `TransportGraph`
+compartilhado. `RouteSearchRequest` preserva também o modo alternativo por IDs.
+`GraphAnalyzer` é usado pela [CLI topológica](../../../docs/GRAPH_ANALYZER.md),
 sem endpoint analítico.

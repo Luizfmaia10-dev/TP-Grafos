@@ -14,13 +14,31 @@ StationId = Annotated[str, StringConstraints(strict=True, strip_whitespace=True,
 DEPARTURE_TIME_PATTERN = re.compile(r"[0-9]{2,}:[0-5][0-9]")
 
 
-class RouteSearchRequest(BaseModel):
-    """Station IDs and a timestamp within the loaded GTFS service day."""
+class AddressPoint(BaseModel):
+    """One user-selected address with coordinates and a walking limit."""
 
     model_config = ConfigDict(extra="forbid")
 
-    origin_id: StationId
-    destination_id: StationId
+    label: Annotated[
+        str,
+        StringConstraints(strict=True, strip_whitespace=True, min_length=1),
+    ]
+    latitude: float
+    longitude: float
+    max_walk_meters: int
+    station_id: StationId | None = None
+
+
+class RouteSearchRequest(BaseModel):
+    """A station or address search within the loaded GTFS service day."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    mode: Literal["station", "address"] = "station"
+    origin_id: StationId | None = None
+    destination_id: StationId | None = None
+    origin: AddressPoint | None = None
+    destination: AddressPoint | None = None
     departure_time: str
 
     @field_validator("departure_time")
@@ -35,9 +53,17 @@ class RouteSearchRequest(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def validate_distinct_stations(self) -> Self:
-        if self.origin_id == self.destination_id:
-            raise ValueError("Origin and destination must be different stations")
+    def validate_search_mode(self) -> Self:
+        if self.mode == "station":
+            if self.origin_id is None or self.destination_id is None:
+                raise ValueError("Station searches require origin_id and destination_id")
+            if self.origin_id == self.destination_id:
+                raise ValueError("Origin and destination must be different stations")
+        else:
+            if self.origin is None or self.destination is None:
+                raise ValueError("Address searches require origin and destination")
+            if self.origin.station_id is None:
+                raise ValueError("Address searches require the selected origin station")
         return self
 
 
@@ -48,6 +74,7 @@ class RouteStep:
     origin: Station
     destination: Station
     route_id: str
+    route_short_name: str
     vehicle_type: VehicleType
     departure_time: str
     arrival_time: str

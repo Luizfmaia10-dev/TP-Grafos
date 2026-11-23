@@ -49,3 +49,4 @@ class Connection:
     travel_time: float
     distance: float
     departure_time: float
+    route_short_name: str | None = None

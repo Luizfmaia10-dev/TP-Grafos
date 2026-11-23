@@ -1,24 +1,32 @@
-import { listStations, searchRoute, ApiError } from "./api-service.js";
-import { createStationRequest } from "./station-request.js";
-import { createFieldActivity, shouldCloseStationOptions } from "./field-activity.js";
+import {
+  getGeocodingConfig,
+  listSnapCandidates,
+  searchRoute,
+  ApiError,
+} from "./api-service.js";
+import {
+  createAddressSelection,
+  selectOriginStation,
+  setAddress,
+  setSnapCandidates,
+  setSnapUnavailable,
+  setWalkLimit,
+  validateAddressSelection,
+} from "./address-selection.js";
+import { createDialog } from "./dialog.js";
+import { createAddressAutocomplete } from "./geoapify-autocomplete.js";
 import { createStationMap, currentMapStations } from "./map.js";
 import { createRouteRequest } from "./route-request.js";
 import { formatDuration, renderRoute } from "./route-view.js";
+import { describeWalkLimit, walkLimitProgress } from "./snap-controls.js";
 import { maskDepartureTime } from "./time-mask.js";
 import { createTimePicker } from "./time-picker.js";
 import { createThemeSwitch } from "./theme.js";
-import {
-  createSelection,
-  editStation,
-  selectStation,
-  validateSelection,
-} from "./selection.js";
 
 const form = document.querySelector("#route-form");
 const departureInput = document.querySelector("#departure-time");
 const submitButton = form.querySelector(".search-button");
 const status = document.querySelector("#selection-status");
-const mapRole = document.querySelector("#map-selection-role");
 const planner = document.querySelector("#planner");
 const title = document.querySelector("#planner-title");
 const description = document.querySelector("#planner-description");
@@ -27,87 +35,173 @@ const summary = document.querySelector("#route-summary");
 const itinerary = document.querySelector("#route-itinerary");
 const feedback = document.querySelector("#query-feedback");
 const announcement = document.querySelector("#query-announcement");
+const originElement = document.querySelector("#origin-dialog");
+const limitsElement = document.querySelector("#limits-dialog");
+const originDialog = createDialog(originElement);
+const limitsDialog = createDialog(limitsElement);
+const originTrigger = document.querySelector("#origin-dialog-trigger");
+const originChange = document.querySelector("#origin-change");
+const limitsTrigger = document.querySelector("#limits-dialog-trigger");
+const destinationClear = document.querySelector("#destination-clear");
+const originConfirm = document.querySelector("#origin-confirm");
+const limitConfirm = document.querySelector("#limit-confirm");
+
 createThemeSwitch(document.querySelector("#theme-switch"));
-const touched = new Set();
-const fields = Object.fromEntries(["origin", "destination"].map(field => [field, {
-  wrapper: document.getElementById(`${field}-field`),
-  input: document.getElementById(field),
-  clear: document.getElementById(`${field}-clear`),
-  icon: document.getElementById(`${field}-search-icon`),
-  list: document.getElementById(`${field}-options`),
-  empty: document.getElementById(`${field}-empty`),
-  loading: document.getElementById(`${field}-loading`),
-  error: document.getElementById(`${field}-error`),
-}]));
-
-let selection = createSelection();
-const fieldActivity = createFieldActivity();
-let openField = null;
-let options = [];
-let activeOption = -1;
-let knownStations = [];
-
-const map = createStationMap(
-  document.querySelector("#map-stations"),
-  station => {
-    const field = fieldActivity.activeField;
-    if (!field) return;
-    chooseStation(field, station);
-  },
-);
 const timePicker = createTimePicker(
   document.querySelector("#departure-picker"),
   departureInput,
   document.querySelector("#departure-picker-trigger"),
 );
+
+let selection = createAddressSelection();
+let originDraft = selection;
+let limitDraft = selection;
+let limitField = "origin";
+let geocodingKey = null;
+let originLoading = false;
+let destinationLoading = false;
+let limitLoading = false;
+let originRequestError = null;
+let destinationRequestError = null;
+let limitRequestError = null;
+let limitTimer = null;
+const touched = new Set();
+const snapControllers = new Map();
+
 const request = createRouteRequest(searchRoute, renderRequest);
-const stationRequests = Object.fromEntries(Object.keys(fields).map(field => [
-  field, createStationRequest(listStations, state => renderOptions(field, state)),
-]));
+const map = createStationMap(document.querySelector("#map-stations"), () => {});
+
 const ERROR_MESSAGES = {
-  "unknown-station": ["Parada não encontrada", "Escolha novamente a origem e o destino."],
-  invalid: ["Dados inválidos", "Confira as paradas e o horário de saída."],
+  "unknown-station": ["Parada não encontrada", "Escolha novamente os endereços."],
+  invalid: ["Dados inválidos", "Confira os endereços, limites e horário de saída."],
   unavailable: ["Rede indisponível", "O servidor ainda não carregou a rede de transporte."],
+  "no-station": ["Nenhuma parada próxima", "Aumente o limite de caminhada ou escolha outro endereço."],
 };
-
-function errorMessage(error) {
-  if (error instanceof ApiError) {
-    return ERROR_MESSAGES[error.kind] ?? ["Não foi possível consultar a rede", "O servidor não concluiu a consulta. Tente novamente."];
-  }
-  return ["Falha de conexão", "Não foi possível receber os dados. Verifique sua conexão e tente novamente."];
-}
-
-function refreshMapStations() {
-  knownStations = currentMapStations(knownStations, options, selection,
-    request.state.status === "found" ? request.state : null);
-  map.setStations(knownStations);
-}
-
-function editStationField(field) {
-  fields[field].input.focus();
-}
 
 function announce(message) {
   if (announcement.textContent !== message) announcement.textContent = message;
 }
 
+function errorMessage(error) {
+  if (error instanceof ApiError) {
+    return ERROR_MESSAGES[error.kind]
+      ?? ["Não foi possível consultar a rede", "O servidor não concluiu a consulta. Tente novamente."];
+  }
+  return ["Falha de conexão", "Não foi possível receber os dados. Verifique sua conexão e tente novamente."];
+}
+
+function selectedStation(field, state = selection) {
+  const point = state[field];
+  if (field === "origin") {
+    return point.candidates.find(candidate => candidate.station.stationId === point.stationId)?.station ?? null;
+  }
+  return point.candidates[0]?.station ?? null;
+}
+
+function mapSelection(result = null) {
+  if (result) {
+    return {
+      originId: result.origin.stationId,
+      originText: result.origin.label,
+      destinationId: result.destination.stationId,
+      destinationText: result.destination.label,
+    };
+  }
+  const origin = selectedStation("origin");
+  const destination = selectedStation("destination");
+  return {
+    originId: origin?.stationId ?? null,
+    originText: origin?.label ?? "",
+    destinationId: destination?.stationId ?? null,
+    destinationText: destination?.label ?? "",
+  };
+}
+
+function refreshMap() {
+  const result = request.state.status === "found" ? request.state : null;
+  const adapter = mapSelection(result);
+  const selected = result
+    ? currentMapStations([], [], adapter, result)
+    : [selectedStation("origin"), selectedStation("destination")].filter(Boolean);
+  map.setStations(selected);
+  map.update(adapter, null, result);
+  const mapRole = document.querySelector("#map-selection-role");
+  mapRole.hidden = Boolean(result);
+  mapRole.textContent = "Pontos conectados";
+  document.querySelector("#map-description").textContent = result
+    ? `Trajeto de ${selection.origin.address.label} até ${selection.destination.address.label}. As linhas pontilhadas mostram as caminhadas até a rede.`
+    : "Mapa esquemático da rede. As paradas conectadas aos endereços aparecem depois da confirmação.";
+}
+
+function setStatus(message) {
+  status.textContent = message;
+  status.hidden = message.length === 0;
+}
+
+function showFieldError(id, message, visible) {
+  const element = document.querySelector(id);
+  element.textContent = message ?? "";
+  element.hidden = !message || !visible;
+}
+
+function renderSelection() {
+  const validation = validateAddressSelection(selection);
+  const originStation = selectedStation("origin");
+  const destinationStation = selectedStation("destination");
+  const originAddress = selection.origin.address;
+  const destinationAddress = selection.destination.address;
+
+  document.querySelector("#origin-address-label").textContent = originAddress?.label ?? "Origem ainda não definida";
+  document.querySelector("#origin-station-label").textContent = originStation
+    ? `${originStation.label} · ${selection.origin.candidates.find(item => item.station.stationId === originStation.stationId).distanceMeters} m a pé`
+    : "Informe um endereço e confirme a parada de acesso.";
+  originTrigger.querySelector("span:last-child").textContent = originAddress ? "Alterar origem" : "Definir origem";
+  destinationClear.hidden = !destinationAddress;
+  document.querySelector("#limits-trigger-label").textContent = `A ${selection.origin.maxWalkMeters} m · B ${selection.destination.maxWalkMeters} m`;
+
+  if (!destinationLoading) {
+    const destinationStatus = document.querySelector("#destination-snap-status");
+    if (destinationRequestError) destinationStatus.textContent = destinationRequestError;
+    else if (destinationStation) {
+      const distance = selection.destination.candidates[0].distanceMeters;
+      destinationStatus.textContent = `Parada conectada automaticamente: ${destinationStation.label} · ${distance} m a pé.`;
+    } else if (destinationAddress) destinationStatus.textContent = "Nenhuma parada disponível dentro do limite escolhido.";
+    else destinationStatus.textContent = "A parada mais próxima será escolhida automaticamente.";
+  }
+
+  showFieldError("#origin-error", validation.errors.origin, touched.has("origin"));
+  showFieldError("#destination-error", validation.errors.destination, touched.has("destination"));
+  showFieldError("#departure-error", validation.errors.departureTime, touched.has("departureTime"));
+
+  const loading = request.state.status === "loading";
+  submitButton.disabled = loading || validation.query === null;
+  submitButton.dataset.loading = String(loading);
+  submitButton.textContent = loading ? "Calculando trajeto…" : "Calcular trajeto";
+  if (loading) setStatus("Consultando os horários da rede… Você pode editar os campos para cancelar.");
+  else if (validation.query) setStatus("Endereços conectados à rede. Confira o horário de saída.");
+  else if (originAddress && !destinationAddress) setStatus("Origem definida. Informe o endereço de destino.");
+  else if (destinationAddress && !originAddress) setStatus("Destino definido. Agora defina a origem.");
+  else setStatus("");
+  refreshMap();
+  return validation;
+}
+
 function renderRequest(state) {
-  const loading = state.status === "loading";
   const found = state.status === "found";
   planner.dataset.view = found ? "result" : "search";
   title.textContent = found ? "Seu trajeto" : "Planeje seu trajeto";
-  description.textContent = found ? `Dia de serviço: ${state.serviceDate}` : "Escolha duas paradas pelo nome ou no mapa.";
+  description.textContent = found
+    ? `Dia de serviço: ${state.serviceDate}`
+    : "Informe os endereços para conectá-los à rede de transporte.";
   form.hidden = found;
   editSearch.hidden = !found;
   summary.hidden = !found;
   itinerary.hidden = !found;
-  form.setAttribute("aria-busy", String(loading));
-  submitButton.dataset.loading = String(loading);
-  submitButton.textContent = loading ? "Calculando trajeto…" : "Calcular trajeto";
+  form.setAttribute("aria-busy", String(state.status === "loading"));
   renderSelection();
 
   const messages = {
-    "no-route": ["Nenhum trajeto encontrado", "Não há ligação disponível para essas paradas e esse horário no dia de serviço. Ajuste a busca."],
+    "no-route": ["Nenhum trajeto encontrado", "Não há ligação disponível para este horário. Ajuste a busca."],
     error: errorMessage(state.error),
   };
   const message = messages[state.status];
@@ -123,210 +217,301 @@ function renderRequest(state) {
     title.focus({ preventScroll: true });
     window.scrollTo({ top: 0 });
   } else {
-    announce(loading ? "Calculando trajeto. Edite os campos para cancelar." : message ? message.join(" ") : "Busca pronta para edição.");
     document.querySelector("#itinerary-steps").replaceChildren();
+    announce(state.status === "loading" ? "Calculando trajeto." : message?.join(" ") ?? "Busca pronta para edição.");
   }
 }
 
-function setStatus(message) {
-  status.textContent = message;
-  status.hidden = message.length === 0;
+function requestCandidates(state, field, requestKey, onChange, onBusy, onError) {
+  snapControllers.get(requestKey)?.abort();
+  const controller = new AbortController();
+  snapControllers.set(requestKey, controller);
+  onBusy(true);
+  const point = state[field];
+  return listSnapCandidates({
+    ...point.address,
+    maxWalkMeters: point.maxWalkMeters,
+  }, { signal: controller.signal })
+    .then(result => onChange(setSnapCandidates(state, field, result)))
+    .catch(error => {
+      if (controller.signal.aborted) return;
+      if (error instanceof ApiError && error.kind === "no-station") {
+        onChange(setSnapUnavailable(state, field, error.detail?.minimum_distance_meters ?? null));
+      } else onError(errorMessage(error).join(" "));
+    })
+    .finally(() => {
+      if (snapControllers.get(requestKey) === controller) {
+        snapControllers.delete(requestKey);
+        onBusy(false);
+      }
+    });
 }
 
-function showError(input, element, message, touchedField, hasText) {
-  const visible = Boolean(message && touchedField);
-  element.textContent = message ?? "";
-  // Reserve the draft error's space while typing so blur cannot move a click target.
-  element.hidden = !message || (!visible && !hasText);
-  element.style.visibility = visible ? "visible" : "hidden";
-  element.setAttribute("aria-hidden", String(!visible));
-  input.setAttribute("aria-invalid", String(visible));
-  const hint = input.id === "departure-time" ? "departure-hint" : "station-hint";
-  input.setAttribute("aria-describedby", `${hint}${visible ? ` ${element.id}` : ""}`);
-}
+function renderOriginDialog() {
+  const point = originDraft.origin;
+  const visibleCandidates = point.candidates.slice(0, 20);
+  const container = document.querySelector("#origin-candidates");
+  document.querySelector("#origin-limit-chip").textContent = `Até ${point.maxWalkMeters} m`;
+  const statusElement = document.querySelector("#origin-candidates-status");
+  if (originLoading) statusElement.textContent = "Procurando paradas dentro do seu limite…";
+  else if (originRequestError) statusElement.textContent = originRequestError;
+  else if (!point.address) statusElement.textContent = "Informe um endereço para encontrar paradas próximas.";
+  else if (point.candidates.length === 0) {
+    statusElement.textContent = point.minimumDistanceMeters == null
+      ? "Nenhuma parada foi encontrada em até 2 km desse endereço."
+      : `Nenhuma parada dentro de ${point.maxWalkMeters} m. Distância mínima necessária: ${point.minimumDistanceMeters} m.`;
+  } else statusElement.textContent = point.candidates.length > visibleCandidates.length
+    ? `${point.candidates.length} paradas dentro do limite. Mostrando as 20 mais próximas.`
+    : `${point.candidates.length} ${point.candidates.length === 1 ? "parada encontrada" : "paradas encontradas"}.`;
 
-function renderSelection() {
-  const result = validateSelection(selection);
-  for (const [field, controls] of Object.entries(fields)) {
-    const value = selection[`${field}Text`];
-    if (controls.input.value !== value) controls.input.value = value;
-    controls.clear.hidden = value.length === 0;
-    controls.icon.hidden = value.length !== 0;
-    showError(controls.input, controls.error, result.errors[field], touched.has(field), value.length > 0);
-  }
-  if (departureInput.value !== selection.departureTime) departureInput.value = selection.departureTime;
-  showError(departureInput, document.querySelector("#departure-error"),
-    result.errors.departureTime, touched.has("departureTime"), selection.departureTime.length > 0);
-  const loading = request.state.status === "loading";
-  const found = request.state.status === "found";
-  submitButton.disabled = loading || result.query === null;
-  const activeField = fieldActivity.activeField;
-  refreshMapStations();
-  map.update(selection, activeField, found ? request.state : null);
-  mapRole.hidden = found;
-  mapRole.textContent = activeField === "origin" ? "Origem" : activeField === "destination" ? "Destino" : "Escolha um campo";
-  document.querySelector("#map-description").textContent = found
-    ? `Trajeto de ${selection.originText} até ${selection.destinationText}. Os trechos são identificados por modal na legenda. A marca a origem e B marca o destino.`
-    : "Mapa esquemático da rede de transporte de Belo Horizonte. Busque paradas pelo nome para exibi-las no mapa. Os marcadores A e B identificam suas escolhas.";
-
-  if (loading) setStatus("Consultando os horários da rede… Você pode editar os campos para cancelar.");
-  else if (result.query) setStatus("Paradas selecionadas. Confira o horário de saída.");
-  else if (selection.originId && !selection.destinationId) setStatus("Origem selecionada. Escolha o destino.");
-  else if (selection.destinationId && !selection.originId) setStatus("Destino selecionado. Escolha a origem.");
-  else setStatus("");
-  return result;
-}
-
-function closeOptions() {
-  openField = null;
-  options = [];
-  for (const stationRequest of Object.values(stationRequests)) stationRequest.cancel();
-  for (const controls of Object.values(fields)) {
-    controls.list.hidden = true;
-    controls.empty.hidden = true;
-    controls.loading.hidden = true;
-    controls.input.closest(".station-picker").setAttribute("aria-busy", "false");
-    controls.input.setAttribute("aria-expanded", "false");
-    controls.input.removeAttribute("aria-activedescendant");
-  }
-  activeOption = -1;
-  refreshMapStations();
-}
-
-function chooseStation(field, station, focusNext = false) {
-  selection = selectStation(selection, field, station);
-  request.cancel();
-  touched.add(field);
-  closeOptions();
-  fieldActivity.activate(field);
-  if (field === "origin" && !selection.destinationId) fieldActivity.activate("destination");
-  if (field === "destination" && !selection.originId) fieldActivity.activate("origin");
-  const result = renderSelection();
-  announce(selection.originId && selection.destinationId && !result.query
-    ? Object.values(result.errors).join(" ")
-    : `${field === "origin" ? "Origem selecionada" : "Destino selecionado"}: ${station.label}.`);
-  if (focusNext) {
-    if (!selection.originId) fields.origin.input.focus();
-    else if (!selection.destinationId) fields.destination.input.focus();
-    else departureInput.focus();
-  }
-}
-
-function openOptions(field) {
-  closeOptions();
-  openField = field;
-  stationRequests[field].submit(selection[`${field}Text`]);
-}
-
-function renderOptions(field, state) {
-  if (openField !== field) return;
-  const controls = fields[field];
-  const loading = state.status === "loading";
-  controls.input.closest(".station-picker").setAttribute("aria-busy", String(loading));
-  controls.loading.hidden = !loading;
-  options = state.status === "ready" ? state.stations : [];
-  activeOption = -1;
-  controls.input.removeAttribute("aria-activedescendant");
-  refreshMapStations();
-  const items = options.map(station => {
-    const option = document.createElement("li");
-    option.id = `${field}-option-${station.stationId}`;
-    option.className = "station-option";
-    option.setAttribute("role", "option");
-    option.setAttribute("aria-selected", "false");
-
+  container.replaceChildren(...visibleCandidates.map((candidate, index) => {
+    const label = document.createElement("label");
+    label.className = "candidate-card";
+    label.dataset.selected = String(candidate.station.stationId === point.stationId);
+    const input = document.createElement("input");
+    input.type = "radio";
+    input.name = "origin-station";
+    input.value = candidate.station.stationId;
+    input.checked = candidate.station.stationId === point.stationId;
+    input.addEventListener("change", () => {
+      originDraft = selectOriginStation(originDraft, input.value);
+      renderOriginDialog();
+    });
     const copy = document.createElement("span");
-    copy.className = "suggestion-copy";
-    const title = document.createElement("span");
-    title.className = "suggestion-title";
-    title.textContent = station.mapName;
+    copy.className = "candidate-copy";
+    const name = document.createElement("strong");
+    name.textContent = candidate.station.label;
     const detail = document.createElement("span");
-    detail.className = "suggestion-detail";
-    detail.textContent = `Parada ${station.stationId}`;
-    copy.append(title, detail);
-    const arrow = document.createElement("img");
-    arrow.src = "/assets/icons/arrow.svg";
-    arrow.alt = "";
-    option.append(copy, arrow);
+    detail.textContent = `${candidate.distanceMeters} m a pé${index === 0 ? " · Mais próxima" : ""}`;
+    copy.append(name, detail);
+    const mark = document.createElement("span");
+    mark.className = "candidate-radio";
+    mark.setAttribute("aria-hidden", "true");
+    label.append(input, copy, mark);
+    return label;
+  }));
+  originConfirm.disabled = originLoading || !point.address || !point.stationId;
+}
 
-    // Keep the input focused until the click chooses an option, including touch.
-    option.addEventListener("pointerdown", event => event.preventDefault());
-    option.addEventListener("click", () => chooseStation(field, station, true));
-    return option;
+function loadOriginCandidates() {
+  originRequestError = null;
+  renderOriginDialog();
+  requestCandidates(
+    originDraft,
+    "origin",
+    "origin-dialog",
+    next => { originDraft = next; renderOriginDialog(); },
+    busy => { originLoading = busy; renderOriginDialog(); },
+    message => { originRequestError = message; renderOriginDialog(); },
+  );
+}
+
+function mountOriginAutocomplete() {
+  if (!geocodingKey) return;
+  createAddressAutocomplete(
+    geocodingKey,
+    document.querySelector("#origin-autocomplete"),
+    address => {
+      originDraft = setAddress(originDraft, "origin", address);
+      originRequestError = null;
+      document.querySelector("#origin-address-error").hidden = true;
+      loadOriginCandidates();
+    },
+    message => {
+      const error = document.querySelector("#origin-address-error");
+      error.textContent = message;
+      error.hidden = false;
+    },
+  );
+}
+
+function openOrigin(trigger) {
+  if (!geocodingKey) return;
+  originDraft = selection;
+  originRequestError = null;
+  mountOriginAutocomplete();
+  renderOriginDialog();
+  originDialog.open(trigger);
+}
+
+function renderDestination() {
+  const element = document.querySelector("#destination-snap-status");
+  if (destinationLoading) element.textContent = "Procurando a parada mais próxima…";
+  renderSelection();
+}
+
+function loadDestinationCandidates() {
+  destinationRequestError = null;
+  renderDestination();
+  requestCandidates(
+    selection,
+    "destination",
+    "destination",
+    next => { selection = next; renderDestination(); },
+    busy => { destinationLoading = busy; renderDestination(); },
+    message => { destinationRequestError = message; renderDestination(); },
+  );
+}
+
+function mountDestinationAutocomplete() {
+  const container = document.querySelector("#destination-autocomplete");
+  if (!geocodingKey) return;
+  createAddressAutocomplete(
+    geocodingKey,
+    container,
+    address => {
+      selection = setAddress(selection, "destination", address);
+      request.cancel();
+      touched.delete("destination");
+      loadDestinationCandidates();
+    },
+    message => {
+      destinationRequestError = message;
+      renderDestination();
+    },
+  );
+}
+
+function renderLimitDialog() {
+  const point = limitDraft[limitField];
+  const fieldLabel = limitField === "origin" ? "origem" : "destino";
+  document.querySelectorAll("[data-limit-field]").forEach(tab => {
+    tab.setAttribute("aria-selected", String(tab.dataset.limitField === limitField));
   });
-  controls.list.replaceChildren(...items);
-  controls.list.hidden = options.length === 0;
-  controls.empty.hidden = !["empty", "error"].includes(state.status);
-  controls.empty.textContent = state.status === "error"
-    ? errorMessage(state.error).join(". ") : "Nenhuma parada encontrada na rede para esta busca.";
-  controls.input.setAttribute("aria-expanded", String(options.length > 0));
-  const fieldName = field === "origin" ? "origem" : "destino";
-  if (!loading) announce(options.length ? `${options.length} ${options.length === 1 ? "parada encontrada" : "paradas encontradas"} para ${fieldName}. Use as setas e Enter para selecionar.`
-    : controls.empty.hidden ? "" : controls.empty.textContent);
-}
-
-function highlightOption(index) {
-  activeOption = index;
-  const controls = fields[openField];
-  const items = [...controls.list.children];
-  items.forEach((item, position) => item.setAttribute("aria-selected", String(position === index)));
-  controls.input.setAttribute("aria-activedescendant", items[index].id);
-  items[index].scrollIntoView({ block: "nearest" });
-}
-
-function handleStationKey(event, field) {
-  if (event.key === "Escape") {
-    event.preventDefault();
-    closeOptions();
-  } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-    event.preventDefault();
-    if (openField !== field) openOptions(field);
-    if (options.length === 0) return;
-    const index = event.key === "ArrowDown"
-      ? (activeOption + 1) % options.length
-      : (activeOption <= 0 ? options.length - 1 : activeOption - 1);
-    highlightOption(index);
-  } else if (event.key === "Enter" && openField === field && options.length > 0) {
-    event.preventDefault();
-    if (activeOption >= 0) chooseStation(field, options[activeOption], true);
-    else if (options.length === 1) chooseStation(field, options[0], true);
-    else setStatus("Use as setas para escolher uma parada da lista.");
+  document.querySelector("#limit-visual-point").textContent = limitField === "origin" ? "A" : "B";
+  const progress = walkLimitProgress(point.maxWalkMeters);
+  document.querySelector("#limit-visual").style.setProperty(
+    "--walk-scale",
+    String(0.45 + (progress * 0.55)),
+  );
+  document.querySelector("#limit-slider").value = String(point.maxWalkMeters);
+  document.querySelector("#limit-value").textContent = point.maxWalkMeters >= 1_000
+    ? `${(point.maxWalkMeters / 1_000).toLocaleString("pt-BR")} km`
+    : `${point.maxWalkMeters} m`;
+  document.querySelectorAll("[data-limit-value]").forEach(button => {
+    button.dataset.selected = String(Number(button.dataset.limitValue) === point.maxWalkMeters);
+  });
+  const address = document.querySelector("#limit-address");
+  address.textContent = point.address?.label ?? `Endereço de ${fieldLabel} ainda não informado.`;
+  const feedbackElement = document.querySelector("#limit-feedback");
+  const message = document.querySelector("#limit-message");
+  if (limitLoading) {
+    feedbackElement.dataset.state = "loading";
+    message.textContent = "Verificando as paradas disponíveis para este limite…";
+    limitConfirm.disabled = true;
+  } else if (limitRequestError) {
+    feedbackElement.dataset.state = "error";
+    message.textContent = limitRequestError;
+    limitConfirm.disabled = true;
+  } else {
+    const limitDescription = describeWalkLimit(point, limitField);
+    feedbackElement.dataset.state = limitDescription.state;
+    message.textContent = limitDescription.message;
+    limitConfirm.disabled = !limitDescription.canConfirm;
   }
 }
 
-for (const [field, controls] of Object.entries(fields)) {
-  controls.input.addEventListener("focus", () => {
-    fieldActivity.activate(field);
-    renderSelection();
-    openOptions(field);
-  });
-  controls.input.addEventListener("input", () => {
-    selection = editStation(selection, field, controls.input.value);
-    request.cancel();
-    touched.delete(field);
-    renderSelection();
-    openOptions(field);
-  });
-  controls.input.addEventListener("keydown", event => handleStationKey(event, field));
-  controls.input.addEventListener("blur", () => {
-    if (selection[`${field}Text`]) touched.add(field);
-    const result = renderSelection();
-    if (selection[`${field}Text`] && result.errors[field]) announce(result.errors[field]);
-  });
-  controls.clear.addEventListener("click", () => {
-    closeOptions();
-    selection = editStation(selection, field, "");
-    request.cancel();
-    touched.delete(field);
-    fieldActivity.deactivate();
-    renderSelection();
-    form.focus({ preventScroll: true });
-    announce(`${field === "origin" ? "Origem limpa" : "Destino limpo"}. Escolha uma parada.`);
-  });
-  controls.input.addEventListener("pointerdown", () => {
-    if (document.activeElement === controls.input && openField !== field) openOptions(field);
-  });
+function prepareLimit(field) {
+  snapControllers.get("limit")?.abort();
+  clearTimeout(limitTimer);
+  limitField = field;
+  limitDraft = selection;
+  limitRequestError = null;
+  limitLoading = false;
+  renderLimitDialog();
 }
+
+function verifyLimit() {
+  const point = limitDraft[limitField];
+  if (!point.address) {
+    renderLimitDialog();
+    return;
+  }
+  limitRequestError = null;
+  const previousOriginId = selection.origin.stationId;
+  requestCandidates(
+    limitDraft,
+    limitField,
+    "limit",
+    next => {
+      if (limitField === "origin" && previousOriginId
+          && next.origin.candidates.some(item => item.station.stationId === previousOriginId)) {
+        next = selectOriginStation(next, previousOriginId);
+      }
+      limitDraft = next;
+      renderLimitDialog();
+    },
+    busy => { limitLoading = busy; renderLimitDialog(); },
+    message => { limitRequestError = message; renderLimitDialog(); },
+  );
+}
+
+function updatePendingLimit(value) {
+  limitDraft = setWalkLimit(selection, limitField, value);
+  limitRequestError = null;
+  renderLimitDialog();
+  clearTimeout(limitTimer);
+  limitTimer = setTimeout(verifyLimit, 220);
+}
+
+originTrigger.addEventListener("click", () => openOrigin(originTrigger));
+originChange.addEventListener("click", () => openOrigin(originChange));
+limitsTrigger.addEventListener("click", () => {
+  prepareLimit("origin");
+  limitsDialog.open(limitsTrigger);
+});
+
+document.querySelectorAll("[data-dialog-close]").forEach(button => {
+  button.addEventListener("click", () => {
+    const dialog = button.dataset.dialogClose === "origin-dialog" ? originDialog : limitsDialog;
+    dialog.close();
+  });
+});
+
+originElement.addEventListener("close", () => snapControllers.get("origin-dialog")?.abort());
+limitsElement.addEventListener("close", () => {
+  snapControllers.get("limit")?.abort();
+  clearTimeout(limitTimer);
+});
+
+originConfirm.addEventListener("click", () => {
+  if (!originDraft.origin.address || !originDraft.origin.stationId) return;
+  selection = originDraft;
+  request.cancel();
+  touched.delete("origin");
+  originDialog.close();
+  renderSelection();
+  announce(`Origem definida: ${selection.origin.address.label}.`);
+});
+
+destinationClear.addEventListener("click", () => {
+  snapControllers.get("destination")?.abort();
+  selection = setAddress(selection, "destination", null);
+  destinationRequestError = null;
+  touched.delete("destination");
+  request.cancel();
+  mountDestinationAutocomplete();
+  renderSelection();
+  announce("Destino limpo. Informe outro endereço.");
+});
+
+document.querySelectorAll("[data-limit-field]").forEach(tab => {
+  tab.addEventListener("click", () => prepareLimit(tab.dataset.limitField));
+});
+document.querySelector("#limit-slider").addEventListener("input", event => {
+  updatePendingLimit(Number(event.target.value));
+});
+document.querySelectorAll("[data-limit-value]").forEach(button => {
+  button.addEventListener("click", () => updatePendingLimit(Number(button.dataset.limitValue)));
+});
+limitConfirm.addEventListener("click", () => {
+  if (limitConfirm.disabled) return;
+  selection = limitDraft;
+  request.cancel();
+  limitsDialog.close();
+  renderSelection();
+  announce(`Limite de ${limitField === "origin" ? "origem" : "destino"} atualizado para ${selection[limitField].maxWalkMeters} metros.`);
+});
 
 for (const event of ["input", "blur"]) {
   departureInput.addEventListener(event, () => {
@@ -334,57 +519,48 @@ for (const event of ["input", "blur"]) {
     selection = { ...selection, departureTime: departureInput.value };
     if (event === "input") request.cancel();
     if (event === "blur" && selection.departureTime) touched.add("departureTime");
-    const result = renderSelection();
-    if (event === "blur" && result.errors.departureTime) announce(result.errors.departureTime);
+    renderSelection();
   });
 }
-
-let pointerDownOutsideOptions = null;
-let pointerDownKeepsOptionsOpen = false;
-document.addEventListener("pointerdown", event => {
-  const closesOptions = openField
-    && shouldCloseStationOptions(fields[openField].wrapper, event.target);
-  pointerDownOutsideOptions = closesOptions ? openField : null;
-  pointerDownKeepsOptionsOpen = Boolean(openField && !closesOptions);
-});
-document.addEventListener("click", () => {
-  if (pointerDownOutsideOptions && openField === pointerDownOutsideOptions) closeOptions();
-  pointerDownOutsideOptions = null;
-});
-document.addEventListener("pointerup", () => { pointerDownKeepsOptionsOpen = false; });
-document.addEventListener("pointercancel", () => {
-  pointerDownOutsideOptions = null;
-  pointerDownKeepsOptionsOpen = false;
-});
-document.addEventListener("focusin", event => {
-  if (!pointerDownOutsideOptions && openField
-      && shouldCloseStationOptions(
-        fields[openField].wrapper,
-        event.target,
-        pointerDownKeepsOptionsOpen,
-      )) closeOptions();
-});
 
 form.addEventListener("submit", event => {
   event.preventDefault();
   if (request.state.status === "loading") return;
-  closeOptions();
   timePicker.close({ restoreFocus: false });
   ["origin", "destination", "departureTime"].forEach(field => touched.add(field));
-  const result = renderSelection();
-  if (!result.query) {
-    announce(Object.values(result.errors).join(" "));
-    if (result.errors.origin) editStationField("origin");
-    else if (result.errors.destination) editStationField("destination");
+  const validation = renderSelection();
+  if (!validation.query) {
+    announce(Object.values(validation.errors).join(" "));
+    if (validation.errors.origin) openOrigin(originChange);
+    else if (validation.errors.destination) document.querySelector("#destination-autocomplete input")?.focus();
     else departureInput.focus();
     return;
   }
-  request.submit(result.query);
+  request.submit(validation.query);
 });
 
 editSearch.addEventListener("click", () => {
   request.cancel();
-  editStationField("origin");
+  openOrigin(editSearch);
 });
 
+async function initializeGeocoding() {
+  try {
+    const config = await getGeocodingConfig();
+    if (!config.available || !config.apiKey) throw new Error("Geocoding configuration is unavailable");
+    geocodingKey = config.apiKey;
+    mountDestinationAutocomplete();
+  } catch {
+    const message = "Busca de endereços indisponível. Configure o Geoapify para continuar.";
+    originTrigger.disabled = true;
+    originChange.disabled = true;
+    const destination = document.querySelector("#destination-autocomplete");
+    destination.textContent = message;
+    destination.dataset.unavailable = "true";
+    announce(message);
+  }
+  renderSelection();
+}
+
 renderSelection();
+initializeGeocoding();

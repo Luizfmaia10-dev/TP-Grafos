@@ -14,6 +14,7 @@ class ItineraryStep:
     origin: Station
     destination: Station
     route_id: str
+    route_short_name: str
     vehicle_type: VehicleType
     departure_time: str
     arrival_time: str
@@ -62,7 +63,8 @@ class Itinerary:
             departure_seconds = round(departure * 60)
             arrival_seconds = round(arrival * 60)
             step = ItineraryStep(
-                station, connection.destination, connection.route_id, connection.vehicle_type,
+                station, connection.destination, connection.route_id,
+                connection.route_short_name or "Linha não informada", connection.vehicle_type,
                 TimeUtils.minutes_to_time(departure), TimeUtils.minutes_to_time(arrival),
                 departure_seconds - round(current_time * 60),
                 arrival_seconds - departure_seconds, connection.distance,
@@ -78,7 +80,7 @@ class Itinerary:
             else:
                 mode = "ônibus" if step.vehicle_type is VehicleType.BUS else "metrô"
                 instructions.append(
-                    f"Pegue o {mode} {step.route_id} de {station.name} "
+                    f"Pegue o {mode} {step.route_short_name} de {station.name} "
                     f"até {step.destination.name} às {step.departure_time}; "
                     f"chegada às {step.arrival_time}."
                 )

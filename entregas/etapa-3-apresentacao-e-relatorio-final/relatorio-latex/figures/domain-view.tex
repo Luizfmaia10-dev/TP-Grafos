@@ -3,10 +3,10 @@
   relation/.style={-{Latex[length=2mm]},line width=.5pt},
   relation label/.style={font=\fontsize{9}{11}\selectfont,fill=white,inner sep=2pt}
 ]
-\node[box] (station) at (0,0) {\textbf{Station}\\\ttfamily station\_id, name\\latitude, longitude};
-\node[box] (connection) at (7.7,0) {\textbf{\rmfamily Connection}\\\ttfamily route\_id, destination, vehicle\_type\\departure\_time, travel\_time, distance};
+\node[box] (station) at (0,0) {\textbf{Station / TemporaryVertex}\\\ttfamily station\_id, name, latitude, longitude\\\rmfamily ponto temporário: \ttfamily marker\_type};
+\node[box] (connection) at (7.7,0) {\textbf{\rmfamily Connection}\\\ttfamily route\_id, route\_short\_name, destination\\vehicle\_type, departure\_time, travel\_time, distance};
 \node[box] (graph) at (0,-3.1) {\textbf{\rmfamily TransportGraph}\\\ttfamily add\_station(station)\\add\_connection(origin, connection)\\get\_neighbors(station)};
-\node[box] (simulator) at (7.7,-3.1) {\textbf{\rmfamily RouteSimulator}\\\ttfamily calculate\_route(...)\\max\_speed\_of(graph)\\heuristic(current, target)};
+\node[box] (simulator) at (7.7,-3.1) {\textbf{\rmfamily RouteSimulator}\\\ttfamily calculate\_route(...)\\find\_snap\_candidates(...)\\snap\_to\_network(...)};
 \node[box] (loader) at (0,-6.2) {\textbf{\rmfamily DataLoader}\\\ttfamily build\_graph()\\\rmfamily Lê e higieniza o GTFS por data.};
 \node[box] (itinerary) at (7.7,-6.2) {\textbf{\rmfamily Itinerary}\\\ttfamily steps, instructions, total\_seconds\\to\_dict(), to\_json()\\\rmfamily Criado pela API a partir do caminho.};
 \draw[relation] (connection.west) -- node[relation label,above]{destino} (station.east);

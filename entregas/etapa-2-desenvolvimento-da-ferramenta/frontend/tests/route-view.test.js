@@ -18,7 +18,8 @@ const result = {
     "Take WALK walk from Terminal to Destino at 25:15:45; arrive at 25:18:00.",
   ],
   steps: [
-    { origin: central, destination: transfer, routeId: "bus", vehicleType: "BUS",
+    { origin: central, destination: transfer, routeId: "bus", routeShortName: "510",
+      vehicleType: "BUS",
       departureTime: "25:06:00", arrivalTime: "25:11:30", waitingSeconds: 60,
       travelSeconds: 330, distanceKm: 1 },
     { origin: transfer, destination: terminal, routeId: "metro", vehicleType: "SUBWAY",
@@ -53,8 +54,21 @@ test("timeline keeps endpoints and consumes a wait instruction before each movem
   }
   assert.deepEqual(entries.slice(2, 5).map(entry => entry.label),
     ["Ônibus", "Metrô", "Caminhada"]);
+  assert.equal(entries[2].title, "Ônibus · 510");
   assert.equal(entries.at(-1).time, "25:18:00");
   assert.equal(entries.at(-1).station, destination);
+});
+
+test("timeline never exposes an internal route ID when the public name is missing", () => {
+  const missingPublicName = {
+    ...result,
+    steps: [{ ...result.steps[0], routeId: "561865", routeShortName: undefined }],
+  };
+
+  const busEntry = buildTimelineEntries(missingPublicName)[2];
+
+  assert.equal(busEntry.title, "Ônibus · Linha não informada");
+  assert.equal(busEntry.title.includes("561865"), false);
 });
 
 function createDocument() {

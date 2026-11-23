@@ -34,7 +34,7 @@
    - Arquivos vetoriais SVG e imagens PNG em alta resolucao dos diagramas UML e arquiteturais.
 
 6. **`prototipos-ui/`**:
-   - Prototipos visuais de interface (tela inicial, busca de rotas e instrucoes passo a passo).
+   - Prototipo navegavel e capturas reais do fluxo atual: entrada por endereco, snap-to-network e itinerario passo a passo.
 
 ---
 

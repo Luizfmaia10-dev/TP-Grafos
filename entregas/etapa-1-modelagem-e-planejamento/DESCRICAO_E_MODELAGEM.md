@@ -30,7 +30,7 @@ O foco primário do MVP é a demonstração da correção da solução matemáti
 
 O domínio do sistema é estruturado em inglês com tolerância zero a acoplamento com a interface:
 - `Station`: Vértice que representa paradas ou estações da rede, implementado com `__slots__` para eficiência de memória em grafos densos.
-- `TemporaryVertex`: Especialização de `Station` para representar pontos arbitrários clicados pelo usuário.
+- `TemporaryVertex`: Especialização de `Station` para representar endereços geocodificados em coordenadas arbitrárias durante uma consulta.
 - `Connection`: Aresta direcionada ponderada por tempo de percurso e horário de partida, utilizando `__slots__` para reduzir o consumo de RAM diante da alta cardinalidade de viagens.
 - `VehicleType`: Enumeração dos modais suportados (`BUS`, `SUBWAY`, `WALK`).
 - `TransportGraph`: Estrutura de lista de adjacência em memória com complexidade $O(1)$ para adição de nós e obtenção de vizinhos, mantendo listas de conexões ordenadas por horário de partida.

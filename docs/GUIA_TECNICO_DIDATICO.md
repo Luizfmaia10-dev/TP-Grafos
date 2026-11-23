@@ -12,10 +12,10 @@ Diferente de um GPS para automoveis (como o Waze ou Google Maps em modo carro), 
 
 ```mermaid
 graph LR
-    A["Origem do Passageiro\n(Clique no Mapa)"] --> B["Caminhada ate a Parada\n(TemporaryVertex: WALK)"]
+    A["Endereço de Origem\n(Geoapify: Lat/Lon)"] --> B["Caminhada ate a Parada Escolhida\n(TemporaryVertex: WALK)"]
     B --> C["Espera na Parada\n(Calculo de Intervalo)"]
     C --> D["Embarque no Onibus/Metro\n(Connection: BUS / SUBWAY)"]
-    D --> E["Desembarque e Caminhada Final\n(Chegada ao Destino)"]
+    D --> E["Desembarque e Caminhada Final\n(Parada mais proxima ao Endereço)"]
 ```
 
 ---
@@ -248,23 +248,25 @@ $$\text{Tempo de Espera} = \text{departure\_time} - t_{\text{atual}}$$
 ## Parte 6: Vertices Temporarios e Resposta Estruturada
 
 ### 1. Vertices Temporarios e o Mecanismo *Snap-to-Network*
-O usuario do aplicativo nao clica necessariamente em cima de uma parada oficial de onibus; ele clica na porta de sua casa ou em um restaurante.
+O usuario seleciona enderecos de Belo Horizonte no autocomplete. O Geoapify/OpenStreetMap fornece apenas o rotulo e as coordenadas; o RotasGraph escolhe as paradas e calcula a rota localmente.
 
 Para resolver isso sem alterar a base oficial de dados, o sistema utiliza a especializacao `TemporaryVertex`:
-1. Um vertice temporario de origem e inserido no grafo com as coordenadas do clique.
-2. O algoritmo calcula a distancia do clique ate todas as estacoes num raio configuravel (ex.: 800 metros).
-3. Sao criadas arestas temporarias bidirecionais do modal `WALK` (caminhada), considerando uma velocidade media humana de caminhada de aproximadamente $5\text{ km/h}$ ($\approx 0{,}083\text{ km/min}$).
-4. Realiza-se o mesmo procedimento para o destino.
-5. O A* calcula a rota do vertice temporario de origem ate o vertice temporario de destino.
-6. Apos a conclusao da busca, os vertices temporarios sao **removidos do grafo** para restabelecer a topologia original da rede.
+1. O usuario escolhe limites independentes entre 100 e 2.000 metros para origem e destino; ambos comecam em 800 metros.
+2. `POST /snap/candidates` calcula Haversine ate estacoes reais, filtra pelo limite e ordena por distancia e ID.
+3. Na origem, a estacao mais proxima e recomendada, mas outra candidata valida pode ser confirmada. No destino, a mais proxima e automatica.
+4. Na consulta, o motor cria um vertice temporario para cada endereco e uma aresta direcional `WALK`: ponto--parada na origem e parada--ponto no destino.
+5. As caminhadas usam aproximadamente $5\text{ km/h}$ ($\approx 0{,}083\text{ km/min}$) e partem imediatamente.
+6. O A* calcula a rota entre os dois vertices temporarios.
+7. As arestas ficam em um overlay privado e sao removidas no `finally`; o `TransportGraph` compartilhado nunca e mutado.
 
 ```mermaid
 flowchart TD
-    Click["Clique do Usuario: Casa (Coord Lat/Lon)"] --> TempV["Cria TemporaryVertex"]
-    TempV --> SearchNear["Busca Estacoes no Raio de 800m"]
-    SearchNear --> AddEdges["Cria Arestas Temporarias: WALK (5 km/h)"]
-    AddEdges --> RunAStar["Executa Time-Dependent A*"]
-    RunAStar --> Cleanup["Limpa TemporaryVertex do Grafo"]
+    Address["Seleciona Endereco: Geoapify retorna Lat/Lon"] --> Limit["Aplica limite A ou B: 100 a 2.000 m"]
+    Limit --> SearchNear["POST /snap/candidates: ordena paradas alcançaveis"]
+    SearchNear --> Choice["Origem: usuario confirma | Destino: mais proxima"]
+    Choice --> TempV["Cria TemporaryVertex e aresta WALK direcional"]
+    TempV --> RunAStar["Executa Time-Dependent A*"]
+    RunAStar --> Cleanup["Remove o overlay temporario no finally"]
     RunAStar --> ReturnItinerary["Retorna Itinerary Estruturado"]
 ```
 

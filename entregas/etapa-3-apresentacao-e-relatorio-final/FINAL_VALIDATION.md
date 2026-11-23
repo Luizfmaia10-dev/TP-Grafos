@@ -30,16 +30,16 @@ trabalho da branch `main`, sem criar commit.
 
 ## Documentos finais
 
-- O artigo SBC recompilado tem 15 páginas A4.
+- O artigo SBC recompilado tem 14 páginas A4.
 - A apresentação recompilada tem 12 slides em 16:9.
 - O relatório de complexidade recompilado tem 6 páginas A4.
-- Os 15 renders do artigo e os 12 dos slides coincidiram exatamente com os
+- Os 14 renders do artigo e os 12 dos slides coincidiram exatamente com os
   renders aprovados. As seis páginas de complexidade foram reinspecionadas.
 - As compilações Tectonic terminaram com código zero e sem referências
   indefinidas na última passagem. Permanecem apenas avisos não bloqueantes de
   justificação `Underfull` e metadados do `hyperref`, sem corte visual.
 - A compilação alternativa do artigo com TeX Live 2026, pdfTeX 1.40.29 e
-  `latexmk` 4.89 terminou com código zero e gerou 15 páginas A4. Todas as
+  `latexmk` 4.89 terminou com código zero e gerou 14 páginas A4. Todas as
   páginas foram renderizadas com Poppler e reinspecionadas sem cortes, páginas
   vazias, sobreposições ou glifos ilegíveis. O template SBC recebeu apenas a
   adaptação do hook legado de bibliografia para o kernel LaTeX atual.
